@@ -1,5 +1,6 @@
 package org.sorz.lab.tinykeepass;
 
+import android.annotation.SuppressLint;
 import android.app.KeyguardManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.security.keystore.UserNotAuthenticatedException;
@@ -14,14 +15,18 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-
 
 public class DatabaseSetupActivity extends AppCompatActivity {
+    final static private String DB_FILE_NAME = "database.kdbx";
+    final static private String TEMP_DB_FILE_NAME = "~database.kdbx";
+
     private KeyguardManager keyguardManager;
     private FingerprintManager fingerprintManager;
 
@@ -105,6 +110,7 @@ public class DatabaseSetupActivity extends AppCompatActivity {
         return true;
     }
 
+    @SuppressLint("StaticFieldLeak")
     private void submit() {
         SecureStringStorage storage = null;
         try {
@@ -120,6 +126,44 @@ public class DatabaseSetupActivity extends AppCompatActivity {
         } catch (SecureStringStorage.SystemException e) {
             throw new RuntimeException("cannot get SecureStringStorage", e);
         }
+
+        URL url;
+        try {
+            url = new URL(editDatabaseUrl.getText().toString());
+        } catch (MalformedURLException e) {
+            editDatabaseUrl.setError("Not a valid URL");
+            return;
+        }
+
+        String username = null;
+        String password = null;
+        if (checkBasicAuth.isChecked()) {
+            username = editAuthUsername.getText().toString();
+            password = editAuthPassword.getText().toString();
+        }
+        FileOutputStream output;
+        try {
+            output = openFileOutput("db.tmp", MODE_PRIVATE);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("cannot open db.tmp", e);
+        }
+
+        new FetchFileTask(output, url, username, password) {
+            @Override
+            protected void onPostExecute(String error) {
+                if (error != null) {
+                    Toast.makeText(DatabaseSetupActivity.this, error, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(DatabaseSetupActivity.this, "ok", Toast.LENGTH_SHORT).show();
+                    submitAfterDownload();
+                }
+            }
+        }.execute();
+    }
+
+    private void submitAfterDownload() {
+        // TODO: check new downloaded db file
+        // TODO: save url, password, ...
 
     }
 
