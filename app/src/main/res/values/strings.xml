@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">TinyKeepass</string>
+    <string name="database_url">https://database-url.kdbx</string>
+    <string name="no_screen_lock">No secure screen lock (PIN/pattern/password)</string>
+    <string name="no_fingerprint_detected">No fingerprint scanner detected on this device</string>
+    <string name="no_fingerprint_enrolled">No enrolled fingerprint found</string>
+    <string-array name="authenticate_method">
+        <item>No authentication</item>
+        <item>Authenticate with lock screen</item>
+        <item>Authenticate with fingerprint</item>
+    </string-array>
+
+</resources>
