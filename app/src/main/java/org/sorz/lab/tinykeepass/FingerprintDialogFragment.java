@@ -97,10 +97,13 @@ public class FingerprintDialogFragment extends DialogFragment {
             new FingerprintManager.AuthenticationCallback() {
                 @Override
                 public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
+                    Context context = getContext();
+                    if (context == null)
+                        return;
                     textFingerprintStatus.removeCallbacks(resetErrorTextRunnable);
                     imageFingerprintIcon.setImageResource(R.drawable.ic_fingerprint_success);
                     textFingerprintStatus.setText(R.string.fingerprint_success);
-                    textFingerprintStatus.setTextColor(getContext().getColor(R.color.success));
+                    textFingerprintStatus.setTextColor(context.getColor(R.color.success));
                     imageFingerprintIcon.postDelayed(() -> {
                         if (listener != null)
                             listener.onFingerprintSuccess(result.getCryptoObject().getCipher());
@@ -135,7 +138,6 @@ public class FingerprintDialogFragment extends DialogFragment {
         super.onPause();
         if (cancellationSignal != null)
             cancellationSignal.cancel();
-        // TODO: cancel fingerprint here
     }
 
     @Override
@@ -146,9 +148,12 @@ public class FingerprintDialogFragment extends DialogFragment {
     }
 
     private void showError(CharSequence error) {
+        Context context = getContext();
+        if (context == null)
+            return;
         imageFingerprintIcon.setImageResource(R.drawable.ic_fingerprint_error);
         textFingerprintStatus.setText(error);
-        textFingerprintStatus.setTextColor(getContext().getColor(R.color.warning));
+        textFingerprintStatus.setTextColor(context.getColor(R.color.warning));
         textFingerprintStatus.removeCallbacks(resetErrorTextRunnable);
         textFingerprintStatus.postDelayed(resetErrorTextRunnable, ERROR_TIMEOUT_MILLIS);
     }
@@ -156,9 +161,12 @@ public class FingerprintDialogFragment extends DialogFragment {
     private Runnable resetErrorTextRunnable = new Runnable() {
         @Override
         public void run() {
+            Context context = getContext();
+            if (context == null)
+                return;
             imageFingerprintIcon.setImageResource(R.mipmap.ic_fp_40px);
             textFingerprintStatus.setText(R.string.fingerprint_hint);
-            textFingerprintStatus.setTextColor(getContext().getColor(R.color.hint));
+            textFingerprintStatus.setTextColor(context.getColor(R.color.hint));
         }
     };
 

@@ -28,7 +28,8 @@ import java.util.List;
 import javax.crypto.Cipher;
 
 
-public class DatabaseSetupActivity extends AppCompatActivity {
+public class DatabaseSetupActivity extends AppCompatActivity
+        implements FingerprintDialogFragment.OnFragmentInteractionListener {
     final private static String TAG = DatabaseSetupActivity.class.getName();
     final private static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 0;
     private KeyguardManager keyguardManager;
@@ -75,13 +76,6 @@ public class DatabaseSetupActivity extends AppCompatActivity {
             if (isInputValid())
                 submit();
         });
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (fingerprintCancellationSignal != null)
-            fingerprintCancellationSignal.cancel();
     }
 
     @Override
@@ -221,22 +215,9 @@ public class DatabaseSetupActivity extends AppCompatActivity {
     }
 
     private void requestFingerprintToSaveKeys() {
-        Cipher cipher;
-        try {
-            cipher = secureStringStorage.getEncryptCipher();
-        } catch (UserNotAuthenticatedException | SecureStringStorage.SystemException e) {
-            throw new RuntimeException("cannot get cipher", e);
-        }
-        FingerprintManager.CryptoObject cryptoObject = new FingerprintManager.CryptoObject(cipher);
-        fingerprintCancellationSignal = new CancellationSignal();
-        fingerprintManager.authenticate(cryptoObject, fingerprintCancellationSignal, 0,
-            new FingerprintManager.AuthenticationCallback() {
-                @Override
-                public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
-                    saveKeys(result.getCryptoObject().getCipher());
-                }
-
-            }, null);
+        getFragmentManager().beginTransaction()
+                .add(FingerprintDialogFragment.newInstance(), "fingerprint")
+                .commit();
     }
 
     @Override
@@ -251,4 +232,13 @@ public class DatabaseSetupActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onFingerprintCancel() {
+
+    }
+
+    @Override
+    public void onFingerprintSuccess(Cipher cipher) {
+        saveKeys(cipher);
+    }
 }
