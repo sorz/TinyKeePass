@@ -1,7 +1,6 @@
 package org.sorz.lab.tinykeepass;
 
 import android.content.Context;
-import android.icu.util.Output;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -94,6 +93,7 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
                 return "Fail to save database";
             }
         }
+        KeePassStorage.setKeePassFile(db);
         return null;
     }
 }
