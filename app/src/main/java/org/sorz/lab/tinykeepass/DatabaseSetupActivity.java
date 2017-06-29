@@ -5,7 +5,6 @@ import android.app.KeyguardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
-import android.os.CancellationSignal;
 import android.preference.PreferenceManager;
 import android.security.keystore.UserNotAuthenticatedException;
 import android.support.v7.app.AppCompatActivity;
@@ -17,6 +16,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -35,14 +35,17 @@ public class DatabaseSetupActivity extends AppCompatActivity
     private KeyguardManager keyguardManager;
     private FingerprintManager fingerprintManager;
     private SecureStringStorage secureStringStorage;
-    private CancellationSignal fingerprintCancellationSignal;
 
     private CheckBox checkBasicAuth;
     private EditText editDatabaseUrl;
     private EditText editAuthUsername;
     private EditText editAuthPassword;
     private EditText editMasterPassword;
+    private CheckBox checkShowPassword;
+    private Button buttonConfirm;
     private Spinner spinnerAuthMethod;
+    private ProgressBar progressBar;
+    private List<View> disabledViews = new ArrayList<>(8);
 
 
     @Override
@@ -59,8 +62,9 @@ public class DatabaseSetupActivity extends AppCompatActivity
         editAuthPassword = (EditText) findViewById(R.id.editAuthPassword);
         editMasterPassword = (EditText) findViewById(R.id.editMasterPassword);
         spinnerAuthMethod = (Spinner) findViewById(R.id.spinnerAuthMethod);
-        CheckBox checkShowPassword = (CheckBox) findViewById(R.id.checkShowPassword);
-        Button buttonConfirm = (Button) findViewById(R.id.buttonConfirm);
+        checkShowPassword = (CheckBox) findViewById(R.id.checkShowPassword);
+        buttonConfirm = (Button) findViewById(R.id.buttonConfirm);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         checkBasicAuth.setOnCheckedChangeListener((CompoundButton button, boolean isChecked) -> {
             editAuthUsername.setVisibility(isChecked ? View.VISIBLE : View.GONE);
@@ -81,12 +85,15 @@ public class DatabaseSetupActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        disabledViews.clear();
         checkBasicAuth = null;
         editDatabaseUrl = null;
         editAuthUsername = null;
         editAuthPassword = null;
         editMasterPassword = null;
         spinnerAuthMethod = null;
+        checkShowPassword = null;
+        buttonConfirm = null;
     }
 
     private boolean isInputValid() {
@@ -137,6 +144,18 @@ public class DatabaseSetupActivity extends AppCompatActivity
             editDatabaseUrl.setError("Not a valid URL");
             return;
         }
+        disabledViews.clear();
+        disabledViews.add(checkBasicAuth);
+        disabledViews.add(editDatabaseUrl);
+        disabledViews.add(editAuthUsername);
+        disabledViews.add(editAuthPassword);
+        disabledViews.add(editMasterPassword);
+        disabledViews.add(spinnerAuthMethod);
+        disabledViews.add(checkBasicAuth);
+        disabledViews.add(buttonConfirm);
+        for (View v : disabledViews)
+            v.setEnabled(false);
+        progressBar.setVisibility(View.VISIBLE);
 
         String username = null;
         String password = null;
@@ -150,11 +169,19 @@ public class DatabaseSetupActivity extends AppCompatActivity
             protected void onPostExecute(String error) {
                 if (error != null) {
                     Toast.makeText(DatabaseSetupActivity.this, error, Toast.LENGTH_SHORT).show();
+                    cancelSubmit();
                 } else {
                     saveDatabaseConfigs();
                 }
             }
         }.execute();
+    }
+
+    private void cancelSubmit() {
+        for (View v : disabledViews)
+            v.setEnabled(true);
+        disabledViews.clear();
+        progressBar.setVisibility(View.INVISIBLE);
     }
 
     private void saveDatabaseConfigs() {
@@ -209,6 +236,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
             throw new RuntimeException("cannot get save keys", e);
         } catch (UserNotAuthenticatedException e) {
             Log.e(TAG, "cannot get cipher from system", e);
+            cancelSubmit();
             return;
         }
         Toast.makeText(DatabaseSetupActivity.this, "ok", Toast.LENGTH_SHORT).show();
@@ -226,6 +254,8 @@ public class DatabaseSetupActivity extends AppCompatActivity
             case REQUEST_CONFIRM_DEVICE_CREDENTIAL:
                 if (resultCode == RESULT_OK)
                     saveKeys(null);
+                else
+                    cancelSubmit();
                 break;
             default:
                 break;
@@ -234,7 +264,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
 
     @Override
     public void onFingerprintCancel() {
-
+        cancelSubmit();
     }
 
     @Override
