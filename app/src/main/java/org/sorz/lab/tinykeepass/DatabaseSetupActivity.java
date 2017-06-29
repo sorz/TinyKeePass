@@ -5,6 +5,7 @@ import android.app.KeyguardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
+import android.os.CancellationSignal;
 import android.preference.PreferenceManager;
 import android.security.keystore.UserNotAuthenticatedException;
 import android.support.v7.app.AppCompatActivity;
@@ -33,6 +34,7 @@ public class DatabaseSetupActivity extends AppCompatActivity {
     private KeyguardManager keyguardManager;
     private FingerprintManager fingerprintManager;
     private SecureStringStorage secureStringStorage;
+    private CancellationSignal fingerprintCancellationSignal;
 
     private CheckBox checkBasicAuth;
     private EditText editDatabaseUrl;
@@ -73,6 +75,24 @@ public class DatabaseSetupActivity extends AppCompatActivity {
             if (isInputValid())
                 submit();
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (fingerprintCancellationSignal != null)
+            fingerprintCancellationSignal.cancel();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        checkBasicAuth = null;
+        editDatabaseUrl = null;
+        editAuthUsername = null;
+        editAuthPassword = null;
+        editMasterPassword = null;
+        spinnerAuthMethod = null;
     }
 
     private boolean isInputValid() {
@@ -175,6 +195,7 @@ public class DatabaseSetupActivity extends AppCompatActivity {
                     break;
                 case 2: // fingerprint
                     secureStringStorage.generateNewKey(true, -1);
+                    requestFingerprintToSaveKeys();
                     break;
             }
         } catch (SecureStringStorage.SystemException e) {
@@ -197,6 +218,25 @@ public class DatabaseSetupActivity extends AppCompatActivity {
             return;
         }
         Toast.makeText(DatabaseSetupActivity.this, "ok", Toast.LENGTH_SHORT).show();
+    }
+
+    private void requestFingerprintToSaveKeys() {
+        Cipher cipher;
+        try {
+            cipher = secureStringStorage.getEncryptCipher();
+        } catch (UserNotAuthenticatedException | SecureStringStorage.SystemException e) {
+            throw new RuntimeException("cannot get cipher", e);
+        }
+        FingerprintManager.CryptoObject cryptoObject = new FingerprintManager.CryptoObject(cipher);
+        fingerprintCancellationSignal = new CancellationSignal();
+        fingerprintManager.authenticate(cryptoObject, fingerprintCancellationSignal, 0,
+            new FingerprintManager.AuthenticationCallback() {
+                @Override
+                public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
+                    saveKeys(result.getCryptoObject().getCipher());
+                }
+
+            }, null);
     }
 
     @Override
