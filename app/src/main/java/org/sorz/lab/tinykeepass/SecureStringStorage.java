@@ -7,8 +7,15 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.UserNotAuthenticatedException;
 import android.util.Base64;
+import android.util.Log;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.UTFDataFormatException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
@@ -17,6 +24,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -31,9 +40,10 @@ import javax.crypto.spec.GCMParameterSpec;
  */
 
 public class SecureStringStorage {
+    final static private String TAG = SecureStringStorage.class.getName();
     final private static String KEY_ALIAS = "my-key";
-    final private static String PREF_PREFIX = "secure-string-";
-    final private static String PREF_PREFIX_IV = "secure-string-iv";
+    final private static String PREF_VALUE_NAME = "secure-strings";
+    final private static String PREF_IV_NAME = "secure-strings-iv";
 
     final private SharedPreferences preferences;
     final private KeyStore keyStore;
@@ -91,39 +101,67 @@ public class SecureStringStorage {
         }
     }
 
-    public void put(String key, String value) throws SystemException, UserNotAuthenticatedException {
-        Cipher cipher = getCipher(Cipher.ENCRYPT_MODE, null);
-        cipher.updateAAD(key.getBytes());
-        byte[] bytes;
+    public Cipher getEncryptCipher() throws UserNotAuthenticatedException, SystemException {
+        return getCipher(Cipher.ENCRYPT_MODE, null);
+    }
+
+    public Cipher getDecryptCipher()
+            throws UserNotAuthenticatedException, SystemException {
+        String iv = preferences.getString(PREF_IV_NAME, null);
+        if (iv == null)
+            return null;
+        return getCipher(Cipher.DECRYPT_MODE, Base64.decode(iv, Base64.DEFAULT));
+    }
+
+    public void put(Cipher cipher, List<String> strings)
+            throws SystemException, UserNotAuthenticatedException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        DataOutputStream output = new DataOutputStream(bytes);
+        byte[] ciphertext;
         try {
-            bytes = cipher.doFinal(value.getBytes());
+            for (String s : strings)
+                output.writeUTF(s);
+            output.flush();
+            ciphertext = cipher.doFinal(bytes.toByteArray());
         } catch (IllegalBlockSizeException | BadPaddingException e) {
             throw new SystemException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        byte[] ciphertext = Base64.encode(bytes, Base64.DEFAULT);
+        ciphertext = Base64.encode(ciphertext, Base64.DEFAULT);
         byte[] iv = Base64.encode(cipher.getIV(), Base64.DEFAULT);
         preferences.edit()
-                .putString(PREF_PREFIX + key, new String(ciphertext))
-                .putString(PREF_PREFIX_IV + key, new String(iv))
+                .putString(PREF_VALUE_NAME, new String(ciphertext))
+                .putString(PREF_IV_NAME, new String(iv))
                 .apply();
     }
 
-    public String get(String key) throws SystemException, BadPaddingException,
+    public List<String> get(Cipher cipher) throws SystemException, BadPaddingException,
             IllegalBlockSizeException, UserNotAuthenticatedException {
-        String ciphertext = preferences.getString(PREF_PREFIX + key, null);
-        String iv = preferences.getString(PREF_PREFIX_IV + key, null);
-        if (ciphertext == null || iv == null)
+        String ciphertext = preferences.getString(PREF_VALUE_NAME , null);
+        if (ciphertext == null)
             return null;
-        Cipher cipher = getCipher(Cipher.DECRYPT_MODE, Base64.decode(iv, Base64.DEFAULT));
-        cipher.updateAAD(key.getBytes());
         byte[] cleartext = cipher.doFinal(Base64.decode(ciphertext, Base64.DEFAULT));
-        return new String(cleartext);
+        DataInputStream input = new DataInputStream(new ByteArrayInputStream(cleartext));
+        List<String> strings =new ArrayList<>();
+        try {
+            // noinspection InfiniteLoopStatement
+            while (true)
+                strings.add(input.readUTF());
+        } catch (EOFException e) {
+            return strings;
+        } catch (UTFDataFormatException e) {
+            Log.e(TAG,"fail to parse string", e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
-    public void remove(String key) {
+    public void clear(String key) {
         preferences.edit()
-                .remove(PREF_PREFIX + key)
-                .remove(PREF_PREFIX_IV + key)
+                .remove(PREF_VALUE_NAME)
+                .remove(PREF_IV_NAME)
                 .apply();
     }
 

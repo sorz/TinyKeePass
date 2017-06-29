@@ -10,6 +10,7 @@ import android.security.keystore.UserNotAuthenticatedException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -23,8 +24,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.crypto.Cipher;
+
 
 public class DatabaseSetupActivity extends AppCompatActivity {
+    final private static String TAG = DatabaseSetupActivity.class.getName();
     final private static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 0;
     private KeyguardManager keyguardManager;
     private FingerprintManager fingerprintManager;
@@ -160,7 +164,7 @@ public class DatabaseSetupActivity extends AppCompatActivity {
             switch (spinnerAuthMethod.getSelectedItemPosition()) {
                 case 0: // no auth
                     secureStringStorage.generateNewKey(false, -1);
-                    saveKeys();
+                    saveKeys(null);
                     break;
                 case 1: // lock screen
                     secureStringStorage.generateNewKey(true, 60);
@@ -178,14 +182,19 @@ public class DatabaseSetupActivity extends AppCompatActivity {
         }
     }
 
-    private void saveKeys() {
+    private void saveKeys(Cipher cipher) {
         try {
-            secureStringStorage.put("db-master-key", editMasterPassword.getText().toString());
-            secureStringStorage.put("db-auth-password", editAuthPassword.getText().toString());
+            if (cipher == null)
+                cipher = secureStringStorage.getEncryptCipher();
+            List<String> strings = new ArrayList<>(2);
+            strings.add(editMasterPassword.getText().toString());
+            strings.add(editAuthPassword.getText().toString());
+            secureStringStorage.put(cipher, strings);
         } catch (SecureStringStorage.SystemException e) {
             throw new RuntimeException("cannot get save keys", e);
         } catch (UserNotAuthenticatedException e) {
-            e.printStackTrace();
+            Log.e(TAG, "cannot get cipher from system", e);
+            return;
         }
         Toast.makeText(DatabaseSetupActivity.this, "ok", Toast.LENGTH_SHORT).show();
     }
@@ -195,7 +204,7 @@ public class DatabaseSetupActivity extends AppCompatActivity {
         switch (requestCode) {
             case REQUEST_CONFIRM_DEVICE_CREDENTIAL:
                 if (resultCode == RESULT_OK)
-                    saveKeys();
+                    saveKeys(null);
                 break;
             default:
                 break;
