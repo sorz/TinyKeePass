@@ -4,6 +4,8 @@
     <string name="no_screen_lock">No secure screen lock (PIN/pattern/password)</string>
     <string name="no_fingerprint_detected">No fingerprint scanner detected on this device</string>
     <string name="no_fingerprint_enrolled">No enrolled fingerprint found</string>
+    <string name="auth_key_title">User Authentication</string>
+    <string name="auth_key_decription">Please use your screen lock to access master key of Keepass database.</string>
     <string-array name="authenticate_method">
         <item>No authentication</item>
         <item>Authenticate with lock screen</item>

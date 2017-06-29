@@ -2,7 +2,11 @@ package org.sorz.lab.tinykeepass;
 
 import android.annotation.SuppressLint;
 import android.app.KeyguardManager;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
+import android.preference.PreferenceManager;
+import android.security.keystore.UserNotAuthenticatedException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.InputType;
@@ -21,8 +25,10 @@ import java.util.List;
 
 
 public class DatabaseSetupActivity extends AppCompatActivity {
+    final private static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 0;
     private KeyguardManager keyguardManager;
     private FingerprintManager fingerprintManager;
+    private SecureStringStorage secureStringStorage;
 
     private CheckBox checkBasicAuth;
     private EditText editDatabaseUrl;
@@ -106,21 +112,6 @@ public class DatabaseSetupActivity extends AppCompatActivity {
 
     @SuppressLint("StaticFieldLeak")
     private void submit() {
-        SecureStringStorage storage = null;
-        try {
-            storage = new SecureStringStorage(this);
-            switch (spinnerAuthMethod.getSelectedItemPosition()) {
-                case 0: // no auth
-                    storage.generateNewKey(false, -1);
-                case 1: // lock screen
-                    storage.generateNewKey(true, 60);
-                case 2: // fingerprint
-                    storage.generateNewKey(true, -1);
-            }
-        } catch (SecureStringStorage.SystemException e) {
-            throw new RuntimeException("cannot get SecureStringStorage", e);
-        }
-
         URL url;
         try {
             url = new URL(editDatabaseUrl.getText().toString());
@@ -142,7 +133,6 @@ public class DatabaseSetupActivity extends AppCompatActivity {
                 if (error != null) {
                     Toast.makeText(DatabaseSetupActivity.this, error, Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(DatabaseSetupActivity.this, "ok", Toast.LENGTH_SHORT).show();
                     saveDatabaseConfigs();
                 }
             }
@@ -150,9 +140,66 @@ public class DatabaseSetupActivity extends AppCompatActivity {
     }
 
     private void saveDatabaseConfigs() {
-        // TODO: save url, password, ...
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        preferences.edit()
+                .putString("db-url", editDatabaseUrl.getText().toString())
+                .putString("db-auth-username", editAuthUsername.getText().toString())
+                .putBoolean("db-auth-required", checkBasicAuth.isChecked())
+                .putInt("key-auth-method", spinnerAuthMethod.getSelectedItemPosition())
+                .apply();
 
+        if (secureStringStorage == null) {
+            try {
+                secureStringStorage = new SecureStringStorage(this);
+            } catch (SecureStringStorage.SystemException e) {
+                throw new RuntimeException("cannot get SecureStringStorage", e);
+            }
+        }
+
+        try {
+            switch (spinnerAuthMethod.getSelectedItemPosition()) {
+                case 0: // no auth
+                    secureStringStorage.generateNewKey(false, -1);
+                    saveKeys();
+                    break;
+                case 1: // lock screen
+                    secureStringStorage.generateNewKey(true, 60);
+                    Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
+                            getString(R.string.auth_key_title),
+                            getString(R.string.auth_key_decription));
+                    startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL);
+                    break;
+                case 2: // fingerprint
+                    secureStringStorage.generateNewKey(true, -1);
+                    break;
+            }
+        } catch (SecureStringStorage.SystemException e) {
+            throw new RuntimeException("cannot generate new key", e);
+        }
     }
 
+    private void saveKeys() {
+        try {
+            secureStringStorage.put("db-master-key", editMasterPassword.getText().toString());
+            secureStringStorage.put("db-auth-password", editAuthPassword.getText().toString());
+        } catch (SecureStringStorage.SystemException e) {
+            throw new RuntimeException("cannot get save keys", e);
+        } catch (UserNotAuthenticatedException e) {
+            e.printStackTrace();
+        }
+        Toast.makeText(DatabaseSetupActivity.this, "ok", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CONFIRM_DEVICE_CREDENTIAL:
+                if (resultCode == RESULT_OK)
+                    saveKeys();
+                break;
+            default:
+                break;
+        }
+    }
 
 }
