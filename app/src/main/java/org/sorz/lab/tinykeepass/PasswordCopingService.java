@@ -13,7 +13,6 @@ import android.widget.Toast;
 
 public class PasswordCopingService extends Service {
     private static final String TAG = PasswordCopingService.class.getName();
-    private static final int NOTIFICATION_ID_COPY_PASSWORD = 1;
     private static final int PASSWORD_IN_CLIPBOARD_SECS = 20;
     private static final String ACTION_CLEAN_CLIPBOARD = "action-clean-clipboard";
     public static final String ACTION_COPY_PASSWORD = "action-copy-password";
@@ -25,6 +24,7 @@ public class PasswordCopingService extends Service {
     private NotificationManager notificationManager;
     private ClipboardManager clipboardManager;
     private Thread countingDownTask;
+    private int notificationId = 1;
 
     public PasswordCopingService() {
     }
@@ -53,13 +53,12 @@ public class PasswordCopingService extends Service {
                 Log.e(TAG, "password is null");
                 return START_NOT_STICKY;
             }
-            if (countingDownTask != null)
-                countingDownTask.interrupt();
             newNotification(password, username, title);
         } else if (ACTION_COPY_PASSWORD.equals(intent.getAction())) {
             String password = intent.getStringExtra(EXTRA_PASSWORD);
             copyPassword(password);
         } else if (ACTION_CLEAN_CLIPBOARD.equals(intent.getAction())) {
+            stopProgress();
             cleanPassword();
         } else {
             Log.w(TAG, "unknown action");
@@ -68,6 +67,8 @@ public class PasswordCopingService extends Service {
     }
 
     private void newNotification(String password, String username, String title) {
+        stopProgress();
+
         Notification.Builder builder = new Notification.Builder(this)
                 .setSmallIcon(R.drawable.ic_vpn_key_white_24dp)
                 .setContentTitle("Click to copy password")
@@ -87,7 +88,8 @@ public class PasswordCopingService extends Service {
                 this, 0, copyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(copyPendingIntent);
 
-        notificationManager.notify(NOTIFICATION_ID_COPY_PASSWORD, builder.build());
+        notificationManager.cancel(notificationId);
+        notificationManager.notify(++notificationId, builder.build());
     }
 
     private void copyPassword(String password) {
@@ -103,22 +105,21 @@ public class PasswordCopingService extends Service {
                 this, 0, cleanIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setDeleteIntent(cleanPendingIntent);
 
+        int myNotificationId = notificationId;
         countingDownTask = new Thread(() -> {
             int maxPos = 500;
             long posDurationMills = PASSWORD_IN_CLIPBOARD_SECS * 1000 / maxPos;
             for (int pos = maxPos; pos > 0; --pos) {
                 builder.setProgress(maxPos, pos, false);
-                notificationManager.notify(NOTIFICATION_ID_COPY_PASSWORD, builder.build());
+                notificationManager.notify(myNotificationId, builder.build());
                 try {
                     Thread.sleep(posDurationMills);
                 } catch (InterruptedException e) {
-                    cleanPassword();
-                    countingDownTask = null;
-                    return;
+                    break;
                 }
             }
             countingDownTask = null;
-            notificationManager.cancel(NOTIFICATION_ID_COPY_PASSWORD);
+            notificationManager.cancel(myNotificationId);
             cleanPassword();
         });
         countingDownTask.start();
@@ -126,5 +127,10 @@ public class PasswordCopingService extends Service {
 
     private void cleanPassword() {
         clipboardManager.setPrimaryClip(ClipData.newPlainText("",""));
+    }
+
+    private void stopProgress() {
+        if (countingDownTask != null && countingDownTask.isAlive())
+            countingDownTask.interrupt();
     }
 }
