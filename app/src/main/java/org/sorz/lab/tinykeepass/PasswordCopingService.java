@@ -13,7 +13,8 @@ import android.widget.Toast;
 
 public class PasswordCopingService extends Service {
     private static final String TAG = PasswordCopingService.class.getName();
-    private static final int PASSWORD_IN_CLIPBOARD_SECS = 20;
+    private static final int PASSWORD_IN_CLIPBOARD_SECS = 15;
+    private static final int NOTIFICATION_TIMEOUT_SECS = 3 * 60;
     private static final String ACTION_CLEAN_CLIPBOARD = "action-clean-clipboard";
     public static final String ACTION_COPY_PASSWORD = "action-copy-password";
     public static final String ACTION_NEW_NOTIFICATION = "action-new-notification";
@@ -23,6 +24,7 @@ public class PasswordCopingService extends Service {
 
     private NotificationManager notificationManager;
     private ClipboardManager clipboardManager;
+    private Thread cleanNotificationTimer;
     private Thread countingDownTask;
     private int notificationId = 1;
 
@@ -58,7 +60,7 @@ public class PasswordCopingService extends Service {
             String password = intent.getStringExtra(EXTRA_PASSWORD);
             copyPassword(password);
         } else if (ACTION_CLEAN_CLIPBOARD.equals(intent.getAction())) {
-            stopProgress();
+            stopTask(countingDownTask);
             cleanPassword();
         } else {
             Log.w(TAG, "unknown action");
@@ -67,7 +69,7 @@ public class PasswordCopingService extends Service {
     }
 
     private void newNotification(String password, String username, String title) {
-        stopProgress();
+        stopTask(countingDownTask);
 
         Notification.Builder builder = new Notification.Builder(this)
                 .setSmallIcon(R.drawable.ic_vpn_key_white_24dp)
@@ -90,9 +92,24 @@ public class PasswordCopingService extends Service {
 
         notificationManager.cancel(notificationId);
         notificationManager.notify(++notificationId, builder.build());
+
+        int myNotificationId = notificationId;
+        stopTask(cleanNotificationTimer);
+        cleanNotificationTimer = new Thread(() -> {
+            try {
+                Thread.sleep(NOTIFICATION_TIMEOUT_SECS * 1000);
+            } catch (InterruptedException e) {
+                cleanNotificationTimer = null;
+                return;
+            }
+            notificationManager.cancel(myNotificationId);
+        });
+        cleanNotificationTimer.start();
     }
 
     private void copyPassword(String password) {
+        stopTask(cleanNotificationTimer);
+
         clipboardManager.setPrimaryClip(ClipData.newPlainText("Password", password));
         Notification.Builder builder = new Notification.Builder(this)
                 .setSmallIcon(R.drawable.ic_vpn_key_white_24dp)
@@ -129,8 +146,8 @@ public class PasswordCopingService extends Service {
         clipboardManager.setPrimaryClip(ClipData.newPlainText("",""));
     }
 
-    private void stopProgress() {
-        if (countingDownTask != null && countingDownTask.isAlive())
-            countingDownTask.interrupt();
+    private void stopTask(Thread task) {
+        if (task != null && task.isAlive())
+            task.interrupt();
     }
 }
