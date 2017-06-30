@@ -46,8 +46,12 @@ public class MainActivity extends AppCompatActivity
             throw new RuntimeException(e);
         }
 
-        if (KeePassStorage.getKeePassFile() == null) {
-            if (!databaseFile.canRead()) {
+        if (savedInstanceState == null) {
+            getFragmentManager().beginTransaction()
+                    .add(R.id.fragment_container, new DatabaseLockedFragment())
+                    .commit();
+
+            if (KeePassStorage.getKeePassFile() == null && !databaseFile.canRead()) {
                 doConfigureDatabase();
                 finish();
             } else {
@@ -66,10 +70,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void doUnlockDatabase() {
-        openDatabase();
+        if (KeePassStorage.getKeePassFile() != null)
+            showEntryList();
+        else
+            openDatabase();
     }
 
     public void doConfigureDatabase() {
+        KeePassStorage.setKeePassFile(null);
         startActivity(new Intent(this, DatabaseSetupActivity.class));
     }
 
@@ -105,6 +113,7 @@ public class MainActivity extends AppCompatActivity
             List<String> strings = secureStringStorage.get(cipher);
             KeePassFile db = KeePassDatabase.getInstance(databaseFile).openDatabase(strings.get(0));
             KeePassStorage.setKeePassFile(db);
+            showEntryList();
         } catch (SecureStringStorage.SystemException e) {
             throw new RuntimeException(e);
         } catch (BadPaddingException | IllegalBlockSizeException | UserNotAuthenticatedException e) {
@@ -116,6 +125,13 @@ public class MainActivity extends AppCompatActivity
             Snackbar.make(findViewById(R.id.toolbar),
                     e.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
         }
+    }
+
+    private void showEntryList() {
+        getFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, EntryFragment.newInstance(8))
+                .add(FingerprintDialogFragment.newInstance(), "fingerprint")
+                .commit();
     }
 
 
