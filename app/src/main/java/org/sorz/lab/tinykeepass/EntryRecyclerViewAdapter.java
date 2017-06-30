@@ -1,9 +1,12 @@
 package org.sorz.lab.tinykeepass;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -35,9 +38,18 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        holder.mItem = entries.get(position);
-        holder.mIdView.setText(entries.get(position).getTitle());
-        holder.mContentView.setText(entries.get(position).getUsername());
+        Entry entry = entries.get(position);
+        holder.entry = entry;
+        holder.imageIcon.setImageBitmap(
+                BitmapFactory.decodeByteArray(entry.getIconData(), 0,
+                        entry.getIconData().length));
+        holder.textTitle.setText(parse(entry.getTitle()));
+        holder.textUsername.setText(parse(entry.getUsername()));
+
+        String url = parse(entry.getUrl()).replaceFirst("https?://(www\\.)?", "");
+        String[] hostnamePath = url.split("/", 2);
+        holder.textUrlHostname.setText(hostnamePath[0]);
+        holder.textUrlPath.setText(hostnamePath.length > 1 ? "/" + hostnamePath[1] : "");
 
         holder.view.setOnClickListener(v -> {
             if (null != activity) {
@@ -48,6 +60,10 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         });
     }
 
+    private static String parse(String s) {
+        return s == null ? "" : s;
+    }
+
     @Override
     public int getItemCount() {
         return entries.size();
@@ -55,20 +71,26 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         final View view;
-        final TextView mIdView;
-        final TextView mContentView;
-        Entry mItem;
+        final ImageView imageIcon;
+        final TextView textTitle;
+        final TextView textUsername;
+        final TextView textUrlHostname;
+        final TextView textUrlPath;
+        Entry entry;
 
         ViewHolder(View view) {
             super(view);
             this.view = view;
-            mIdView = (TextView) view.findViewById(R.id.id);
-            mContentView = (TextView) view.findViewById(R.id.content);
+            imageIcon = (ImageView) view.findViewById(R.id.imageIcon);
+            textTitle = (TextView) view.findViewById(R.id.textTitle);
+            textUsername = (TextView) view.findViewById(R.id.textUsername);
+            textUrlHostname = (TextView) view.findViewById(R.id.textUrlHostname);
+            textUrlPath = (TextView) view.findViewById(R.id.textUrlPath);
         }
 
         @Override
         public String toString() {
-            return super.toString() + " '" + mContentView.getText() + "'";
+            return super.toString() + " '" + textTitle.getText() + "'";
         }
     }
 
