@@ -9,7 +9,9 @@
     android:paddingBottom="16dp"
     android:paddingStart="8dp"
     android:paddingEnd="16dp"
-    android:orientation="horizontal">
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?android:attr/selectableItemBackground">
 
     <TextView
         android:id="@+id/textUrlPath"

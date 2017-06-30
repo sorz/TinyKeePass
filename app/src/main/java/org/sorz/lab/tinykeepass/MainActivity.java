@@ -1,6 +1,8 @@
 package org.sorz.lab.tinykeepass;
 
 import android.app.KeyguardManager;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -20,6 +22,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 
 import de.slackspace.openkeepass.KeePassDatabase;
+import de.slackspace.openkeepass.domain.Entry;
 import de.slackspace.openkeepass.domain.KeePassFile;
 import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
 
@@ -30,6 +33,7 @@ public class MainActivity extends AppCompatActivity
 
     private SharedPreferences preferences;
     private KeyguardManager keyguardManager;
+    private ClipboardManager clipboardManager;
     private SecureStringStorage secureStringStorage;
 
     private File databaseFile;
@@ -39,6 +43,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
         keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+        clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         databaseFile = new File(getNoBackupFilesDir(), FetchDatabaseTask.DB_FILENAME);
         try {
             secureStringStorage = new SecureStringStorage(this);
@@ -81,6 +86,13 @@ public class MainActivity extends AppCompatActivity
         startActivity(new Intent(this, DatabaseSetupActivity.class));
     }
 
+    public void copyEntry(Entry entry) {
+        clipboardManager.setPrimaryClip(
+                ClipData.newPlainText("Username", entry.getUsername()));
+        showSnackbar(String.format("Username \"%s\" copied", entry.getUsername()),
+                Snackbar.LENGTH_SHORT);
+    }
+
 
     private void openDatabase() {
         int authMethod = preferences.getInt("key-auth-method", 0);
@@ -118,12 +130,10 @@ public class MainActivity extends AppCompatActivity
             throw new RuntimeException(e);
         } catch (BadPaddingException | IllegalBlockSizeException | UserNotAuthenticatedException e) {
             Log.w(TAG, "fail to decrypt keys", e);
-            Snackbar.make(findViewById(R.id.toolbar),
-                    "Failed to decrypt keys", Snackbar.LENGTH_LONG).show();
+            showSnackbar("Failed to decrypt keys", Snackbar.LENGTH_LONG);
         } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
             Log.w(TAG, "cannot open database.", e);
-            Snackbar.make(findViewById(R.id.toolbar),
-                    e.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
+            showSnackbar(e.getLocalizedMessage(), Snackbar.LENGTH_LONG);
         }
     }
 
@@ -133,6 +143,9 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
+    private void showSnackbar(CharSequence text, int duration) {
+        Snackbar.make(findViewById(R.id.toolbar), text, duration).show();
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -141,8 +154,7 @@ public class MainActivity extends AppCompatActivity
                 if (resultCode == RESULT_OK)
                     openDatabase();
                 else
-                    Snackbar.make(findViewById(R.id.toolbar),
-                            "Failed to authenticate user", Snackbar.LENGTH_LONG).show();
+                    showSnackbar("Failed to authenticate user", Snackbar.LENGTH_LONG);
                 break;
             default:
                 break;
@@ -151,8 +163,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onFingerprintCancel() {
-        Snackbar.make(findViewById(R.id.toolbar),
-                "Failed to authenticate user", Snackbar.LENGTH_LONG).show();
+        showSnackbar("Failed to authenticate user", Snackbar.LENGTH_LONG);
     }
 
     @Override
