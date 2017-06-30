@@ -15,8 +15,8 @@ public class PasswordCopingService extends Service {
     private static final String TAG = PasswordCopingService.class.getName();
     private static final int NOTIFICATION_ID_COPY_PASSWORD = 1;
     private static final int PASSWORD_IN_CLIPBOARD_SECS = 20;
-    private static final String ACTION_COPY_PASSWORD = "action-copy-password";
     private static final String ACTION_CLEAN_CLIPBOARD = "action-clean-clipboard";
+    public static final String ACTION_COPY_PASSWORD = "action-copy-password";
     public static final String ACTION_NEW_NOTIFICATION = "action-new-notification";
     public static final String EXTRA_PASSWORD = "extra-password";
     public static final String EXTRA_USERNAME = "extra-username";

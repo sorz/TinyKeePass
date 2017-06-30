@@ -91,8 +91,15 @@ public class MainActivity extends AppCompatActivity
         if (entry.getUsername() != null) {
             clipboardManager.setPrimaryClip(
                     ClipData.newPlainText("Username", entry.getUsername()));
-            showSnackbar(String.format("Username \"%s\" copied", entry.getUsername()),
-                    Snackbar.LENGTH_SHORT);
+            Snackbar snackbar = snackbar(
+                    String.format("Username \"%s\" copied", entry.getUsername()),
+                    Snackbar.LENGTH_LONG);
+            snackbar.setAction("Copy password", v -> {
+                Intent intent = new Intent(this, PasswordCopingService.class);
+                intent.setAction(PasswordCopingService.ACTION_COPY_PASSWORD);
+                intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.getPassword());
+                startService(intent);
+            }).show();
         }
         if (entry.getPassword() != null) {
             Intent intent = new Intent(this, PasswordCopingService.class);
@@ -141,10 +148,10 @@ public class MainActivity extends AppCompatActivity
             throw new RuntimeException(e);
         } catch (BadPaddingException | IllegalBlockSizeException | UserNotAuthenticatedException e) {
             Log.w(TAG, "fail to decrypt keys", e);
-            showSnackbar("Failed to decrypt keys", Snackbar.LENGTH_LONG);
+            snackbar("Failed to decrypt keys", Snackbar.LENGTH_LONG).show();
         } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
             Log.w(TAG, "cannot open database.", e);
-            showSnackbar(e.getLocalizedMessage(), Snackbar.LENGTH_LONG);
+            snackbar(e.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
         }
     }
 
@@ -154,8 +161,8 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
-    private void showSnackbar(CharSequence text, int duration) {
-        Snackbar.make(findViewById(R.id.toolbar), text, duration).show();
+    private Snackbar snackbar(CharSequence text, int duration) {
+        return Snackbar.make(findViewById(R.id.toolbar), text, duration);
     }
 
     @Override
@@ -165,7 +172,7 @@ public class MainActivity extends AppCompatActivity
                 if (resultCode == RESULT_OK)
                     openDatabase();
                 else
-                    showSnackbar("Failed to authenticate user", Snackbar.LENGTH_LONG);
+                    snackbar("Failed to authenticate user", Snackbar.LENGTH_LONG).show();
                 break;
             default:
                 break;
@@ -174,7 +181,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onFingerprintCancel() {
-        showSnackbar("Failed to authenticate user", Snackbar.LENGTH_LONG);
+        snackbar("Failed to authenticate user", Snackbar.LENGTH_LONG).show();
     }
 
     @Override
