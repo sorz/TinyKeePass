@@ -1,6 +1,8 @@
 package org.sorz.lab.tinykeepass;
 
 import android.app.KeyguardManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
@@ -30,10 +32,12 @@ public class MainActivity extends AppCompatActivity
         implements FingerprintDialogFragment.OnFragmentInteractionListener {
     private final static String TAG = MainActivity.class.getName();
     private final static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 0;
+    private final static int NOTIFICATION_ID_COPY_PASSWORD = 1;
 
     private SharedPreferences preferences;
     private KeyguardManager keyguardManager;
     private ClipboardManager clipboardManager;
+    private NotificationManager notificationManager;
     private SecureStringStorage secureStringStorage;
 
     private File databaseFile;
@@ -44,6 +48,7 @@ public class MainActivity extends AppCompatActivity
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
         keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
         clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         databaseFile = new File(getNoBackupFilesDir(), FetchDatabaseTask.DB_FILENAME);
         try {
             secureStringStorage = new SecureStringStorage(this);
@@ -87,13 +92,27 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void copyEntry(Entry entry) {
-        clipboardManager.setPrimaryClip(
-                ClipData.newPlainText("Username", entry.getUsername()));
-        showSnackbar(String.format("Username \"%s\" copied", entry.getUsername()),
-                Snackbar.LENGTH_SHORT);
+        if (entry.getUsername() != null) {
+            clipboardManager.setPrimaryClip(
+                    ClipData.newPlainText("Username", entry.getUsername()));
+            showSnackbar(String.format("Username \"%s\" copied", entry.getUsername()),
+                    Snackbar.LENGTH_SHORT);
+        }
+        if (entry.getPassword() != null) {
+            Notification.Builder builder = new Notification.Builder(this)
+                    .setSmallIcon(R.drawable.ic_vpn_key_white_24dp)
+                    .setContentTitle("Click to copy password");
+            if (entry.getUsername() != null)
+                builder.setContentText(
+                        String.format("Copy %s's password to clipboard.", entry.getUsername()));
+            else if (entry.getTitle() != null)
+                builder.setContentText("Copy password for " + entry.getTitle());
+            else
+                builder.setContentText("Copy password to clipboard.");
+            notificationManager.notify(NOTIFICATION_ID_COPY_PASSWORD, builder.build());
+
+        }
     }
-
-
     private void openDatabase() {
         int authMethod = preferences.getInt("key-auth-method", 0);
         switch (authMethod) {
