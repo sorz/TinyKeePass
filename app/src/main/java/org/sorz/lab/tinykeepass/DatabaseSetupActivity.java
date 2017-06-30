@@ -239,7 +239,8 @@ public class DatabaseSetupActivity extends AppCompatActivity
             cancelSubmit();
             return;
         }
-        Toast.makeText(DatabaseSetupActivity.this, "ok", Toast.LENGTH_SHORT).show();
+        startActivity(new Intent(this, MainActivity.class));
+        finish();
     }
 
     private void requestFingerprintToSaveKeys() {

@@ -19,5 +19,7 @@
     <string name="fingerprint_dialog_title">User Authentication</string>
     <string name="fingerprint_failed">Fingerprint not recongized</string>
     <string name="fingerprint_success">Fingerprint recognized</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="action_settings">Settings</string>
 
 </resources>

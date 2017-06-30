@@ -30,7 +30,7 @@ import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
 
 public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
     final static private String TAG = FetchDatabaseTask.class.getName();
-    final static private String DB_FILENAME = "database.kdbx";
+    final static public String DB_FILENAME = "database.kdbx";
     final private URL url;
     final private String masterPassword;
     final private File cacheDir;
