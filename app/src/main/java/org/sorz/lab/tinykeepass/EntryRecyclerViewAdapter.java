@@ -6,19 +6,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.sorz.lab.tinykeepass.dummy.DummyContent.DummyItem;
-
+import java.util.ArrayList;
 import java.util.List;
+
+import de.slackspace.openkeepass.domain.KeePassFile;
+import de.slackspace.openkeepass.domain.Entry;
 
 
 public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
-
-    private final List<DummyItem> mValues;
+    private final List<Entry> entries;
     private final MainActivity activity;
 
-    public EntryRecyclerViewAdapter(List<DummyItem> items, MainActivity listener) {
-        mValues = items;
-        activity = listener;
+    public EntryRecyclerViewAdapter(MainActivity activity) {
+        this.activity = activity;
+        KeePassFile db = KeePassStorage.getKeePassFile();
+        if (db != null)
+            entries = db.getEntries();
+        else
+            entries = new ArrayList<>();
     }
 
     @Override
@@ -30,36 +35,33 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        holder.mItem = mValues.get(position);
-        holder.mIdView.setText(mValues.get(position).id);
-        holder.mContentView.setText(mValues.get(position).content);
+        holder.mItem = entries.get(position);
+        holder.mIdView.setText(entries.get(position).getTitle());
+        holder.mContentView.setText(entries.get(position).getUsername());
 
-        holder.mView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (null != activity) {
-                    // Notify the active callbacks interface (the activity, if the
-                    // fragment is attached to one) that an item has been selected.
-                    //activity.onListFragmentInteraction(holder.mItem);
-                }
+        holder.view.setOnClickListener(v -> {
+            if (null != activity) {
+                // Notify the active callbacks interface (the activity, if the
+                // fragment is attached to one) that an item has been selected.
+                //activity.onListFragmentInteraction(holder.mItem);
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return mValues.size();
+        return entries.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        public final View mView;
-        public final TextView mIdView;
-        public final TextView mContentView;
-        public DummyItem mItem;
+        final View view;
+        final TextView mIdView;
+        final TextView mContentView;
+        Entry mItem;
 
-        public ViewHolder(View view) {
+        ViewHolder(View view) {
             super(view);
-            mView = view;
+            this.view = view;
             mIdView = (TextView) view.findViewById(R.id.id);
             mContentView = (TextView) view.findViewById(R.id.content);
         }
@@ -69,4 +71,5 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
             return super.toString() + " '" + mContentView.getText() + "'";
         }
     }
+
 }

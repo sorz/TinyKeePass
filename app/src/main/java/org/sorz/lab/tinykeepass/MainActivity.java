@@ -129,8 +129,7 @@ public class MainActivity extends AppCompatActivity
 
     private void showEntryList() {
         getFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, EntryFragment.newInstance(8))
-                .add(FingerprintDialogFragment.newInstance(), "fingerprint")
+                .replace(R.id.fragment_container, EntryFragment.newInstance())
                 .commit();
     }
 
