@@ -1,7 +1,7 @@
 package org.sorz.lab.tinykeepass;
 
+import android.annotation.SuppressLint;
 import android.app.KeyguardManager;
-import android.app.NotificationManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
@@ -9,13 +9,14 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.security.keystore.UserNotAuthenticatedException;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 import javax.crypto.BadPaddingException;
@@ -31,11 +32,14 @@ public class MainActivity extends AppCompatActivity
         implements FingerprintDialogFragment.OnFragmentInteractionListener {
     private final static String TAG = MainActivity.class.getName();
     private final static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 0;
+    private final static int ACTION_OPEN_DB = 1;
+    private final static int ACTION_SYNC_DB = 2;
 
     private SharedPreferences preferences;
     private KeyguardManager keyguardManager;
     private ClipboardManager clipboardManager;
     private SecureStringStorage secureStringStorage;
+    private int actionAfterGetKey;
 
     private File databaseFile;
 
@@ -67,24 +71,23 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(view ->
-                Snackbar
-                    .make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show());
     }
 
     public void doUnlockDatabase() {
-        if (KeePassStorage.getKeePassFile() != null)
+        if (KeePassStorage.getKeePassFile() != null) {
             showEntryList();
-        else
-            openDatabase();
+        } else {
+            getKeyThen(ACTION_OPEN_DB);
+        }
     }
 
     public void doConfigureDatabase() {
         KeePassStorage.setKeePassFile(null);
         startActivity(new Intent(this, DatabaseSetupActivity.class));
+    }
+
+    public void doSyncDatabase() {
+        getKeyThen(ACTION_SYNC_DB);
     }
 
     public void copyEntry(Entry entry) {
@@ -99,6 +102,7 @@ public class MainActivity extends AppCompatActivity
                 intent.setAction(PasswordCopingService.ACTION_COPY_PASSWORD);
                 intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.getPassword());
                 startService(intent);
+                snackbar("Password copied", Snackbar.LENGTH_SHORT).show();
             }).show();
         }
         if (entry.getPassword() != null) {
@@ -112,14 +116,16 @@ public class MainActivity extends AppCompatActivity
             startService(intent);
         }
     }
-    private void openDatabase() {
+
+    private void getKeyThen(int action) {
+        actionAfterGetKey = action;
         int authMethod = preferences.getInt("key-auth-method", 0);
         switch (authMethod) {
             case 0: // no auth
             case 1: // screen lock
                 try {
                     Cipher cipher = secureStringStorage.getDecryptCipher();
-                    openDatabase(cipher);
+                    getKey(cipher);
                 } catch (UserNotAuthenticatedException e) {
                     // should do authentication
                     Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
@@ -138,21 +144,66 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void openDatabase(Cipher cipher) {
+    @SuppressLint("StaticFieldLeak")
+    private void getKey(Cipher cipher) {
+        List<String> keys;
         try {
-            List<String> strings = secureStringStorage.get(cipher);
-            KeePassFile db = KeePassDatabase.getInstance(databaseFile).openDatabase(strings.get(0));
-            KeePassStorage.setKeePassFile(db);
-            showEntryList();
+            keys = secureStringStorage.get(cipher);
         } catch (SecureStringStorage.SystemException e) {
             throw new RuntimeException(e);
         } catch (BadPaddingException | IllegalBlockSizeException | UserNotAuthenticatedException e) {
             Log.w(TAG, "fail to decrypt keys", e);
             snackbar("Failed to decrypt keys", Snackbar.LENGTH_LONG).show();
-        } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
-            Log.w(TAG, "cannot open database.", e);
-            snackbar(e.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
+            return;
         }
+        if (keys.size() < 2) {
+            snackbar("Broken keys", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        switch (actionAfterGetKey) {
+            case ACTION_OPEN_DB:
+                try {
+                    KeePassFile db = KeePassDatabase.getInstance(databaseFile)
+                            .openDatabase(keys.get(0));
+                    KeePassStorage.setKeePassFile(db);
+                } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
+                    Log.w(TAG, "cannot open database.", e);
+                    snackbar(e.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
+                    return;
+                }
+                showEntryList();
+                break;
+            case ACTION_SYNC_DB:
+                URL url;
+                try {
+                    url = new URL(preferences.getString("db-url", ""));
+                } catch (MalformedURLException e) {
+                    snackbar(e.getLocalizedMessage(), Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
+                String username = null;
+                String password = null;
+                if (preferences.getBoolean("db-auth-required", false)) {
+                    username = preferences.getString("db-auth-username", "");
+                    password = keys.get(1);
+                }
+                new FetchDatabaseTask(this, url, keys.get(0), username, password) {
+                    @Override
+                    protected void onPostExecute(String error) {
+                        if (error != null) {
+                            snackbar(error, Snackbar.LENGTH_SHORT).show();
+                        } else {
+                            snackbar("Synchronize finished", Snackbar.LENGTH_SHORT).show();
+                            showEntryList();
+                        }
+                    }
+                }.execute();
+                break;
+            default:
+                break;
+        }
+
     }
 
     private void showEntryList() {
@@ -170,7 +221,7 @@ public class MainActivity extends AppCompatActivity
         switch (requestCode) {
             case REQUEST_CONFIRM_DEVICE_CREDENTIAL:
                 if (resultCode == RESULT_OK)
-                    openDatabase();
+                    getKeyThen(actionAfterGetKey);
                 else
                     snackbar("Failed to authenticate user", Snackbar.LENGTH_LONG).show();
                 break;
@@ -186,6 +237,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onFingerprintSuccess(Cipher cipher) {
-        openDatabase(cipher);
+        getKey(cipher);
     }
 }

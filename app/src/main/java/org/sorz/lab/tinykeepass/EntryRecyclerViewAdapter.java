@@ -1,8 +1,8 @@
 package org.sorz.lab.tinykeepass;
 
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,16 +17,21 @@ import de.slackspace.openkeepass.domain.Entry;
 
 
 public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
+    private final static String TAG = EntryRecyclerViewAdapter.class.getName();
     private final List<Entry> entries;
     private final MainActivity activity;
 
     public EntryRecyclerViewAdapter(MainActivity activity) {
         this.activity = activity;
         KeePassFile db = KeePassStorage.getKeePassFile();
-        if (db != null)
+        if (db != null) {
             entries = db.getEntries();
-        else
+            Log.d(TAG, entries.size() + " entries loaded");
+
+        } else {
+            Log.w(TAG, "database is locked");
             entries = new ArrayList<>();
+        }
     }
 
     @Override
