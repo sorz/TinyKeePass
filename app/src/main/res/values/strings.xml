@@ -5,21 +5,19 @@
     <string name="no_fingerprint_detected">No fingerprint scanner detected on this device</string>
     <string name="no_fingerprint_enrolled">No enrolled fingerprint found</string>
     <string name="auth_key_title">User Authentication</string>
-    <string name="auth_key_decription">Please use your screen lock to access master key of Keepass database.</string>
+    <string name="auth_key_description">Please use your screen lock to access master key of Keepass database.</string>
     <string-array name="authenticate_method">
         <item>No authentication</item>
         <item>Authenticate with lock screen</item>
         <item>Authenticate with fingerprint</item>
     </string-array>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="fingerprint_description">Confirm fingerprint to continue</string>
-    <string name="fingerprint_hint">Toush sensor</string>
+    <string name="fingerprint_hint">Touch sensor</string>
     <string name="fingerprint_dialog_title">User Authentication</string>
-    <string name="fingerprint_failed">Fingerprint not recongized</string>
+    <string name="fingerprint_failed">Fingerprint not recognized</string>
     <string name="fingerprint_success">Fingerprint recognized</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_main">TinyKeepass</string>
     <string name="action_settings">Settings</string>
 
 </resources>

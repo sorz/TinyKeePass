@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity
                     // should do authentication
                     Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
                             getString(R.string.auth_key_title),
-                            getString(R.string.auth_key_decription));
+                            getString(R.string.auth_key_description));
                     startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL);
                 } catch (SecureStringStorage.SystemException e) {
                     throw new RuntimeException(e);

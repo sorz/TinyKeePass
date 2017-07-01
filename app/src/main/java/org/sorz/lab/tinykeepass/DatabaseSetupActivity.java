@@ -211,7 +211,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
                     secureStringStorage.generateNewKey(true, 60);
                     Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
                             getString(R.string.auth_key_title),
-                            getString(R.string.auth_key_decription));
+                            getString(R.string.auth_key_description));
                     startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL);
                     break;
                 case 2: // fingerprint
