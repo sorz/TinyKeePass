@@ -44,7 +44,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
     private CheckBox checkShowPassword;
     private Button buttonConfirm;
     private Spinner spinnerAuthMethod;
-    private ProgressBar progressBar;
+    private ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
     private List<View> disabledViews = new ArrayList<>(8);
 
 
@@ -56,15 +56,14 @@ public class DatabaseSetupActivity extends AppCompatActivity
         keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
         fingerprintManager = (FingerprintManager) getSystemService(FINGERPRINT_SERVICE);
 
-        checkBasicAuth = (CheckBox) findViewById(R.id.checkBasicAuth);
-        editDatabaseUrl = (EditText) findViewById(R.id.editDatabaseUrl);
-        editAuthUsername = (EditText) findViewById(R.id.editAuthUsername);
-        editAuthPassword = (EditText) findViewById(R.id.editAuthPassword);
-        editMasterPassword = (EditText) findViewById(R.id.editMasterPassword);
-        spinnerAuthMethod = (Spinner) findViewById(R.id.spinnerAuthMethod);
-        checkShowPassword = (CheckBox) findViewById(R.id.checkShowPassword);
-        buttonConfirm = (Button) findViewById(R.id.buttonConfirm);
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        checkBasicAuth = findViewById(R.id.checkBasicAuth);
+        editDatabaseUrl = findViewById(R.id.editDatabaseUrl);
+        editAuthUsername = findViewById(R.id.editAuthUsername);
+        editAuthPassword = findViewById(R.id.editAuthPassword);
+        editMasterPassword = findViewById(R.id.editMasterPassword);
+        spinnerAuthMethod = findViewById(R.id.spinnerAuthMethod);
+        checkShowPassword = findViewById(R.id.checkShowPassword);
+        buttonConfirm = findViewById(R.id.buttonConfirm);
 
         checkBasicAuth.setOnCheckedChangeListener((CompoundButton button, boolean isChecked) -> {
             editAuthUsername.setVisibility(isChecked ? View.VISIBLE : View.GONE);

@@ -57,8 +57,8 @@ public class FingerprintDialogFragment extends DialogFragment {
         getDialog().setCancelable(true);
         getDialog().setCanceledOnTouchOutside(true);
         View view = inflater.inflate(R.layout.fragment_fingerprint_dialog, container, false);
-        imageFingerprintIcon = (ImageView) view.findViewById(R.id.imageFingerprintIcon);
-        textFingerprintStatus = (TextView) view.findViewById(R.id.textFingerprintStatus);
+        imageFingerprintIcon = view.findViewById(R.id.imageFingerprintIcon);
+        textFingerprintStatus = view.findViewById(R.id.textFingerprintStatus);
         return view;
     }
 

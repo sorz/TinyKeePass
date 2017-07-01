@@ -84,11 +84,11 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         ViewHolder(View view) {
             super(view);
             this.view = view;
-            imageIcon = (ImageView) view.findViewById(R.id.imageIcon);
-            textTitle = (TextView) view.findViewById(R.id.textTitle);
-            textUsername = (TextView) view.findViewById(R.id.textUsername);
-            textUrlHostname = (TextView) view.findViewById(R.id.textUrlHostname);
-            textUrlPath = (TextView) view.findViewById(R.id.textUrlPath);
+            imageIcon = view.findViewById(R.id.imageIcon);
+            textTitle = view.findViewById(R.id.textTitle);
+            textUsername = view.findViewById(R.id.textUsername);
+            textUrlHostname = view.findViewById(R.id.textUrlHostname);
+            textUrlPath =  view.findViewById(R.id.textUrlPath);
         }
 
         @Override

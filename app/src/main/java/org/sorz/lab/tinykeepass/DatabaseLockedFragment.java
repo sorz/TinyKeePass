@@ -27,8 +27,8 @@ public class DatabaseLockedFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_database_locked, container, false);
-        Button unlockDb = (Button) view.findViewById(R.id.buttonUnlockDb);
-        Button configDb = (Button) view.findViewById(R.id.buttonConfigDb);
+        Button unlockDb = view.findViewById(R.id.buttonUnlockDb);
+        Button configDb = view.findViewById(R.id.buttonConfigDb);
         unlockDb.setOnClickListener(v -> activity.doUnlockDatabase());
         configDb.setOnClickListener(v -> activity.doConfigureDatabase());
         return view;

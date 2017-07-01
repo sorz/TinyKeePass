@@ -39,11 +39,11 @@ public class EntryFragment extends Fragment {
         // Set the adapter
 
         Context context = view.getContext();
-        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
+        RecyclerView recyclerView = view.findViewById(R.id.list);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
         recyclerView.setAdapter(new EntryRecyclerViewAdapter(activity));
 
-        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab);
+        FloatingActionButton fab = view.findViewById(R.id.fab);
         fab.setOnClickListener(v -> {
             if (activity != null)
                 activity.doSyncDatabase();
