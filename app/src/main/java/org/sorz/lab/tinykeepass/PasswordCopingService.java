@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
+import android.graphics.drawable.Icon;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -16,6 +17,7 @@ public class PasswordCopingService extends Service {
     private static final int PASSWORD_IN_CLIPBOARD_SECS = 15;
     private static final int NOTIFICATION_TIMEOUT_SECS = 3 * 60;
     private static final String ACTION_CLEAN_CLIPBOARD = "action-clean-clipboard";
+    private static final String ACTION_SHOW_PASSWORD = "action-show-password";
     public static final String ACTION_COPY_PASSWORD = "action-copy-password";
     public static final String ACTION_NEW_NOTIFICATION = "action-new-notification";
     public static final String EXTRA_PASSWORD = "extra-password";
@@ -59,6 +61,9 @@ public class PasswordCopingService extends Service {
         } else if (ACTION_COPY_PASSWORD.equals(intent.getAction())) {
             String password = intent.getStringExtra(EXTRA_PASSWORD);
             copyPassword(password);
+        } else if (ACTION_SHOW_PASSWORD.equals(intent.getAction())) {
+            String password = intent.getStringExtra(EXTRA_PASSWORD);
+            showPassword(password);
         } else if (ACTION_CLEAN_CLIPBOARD.equals(intent.getAction())) {
             stopTask(countingDownTask);
             cleanPassword();
@@ -68,12 +73,22 @@ public class PasswordCopingService extends Service {
         return START_NOT_STICKY;
     }
 
+
+    private PendingIntent getCopyPendingIntent(String password) {
+        Intent copyIntent = new Intent(this, PasswordCopingService.class);
+        copyIntent.setAction(ACTION_COPY_PASSWORD);
+        copyIntent.putExtra(EXTRA_PASSWORD, password);
+        return PendingIntent.getService(
+                this, 0, copyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+
     private void newNotification(String password, String username, String title) {
         stopTask(countingDownTask);
 
         Notification.Builder builder = new Notification.Builder(this)
                 .setSmallIcon(R.drawable.ic_vpn_key_white_24dp)
-                .setContentTitle("Click to copy password")
+                .setContentTitle("Touch to copy password")
                 .setVisibility(Notification.VISIBILITY_SECRET);
         if (username!= null)
             builder.setContentText(
@@ -83,12 +98,17 @@ public class PasswordCopingService extends Service {
         else
             builder.setContentText("Copy password to clipboard.");
 
-        Intent copyIntent = new Intent(this, PasswordCopingService.class);
-        copyIntent.setAction(ACTION_COPY_PASSWORD);
-        copyIntent.putExtra(EXTRA_PASSWORD, password);
-        PendingIntent copyPendingIntent = PendingIntent.getService(
-                this, 0, copyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        builder.setContentIntent(copyPendingIntent);
+        builder.setContentIntent(getCopyPendingIntent(password));
+
+        Intent showIntent = new Intent(this, PasswordCopingService.class);
+        showIntent.setAction(ACTION_SHOW_PASSWORD);
+        showIntent.putExtra(EXTRA_PASSWORD, password);
+        PendingIntent showPendingIntent = PendingIntent.getService(
+                this, 0, showIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification.Action actionShow = new Notification.Action.Builder(
+                Icon.createWithResource(this, R.drawable.ic_visibility_white_24dp),
+                "Show me", showPendingIntent).build();
+        builder.addAction(actionShow);
 
         notificationManager.cancel(notificationId);
         notificationManager.notify(++notificationId, builder.build());
@@ -105,6 +125,17 @@ public class PasswordCopingService extends Service {
             notificationManager.cancel(myNotificationId);
         });
         cleanNotificationTimer.start();
+    }
+
+    private void showPassword(String password) {
+        Notification.Builder builder = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.ic_vpn_key_white_24dp)
+                .setContentTitle("Your password is")
+                .setContentText(password)
+                .setVisibility(Notification.VISIBILITY_SECRET);
+
+        builder.setContentIntent(getCopyPendingIntent(password));
+        notificationManager.notify(notificationId, builder.build());
     }
 
     private void copyPassword(String password) {
