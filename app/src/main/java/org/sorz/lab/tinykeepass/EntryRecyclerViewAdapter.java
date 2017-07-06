@@ -38,8 +38,18 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
             } else {
                 allEntries = db.getEntries();
             }
-            Log.d(TAG, allEntries.size() + " entries loaded");
+            allEntries.sort((a, b) -> {
+                if (a.getTitle() != null && b.getTitle() != null)
+                    return a.getTitle().compareTo(b.getTitle());
+                else if (a.getUsername() != null && b.getUsername() != null)
+                    return a.getUsername().compareTo(b.getUsername());
+                else if (a.getUrl() != null && b.getUrl() != null)
+                    return a.getUrl().compareTo(b.getUrl());
+                else
+                    return 0;
+            });
 
+            Log.d(TAG, allEntries.size() + " entries loaded");
         } else {
             Log.w(TAG, "database is locked");
             allEntries = new ArrayList<>();
