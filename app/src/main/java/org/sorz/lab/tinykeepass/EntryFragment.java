@@ -6,6 +6,7 @@ import android.app.Fragment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -14,8 +15,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 
-public class EntryFragment extends Fragment {
+public class EntryFragment extends Fragment implements SearchView.OnQueryTextListener {
     private MainActivity activity;
+    private EntryRecyclerViewAdapter entryAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -45,7 +47,8 @@ public class EntryFragment extends Fragment {
         Context context = view.getContext();
         RecyclerView recyclerView = view.findViewById(R.id.list);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
-        recyclerView.setAdapter(new EntryRecyclerViewAdapter(activity));
+        entryAdapter = new EntryRecyclerViewAdapter(activity);
+        recyclerView.setAdapter(entryAdapter);
 
         FloatingActionButton fab = view.findViewById(R.id.fab);
         fab.setOnClickListener(v -> {
@@ -71,6 +74,9 @@ public class EntryFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_main, menu);
+        MenuItem searchMenu = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchMenu.getActionView();
+        searchView.setOnQueryTextListener(this);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -86,4 +92,14 @@ public class EntryFragment extends Fragment {
         }
     }
 
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return onQueryTextChange(query);
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        entryAdapter.setFilter(newText);
+        return true;
+    }
 }

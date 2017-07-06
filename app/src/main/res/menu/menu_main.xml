@@ -3,6 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="org.sorz.lab.tinykeepass.MainActivity">
     <item
+        android:id="@+id/action_search"
+        android:icon="@android:drawable/ic_menu_search"
+        app:showAsAction="ifRoom"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        android:title="@string/action_search"/>
+
+    <item
         android:id="@+id/action_lock_db"
         android:orderInCategory="500"
         android:title="@string/action_lock_db"

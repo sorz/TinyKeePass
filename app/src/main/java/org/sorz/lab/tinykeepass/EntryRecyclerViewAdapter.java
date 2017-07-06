@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import de.slackspace.openkeepass.domain.KeePassFile;
 import de.slackspace.openkeepass.domain.Entry;
@@ -18,20 +19,23 @@ import de.slackspace.openkeepass.domain.Entry;
 
 public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
     private final static String TAG = EntryRecyclerViewAdapter.class.getName();
-    private final List<Entry> entries;
     private final MainActivity activity;
+    private final List<Entry> allEntries;
+    private List<Entry> entries;
+
 
     public EntryRecyclerViewAdapter(MainActivity activity) {
         this.activity = activity;
         KeePassFile db = KeePassStorage.getKeePassFile();
         if (db != null) {
-            entries = db.getEntries();
-            Log.d(TAG, entries.size() + " entries loaded");
+            allEntries = db.getEntries();
+            Log.d(TAG, allEntries.size() + " entries loaded");
 
         } else {
             Log.w(TAG, "database is locked");
-            entries = new ArrayList<>();
+            allEntries = new ArrayList<>();
         }
+        entries = allEntries;
     }
 
     @Override
@@ -95,6 +99,25 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         public String toString() {
             return super.toString() + " '" + textTitle.getText() + "'";
         }
+    }
+
+    private static boolean contains(String string, String query) {
+        return string != null && string.toLowerCase().contains(query);
+    }
+
+    public void setFilter(String query) {
+        if (query == null || query.isEmpty()) {
+            entries = allEntries;
+        } else {
+            final String q = query.toLowerCase().trim();
+            entries = allEntries.parallelStream().filter(e ->
+                    contains(e.getTitle(), q) ||
+                    contains(e.getUrl(), q)  ||
+                    contains(e.getNotes(), q)  ||
+                    contains(e.getUsername(), q)
+            ).collect(Collectors.toList());
+        }
+        notifyDataSetChanged();
     }
 
 }

@@ -19,5 +19,6 @@
     <string name="fingerprint_success">Fingerprint recognized</string>
     <string name="title_activity_main">TinyKeepass</string>
     <string name="action_lock_db">Lock database</string>
+    <string name="action_search">Search</string>
 
 </resources>
