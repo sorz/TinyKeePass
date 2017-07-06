@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import de.slackspace.openkeepass.domain.KeePassFile;
@@ -28,7 +29,15 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         this.activity = activity;
         KeePassFile db = KeePassStorage.getKeePassFile();
         if (db != null) {
-            allEntries = db.getEntries();
+            if (db.getMeta().getRecycleBinEnabled()) {
+                allEntries = new ArrayList<>();
+                UUID recycleBin = db.getMeta().getRecycleBinUuid();
+                db.getGroups().stream()
+                        .filter(g -> !g.getUuid().equals(recycleBin))
+                        .forEach(g -> allEntries.addAll(g.getEntries()));
+            } else {
+                allEntries = db.getEntries();
+            }
             Log.d(TAG, allEntries.size() + " entries loaded");
 
         } else {
