@@ -35,6 +35,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
     private KeyguardManager keyguardManager;
     private FingerprintManager fingerprintManager;
     private SecureStringStorage secureStringStorage;
+    private SharedPreferences preferences;
 
     private CheckBox checkBasicAuth;
     private EditText editDatabaseUrl;
@@ -55,6 +56,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
 
         keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
         fingerprintManager = (FingerprintManager) getSystemService(FINGERPRINT_SERVICE);
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         checkBasicAuth = findViewById(R.id.checkBasicAuth);
         editDatabaseUrl = findViewById(R.id.editDatabaseUrl);
@@ -65,6 +67,9 @@ public class DatabaseSetupActivity extends AppCompatActivity
         checkShowPassword = findViewById(R.id.checkShowPassword);
         progressBar = findViewById(R.id.progressBar);
         buttonConfirm = findViewById(R.id.buttonConfirm);
+
+        editDatabaseUrl.setText(preferences.getString("db-url", ""));
+        editAuthUsername.setText(preferences.getString("db-auth-username", ""));
 
         checkBasicAuth.setOnCheckedChangeListener((CompoundButton button, boolean isChecked) -> {
             editAuthUsername.setVisibility(isChecked ? View.VISIBLE : View.GONE);
@@ -185,7 +190,6 @@ public class DatabaseSetupActivity extends AppCompatActivity
     }
 
     private void saveDatabaseConfigs() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         preferences.edit()
                 .putString("db-url", editDatabaseUrl.getText().toString())
                 .putString("db-auth-username", editAuthUsername.getText().toString())
