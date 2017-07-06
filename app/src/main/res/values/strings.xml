@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name">TinyKeepass</string>
+    <string name="app_name">TinyKeePass</string>
     <string name="database_url">https://database-url.kdbx</string>
     <string name="no_screen_lock">No secure screen lock (PIN/pattern/password)</string>
     <string name="no_fingerprint_detected">No fingerprint scanner detected on this device</string>
     <string name="no_fingerprint_enrolled">No enrolled fingerprint found</string>
     <string name="auth_key_title">User Authentication</string>
-    <string name="auth_key_description">Please use your screen lock to access master key of Keepass database.</string>
+    <string name="auth_key_description">Please use your screen lock to access master key of KeePass database.</string>
     <string-array name="authenticate_method">
         <item>No authentication</item>
         <item>Authenticate with lock screen</item>
@@ -17,8 +17,23 @@
     <string name="fingerprint_dialog_title">User Authentication</string>
     <string name="fingerprint_failed">Fingerprint not recognized</string>
     <string name="fingerprint_success">Fingerprint recognized</string>
-    <string name="title_activity_main">TinyKeepass</string>
+    <string name="title_activity_main">TinyKeepPass</string>
     <string name="action_lock_db">Lock database</string>
     <string name="action_search">Search</string>
+    <string name="username">Username</string>
+    <string name="require_http_auth">Require HTTP Basic Authentication</string>
+    <string name="password">Password</string>
+    <string name="master_password">Master Password</string>
+    <string name="show">Show</string>
+    <string name="unlock">Unlock</string>
+    <string name="configure">Configure</string>
+    <string name="db_is_locked_or_unconfigured">Keepass database is locked or un-configured</string>
+    <string name="username_copied">Username \"%s\" copied</string>
+    <string name="copy_password">Copy password</string>
+    <string name="password_copied">Password copied</string>
+    <string name="fail_to_decrypt">Failed to decrypt keys</string>
+    <string name="broken_keys">Broken keys</string>
+    <string name="sync_done">Synchronize finished</string>
+    <string name="fail_to_auth">Failed to authenticate user</string>
 
 </resources>

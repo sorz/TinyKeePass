@@ -100,16 +100,16 @@ public class MainActivity extends AppCompatActivity
     public void copyEntry(Entry entry) {
         if (entry.getUsername() != null) {
             clipboardManager.setPrimaryClip(
-                    ClipData.newPlainText("Username", entry.getUsername()));
+                    ClipData.newPlainText(getString(R.string.username), entry.getUsername()));
             Snackbar snackbar = snackbar(
-                    String.format("Username \"%s\" copied", entry.getUsername()),
+                    getString(R.string.username_copied, entry.getUsername()),
                     Snackbar.LENGTH_LONG);
-            snackbar.setAction("Copy password", v -> {
+            snackbar.setAction(getString(R.string.copy_password), v -> {
                 Intent intent = new Intent(this, PasswordCopingService.class);
                 intent.setAction(PasswordCopingService.ACTION_COPY_PASSWORD);
                 intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.getPassword());
                 startService(intent);
-                snackbar("Password copied", Snackbar.LENGTH_SHORT).show();
+                snackbar(getString(R.string.password_copied), Snackbar.LENGTH_SHORT).show();
             }).show();
         }
         if (entry.getPassword() != null) {
@@ -160,11 +160,11 @@ public class MainActivity extends AppCompatActivity
             throw new RuntimeException(e);
         } catch (BadPaddingException | IllegalBlockSizeException | UserNotAuthenticatedException e) {
             Log.w(TAG, "fail to decrypt keys", e);
-            snackbar("Failed to decrypt keys", Snackbar.LENGTH_LONG).show();
+            snackbar(getString(R.string.fail_to_decrypt), Snackbar.LENGTH_LONG).show();
             return;
         }
         if (keys.size() < 2) {
-            snackbar("Broken keys", Snackbar.LENGTH_LONG).show();
+            snackbar(getString(R.string.broken_keys), Snackbar.LENGTH_LONG).show();
             return;
         }
 
@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity
                         if (error != null) {
                             snackbar(error, Snackbar.LENGTH_SHORT).show();
                         } else {
-                            snackbar("Synchronize finished", Snackbar.LENGTH_SHORT).show();
+                            snackbar(getString(R.string.sync_done), Snackbar.LENGTH_SHORT).show();
                             showEntryList();
                         }
                     }
@@ -230,7 +230,7 @@ public class MainActivity extends AppCompatActivity
                 if (resultCode == RESULT_OK)
                     getKeyThen(actionAfterGetKey);
                 else
-                    snackbar("Failed to authenticate user", Snackbar.LENGTH_LONG).show();
+                    snackbar(getString(R.string.fail_to_auth), Snackbar.LENGTH_LONG).show();
                 break;
             default:
                 break;
@@ -239,7 +239,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onFingerprintCancel() {
-        snackbar("Failed to authenticate user", Snackbar.LENGTH_LONG).show();
+        snackbar(getString(R.string.fail_to_auth), Snackbar.LENGTH_LONG).show();
     }
 
     @Override
