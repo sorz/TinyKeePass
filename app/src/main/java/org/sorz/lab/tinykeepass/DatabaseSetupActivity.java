@@ -44,7 +44,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
     private CheckBox checkShowPassword;
     private Button buttonConfirm;
     private Spinner spinnerAuthMethod;
-    private ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
+    private ProgressBar progressBar;
     private List<View> disabledViews = new ArrayList<>(8);
 
 
@@ -63,6 +63,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
         editMasterPassword = findViewById(R.id.editMasterPassword);
         spinnerAuthMethod = findViewById(R.id.spinnerAuthMethod);
         checkShowPassword = findViewById(R.id.checkShowPassword);
+        progressBar = findViewById(R.id.progressBar);
         buttonConfirm = findViewById(R.id.buttonConfirm);
 
         checkBasicAuth.setOnCheckedChangeListener((CompoundButton button, boolean isChecked) -> {

@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="org.sorz.lab.tinykeepass.MainActivity">
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
+        android:id="@+id/action_lock_db"
+        android:orderInCategory="500"
+        android:title="@string/action_lock_db"
         app:showAsAction="never" />
 </menu>

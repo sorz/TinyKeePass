@@ -13,6 +13,9 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -69,7 +72,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
     }
 
@@ -79,6 +82,13 @@ public class MainActivity extends AppCompatActivity
         } else {
             getKeyThen(ACTION_OPEN_DB);
         }
+    }
+
+    public void doLockDatabase() {
+        KeePassStorage.setKeePassFile(null);
+        getFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, new DatabaseLockedFragment())
+                .commit();
     }
 
     public void doConfigureDatabase() {
