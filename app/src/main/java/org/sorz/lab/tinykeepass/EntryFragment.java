@@ -132,15 +132,15 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
             if (DatabaseSyncingService.BROADCAST_SYNC_FINISHED.equals(intent.getAction())) {
                 fab.show();
                 String error = intent.getStringExtra(DatabaseSyncingService.EXTRA_SYNC_ERROR);
+
                 if (error != null) {
-                    if (activity != null)
-                        activity.snackbar(getString(R.string.fail_to_sync, error),
+                    if (getView() != null)
+                        Snackbar.make(getView(), getString(R.string.fail_to_sync, error),
                                 Snackbar.LENGTH_LONG).show();
                     entryAdapter.reloadEntries();
                 } else {
-                    if (activity != null)
-                        activity.snackbar(getString(R.string.sync_done),
-                                Snackbar.LENGTH_SHORT).show();
+                    if (getView() != null)
+                        Snackbar.make(getView(), R.string.sync_done, Snackbar.LENGTH_SHORT).show();
                 }
             }
         }

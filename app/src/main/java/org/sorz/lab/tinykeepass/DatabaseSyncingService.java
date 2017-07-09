@@ -86,6 +86,7 @@ public class DatabaseSyncingService extends Service {
                     .setSmallIcon(R.drawable.ic_cloud_white_black_24dp)
                     .setContentTitle("Fetching database")
                     .setContentText(url.toString())
+                    .setOngoing(true)
                     .setProgress(0, 0, true);
             notificationManager.notify(notificationId, builder.build());
         }
