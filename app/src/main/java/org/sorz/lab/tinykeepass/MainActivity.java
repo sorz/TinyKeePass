@@ -208,7 +208,7 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
-    private Snackbar snackbar(CharSequence text, int duration) {
+    public Snackbar snackbar(CharSequence text, int duration) {
         return Snackbar.make(findViewById(R.id.toolbar), text, duration);
     }
 

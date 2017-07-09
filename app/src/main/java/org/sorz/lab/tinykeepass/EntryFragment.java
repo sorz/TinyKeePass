@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -23,6 +24,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
     private MainActivity activity;
     private EntryRecyclerViewAdapter entryAdapter;
     private LocalBroadcastManager localBroadcastManager;
+    private FloatingActionButton fab;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -55,10 +57,12 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         entryAdapter = new EntryRecyclerViewAdapter(activity);
         recyclerView.setAdapter(entryAdapter);
 
-        FloatingActionButton fab = view.findViewById(R.id.fab);
+        fab = view.findViewById(R.id.fab);
         fab.setOnClickListener(v -> {
-            if (activity != null)
+            if (activity != null) {
+                fab.hide();
                 activity.doSyncDatabase();
+            }
         });
         return view;
     }
@@ -81,7 +85,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
     public void onStart() {
         super.onStart();
         localBroadcastManager.registerReceiver(broadcastReceiver,
-                new IntentFilter(DatabaseSyncingService.BROADCAST_DATABASE_UPDATED));
+                new IntentFilter(DatabaseSyncingService.BROADCAST_SYNC_FINISHED));
     }
 
     @Override
@@ -125,8 +129,19 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (DatabaseSyncingService.BROADCAST_DATABASE_UPDATED.equals(intent.getAction())) {
-                entryAdapter.reloadEntries();
+            if (DatabaseSyncingService.BROADCAST_SYNC_FINISHED.equals(intent.getAction())) {
+                fab.show();
+                String error = intent.getStringExtra(DatabaseSyncingService.EXTRA_SYNC_ERROR);
+                if (error != null) {
+                    if (activity != null)
+                        activity.snackbar(getString(R.string.fail_to_sync, error),
+                                Snackbar.LENGTH_LONG).show();
+                    entryAdapter.reloadEntries();
+                } else {
+                    if (activity != null)
+                        activity.snackbar(getString(R.string.sync_done),
+                                Snackbar.LENGTH_SHORT).show();
+                }
             }
         }
     };
