@@ -182,30 +182,21 @@ public class MainActivity extends AppCompatActivity
                 showEntryList();
                 break;
             case ACTION_SYNC_DB:
-                URL url;
-                try {
-                    url = new URL(preferences.getString("db-url", ""));
-                } catch (MalformedURLException e) {
-                    snackbar(e.getLocalizedMessage(), Snackbar.LENGTH_SHORT).show();
-                    return;
-                }
+                String url = preferences.getString("db-url", "");
+                String masterKey = keys.get(0);
                 String username = null;
                 String password = null;
                 if (preferences.getBoolean("db-auth-required", false)) {
                     username = preferences.getString("db-auth-username", "");
                     password = keys.get(1);
                 }
-                new FetchDatabaseTask(this, url, keys.get(0), username, password) {
-                    @Override
-                    protected void onPostExecute(String error) {
-                        if (error != null) {
-                            snackbar(error, Snackbar.LENGTH_SHORT).show();
-                        } else {
-                            snackbar(getString(R.string.sync_done), Snackbar.LENGTH_SHORT).show();
-                            showEntryList();
-                        }
-                    }
-                }.execute();
+                Intent intent = new Intent(this, DatabaseSyncingService.class);
+                intent.setAction(DatabaseSyncingService.ACTION_FETCH);
+                intent.putExtra(DatabaseSyncingService.EXTRA_URL, url);
+                intent.putExtra(DatabaseSyncingService.EXTRA_MASTER_KEY, masterKey);
+                intent.putExtra(DatabaseSyncingService.EXTRA_USERNAME, username);
+                intent.putExtra(DatabaseSyncingService.EXTRA_PASSWORD, password);
+                startService(intent);
                 break;
             default:
                 break;
