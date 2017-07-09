@@ -1,9 +1,13 @@
 package org.sorz.lab.tinykeepass;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -18,6 +22,7 @@ import android.view.ViewGroup;
 public class EntryFragment extends Fragment implements SearchView.OnQueryTextListener {
     private MainActivity activity;
     private EntryRecyclerViewAdapter entryAdapter;
+    private LocalBroadcastManager localBroadcastManager;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -63,12 +68,26 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
     public void onAttach(Context context) {
         super.onAttach(context);
         activity = (MainActivity) context;
+        localBroadcastManager = LocalBroadcastManager.getInstance(activity);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         activity = null;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        localBroadcastManager.registerReceiver(broadcastReceiver,
+                new IntentFilter(DatabaseSyncingService.BROADCAST_DATABASE_UPDATED));
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        localBroadcastManager.unregisterReceiver(broadcastReceiver);
     }
 
     @Override
@@ -102,4 +121,13 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         entryAdapter.setFilter(newText);
         return true;
     }
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (DatabaseSyncingService.BROADCAST_DATABASE_UPDATED.equals(intent.getAction())) {
+                entryAdapter.reloadEntries();
+            }
+        }
+    };
 }

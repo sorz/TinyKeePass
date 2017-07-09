@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.net.MalformedURLException;
@@ -23,6 +24,7 @@ public class DatabaseSyncingService extends Service {
     public static final String EXTRA_MASTER_KEY = "extra-master-key";
     public static final String EXTRA_USERNAME = "extra-username";
     public static final String EXTRA_PASSWORD = "extra-password";
+    public static final String BROADCAST_DATABASE_UPDATED = "intent-database-updated";
 
     private FetchTask fetchTask;
 
@@ -91,6 +93,8 @@ public class DatabaseSyncingService extends Service {
                 KeePassFile db = KeePassStorage.getKeePassFile();
                 if (db != null && db.getMeta().getDatabaseName() != null)
                     builder.setContentText(db.getMeta().getDatabaseName());
+                Intent intent = new Intent(BROADCAST_DATABASE_UPDATED);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
             } else {
                 builder.setContentTitle("Database fetch failed")
                         .setContentText(error);

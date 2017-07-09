@@ -21,12 +21,17 @@ import de.slackspace.openkeepass.domain.Entry;
 public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
     private final static String TAG = EntryRecyclerViewAdapter.class.getName();
     private final MainActivity activity;
-    private final List<Entry> allEntries;
+    private List<Entry> allEntries;
     private List<Entry> entries;
+    private String filter;
 
 
     public EntryRecyclerViewAdapter(MainActivity activity) {
         this.activity = activity;
+        reloadEntries();
+    }
+
+    public void reloadEntries() {
         KeePassFile db = KeePassStorage.getKeePassFile();
         if (db != null) {
             if (db.getMeta().getRecycleBinEnabled()) {
@@ -54,7 +59,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
             Log.w(TAG, "database is locked");
             allEntries = new ArrayList<>();
         }
-        entries = allEntries;
+        setFilter(filter);
     }
 
     @Override
@@ -136,6 +141,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
                     contains(e.getUsername(), q)
             ).collect(Collectors.toList());
         }
+        filter = query;
         notifyDataSetChanged();
     }
 

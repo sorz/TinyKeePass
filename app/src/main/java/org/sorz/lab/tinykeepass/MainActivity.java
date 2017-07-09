@@ -15,8 +15,6 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 
 import javax.crypto.BadPaddingException;
