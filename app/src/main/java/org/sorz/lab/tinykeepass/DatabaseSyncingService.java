@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -23,6 +24,8 @@ public class DatabaseSyncingService extends Service {
     public static final String EXTRA_USERNAME = "extra-username";
     public static final String EXTRA_PASSWORD = "extra-password";
 
+    private FetchTask fetchTask;
+
 
     public DatabaseSyncingService() {
     }
@@ -37,15 +40,20 @@ public class DatabaseSyncingService extends Service {
         if (intent == null) {
             Log.w(TAG, "null intent");
         } else if (ACTION_FETCH.equals(intent.getAction())) {
+            if (fetchTask != null
+                    && fetchTask.getStatus() == AsyncTask.Status.RUNNING) {
+                return START_NOT_STICKY;
+            }
             try {
                 URL url = new URL(intent.getStringExtra(EXTRA_URL));
                 String masterKey = intent.getStringExtra(EXTRA_MASTER_KEY);
                 String username = intent.getStringExtra(EXTRA_USERNAME);
                 String password = intent.getStringExtra(EXTRA_PASSWORD);
-                new FetchTask(this, url, masterKey, username, password).execute();
+                fetchTask = new FetchTask(this, url, masterKey, username, password);
             } catch (MalformedURLException e) {
                 Log.e(TAG, "illegal url", e);
             }
+            fetchTask.execute();
         } else {
             Log.w(TAG, "unknown action");
         }
