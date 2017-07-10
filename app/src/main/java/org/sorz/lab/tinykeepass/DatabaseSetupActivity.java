@@ -1,6 +1,5 @@
 package org.sorz.lab.tinykeepass;
 
-import android.annotation.SuppressLint;
 import android.app.KeyguardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -20,6 +19,7 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -140,7 +140,6 @@ public class DatabaseSetupActivity extends AppCompatActivity
         return true;
     }
 
-    @SuppressLint("StaticFieldLeak")
     private void submit() {
         URL url;
         try {
@@ -169,17 +168,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
             password = editAuthPassword.getText().toString();
         }
         String masterPwd = editMasterPassword.getText().toString();
-        new FetchDatabaseTask(this, url, masterPwd, username, password) {
-            @Override
-            protected void onPostExecute(String error) {
-                if (error != null) {
-                    Toast.makeText(DatabaseSetupActivity.this, error, Toast.LENGTH_SHORT).show();
-                    cancelSubmit();
-                } else {
-                    saveDatabaseConfigs();
-                }
-            }
-        }.execute();
+        new FetchTask(this, url, masterPwd, username, password).execute();
     }
 
     private void cancelSubmit() {
@@ -277,5 +266,30 @@ public class DatabaseSetupActivity extends AppCompatActivity
     @Override
     public void onFingerprintSuccess(Cipher cipher) {
         saveKeys(cipher);
+    }
+
+
+    private static class FetchTask extends FetchDatabaseTask {
+        private final WeakReference<DatabaseSetupActivity> activity;
+
+        FetchTask(DatabaseSetupActivity activity, URL url, String masterPwd,
+                         String username, String password) {
+            super(activity, url, masterPwd, username, password);
+            this.activity = new WeakReference<>(activity);
+        }
+
+        @Override
+        protected void onPostExecute(String error) {
+            DatabaseSetupActivity activity = this.activity.get();
+            if (activity == null)
+                return;
+
+            if (error != null) {
+                Toast.makeText(activity, error, Toast.LENGTH_SHORT).show();
+                activity.cancelSubmit();
+            } else {
+                activity.saveDatabaseConfigs();
+            }
+        }
     }
 }

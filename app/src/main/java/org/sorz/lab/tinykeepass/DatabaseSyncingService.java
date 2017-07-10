@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -75,14 +76,14 @@ public class DatabaseSyncingService extends Service {
     private static class FetchTask extends FetchDatabaseTask {
         private static int nextNotificationId = 1;
 
-        private final Context context;
+        private final WeakReference<Context> context;
         private final URL url;
         private final NotificationManager notificationManager;
         private final int notificationId;
 
         FetchTask(Context context, URL url, String masterPwd, String username, String password) {
             super(context, url, masterPwd, username, password);
-            this.context = context;
+            this.context = new WeakReference<>(context);
             this.url = url;
             notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
             notificationId = nextNotificationId++;
@@ -90,6 +91,10 @@ public class DatabaseSyncingService extends Service {
 
         @Override
         protected void onPreExecute() {
+            Context context = this.context.get();
+            if (context == null)
+                return;
+
             Intent intent = new Intent(context, DatabaseSyncingService.class);
             intent.setAction(ACTION_CANCEL);
             PendingIntent pendingIntent =
@@ -112,6 +117,13 @@ public class DatabaseSyncingService extends Service {
 
         @Override
         protected void onPostExecute(String error) {
+            Context context = this.context.get();
+            if (context == null) {
+                notificationManager.cancel(notificationId);
+                Log.w(TAG, "task done after service exited");
+                return;
+            }
+
             Notification.Builder builder = new Notification.Builder(context);
             if (error == null) {
                 builder.setContentTitle(context.getString(R.string.fetch_ok));
@@ -133,15 +145,17 @@ public class DatabaseSyncingService extends Service {
 
         @Override
         protected void onCancelled(String error) {
-            notifyFinish(context.getString(R.string.fetch_cancel_by_user));
             notificationManager.cancel(notificationId);
+            if (context.isEnqueued())
+                notifyFinish(context.get().getString(R.string.fetch_cancel_by_user));
         }
 
         private void notifyFinish(String error) {
             Intent intent = new Intent(BROADCAST_SYNC_FINISHED);
             if (error != null)
                 intent.putExtra(EXTRA_SYNC_ERROR, error);
-            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+            if (context.isEnqueued())
+                LocalBroadcastManager.getInstance(context.get()).sendBroadcast(intent);
         }
     }
 }
