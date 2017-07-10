@@ -111,7 +111,8 @@ public class MainActivity extends AppCompatActivity
                 break;
             case 2: // fingerprint
                 getFragmentManager().beginTransaction()
-                        .add(FingerprintDialogFragment.newInstance(), "fingerprint")
+                        .add(FingerprintDialogFragment.newInstance(Cipher.DECRYPT_MODE),
+                                "fingerprint")
                         .commit();
                 break;
         }

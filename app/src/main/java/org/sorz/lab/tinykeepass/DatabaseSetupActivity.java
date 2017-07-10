@@ -240,7 +240,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
 
     private void requestFingerprintToSaveKeys() {
         getFragmentManager().beginTransaction()
-                .add(FingerprintDialogFragment.newInstance(), "fingerprint")
+                .add(FingerprintDialogFragment.newInstance(Cipher.ENCRYPT_MODE), "fingerprint")
                 .commit();
     }
 

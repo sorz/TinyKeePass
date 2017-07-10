@@ -30,6 +30,8 @@ import static android.content.Context.FINGERPRINT_SERVICE;
 public class FingerprintDialogFragment extends DialogFragment {
     private static final long ERROR_TIMEOUT_MILLIS = 1500;
     private static final long SUCCESS_TIMEOUT_MILLIS = 300;
+    private static final String ARGS_CIPHER_MODE = "args-cipher-mode";
+
     private OnFragmentInteractionListener listener;
     private ImageView imageFingerprintIcon;
     private TextView textFingerprintStatus;
@@ -39,8 +41,12 @@ public class FingerprintDialogFragment extends DialogFragment {
         // Required empty public constructor
     }
 
-    public static FingerprintDialogFragment newInstance() {
-        return new FingerprintDialogFragment();
+    public static FingerprintDialogFragment newInstance(int cipherMode) {
+        FingerprintDialogFragment fragment = new FingerprintDialogFragment();
+        Bundle args = new Bundle();
+        args.putInt(ARGS_CIPHER_MODE, cipherMode);
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
@@ -85,7 +91,16 @@ public class FingerprintDialogFragment extends DialogFragment {
         Cipher cipher;
         try {
             SecureStringStorage storage = new SecureStringStorage(getContext());
-            cipher = storage.getEncryptCipher();
+            switch (getArguments().getInt(ARGS_CIPHER_MODE)) {
+                case Cipher.ENCRYPT_MODE:
+                    cipher = storage.getEncryptCipher();
+                    break;
+                case Cipher.DECRYPT_MODE:
+                    cipher = storage.getDecryptCipher();
+                    break;
+                default:
+                    throw new UnsupportedOperationException("not support such cipher mode");
+            }
         } catch (UserNotAuthenticatedException | SecureStringStorage.SystemException e) {
             throw new RuntimeException("cannot get cipher", e);
         }

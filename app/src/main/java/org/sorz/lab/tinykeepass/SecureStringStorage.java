@@ -68,7 +68,7 @@ public class SecureStringStorage {
                 .setUserAuthenticationValidityDurationSeconds(authSecs)
                 .build();
 
-        KeyGenerator keyGenerator = null;
+        KeyGenerator keyGenerator;
         try {
             keyGenerator = KeyGenerator.getInstance(
                     KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
