@@ -36,5 +36,9 @@
     <string name="sync_done">Synchronize finished</string>
     <string name="fail_to_auth">Failed to authenticate user</string>
     <string name="fail_to_sync">Failed to fetch database: %s</string>
+    <string name="fetching_database">Fetching database</string>
+    <string name="fetch_ok">Database fetched</string>
+    <string name="fetch_fail">Database fetch failed</string>
+    <string name="fetch_cancel_by_user">cancelled by user</string>
 
 </resources>

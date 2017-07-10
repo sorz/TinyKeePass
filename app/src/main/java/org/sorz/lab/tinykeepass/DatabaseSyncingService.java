@@ -2,9 +2,11 @@ package org.sorz.lab.tinykeepass;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Icon;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
@@ -20,6 +22,7 @@ public class DatabaseSyncingService extends Service {
     private static final String TAG = DatabaseSyncingService.class.getName();
     private static final int NOTIFICATION_OK_TIMEOUT_MILLS = 2 * 1000;
 
+    private static final String ACTION_CANCEL = "action-cancel";
     public static final String ACTION_FETCH = "action-fetch";
     public static final String EXTRA_URL = "extra-url";
     public static final String EXTRA_MASTER_KEY = "extra-master-key";
@@ -58,6 +61,11 @@ public class DatabaseSyncingService extends Service {
                 Log.e(TAG, "illegal url", e);
             }
             fetchTask.execute();
+        } else if (ACTION_CANCEL.equals(intent.getAction())) {
+            if (fetchTask != null && fetchTask.getStatus() == AsyncTask.Status.RUNNING) {
+                boolean cancel = fetchTask.cancel(true);
+                Log.d(TAG, "cancel task: " + cancel);
+            }
         } else {
             Log.w(TAG, "unknown action");
         }
@@ -82,34 +90,57 @@ public class DatabaseSyncingService extends Service {
 
         @Override
         protected void onPreExecute() {
+            Intent intent = new Intent(context, DatabaseSyncingService.class);
+            intent.setAction(ACTION_CANCEL);
+            PendingIntent pendingIntent =
+                    PendingIntent.getService(context, 0, intent, 0);
+            Notification.Action cancel = new Notification.Action.Builder(
+                    Icon.createWithResource(context, android.R.drawable.ic_menu_close_clear_cancel),
+                    context.getString(android.R.string.cancel),
+                    pendingIntent).build();
+
             Notification.Builder builder = new Notification.Builder(context)
                     .setSmallIcon(R.drawable.ic_cloud_white_black_24dp)
-                    .setContentTitle("Fetching database")
+                    .setContentTitle(context.getString(R.string.fetching_database))
                     .setContentText(url.toString())
                     .setOngoing(true)
-                    .setProgress(0, 0, true);
+                    .setProgress(0, 0, true)
+                    .setActions(cancel);
+
             notificationManager.notify(notificationId, builder.build());
         }
 
         @Override
         protected void onPostExecute(String error) {
             Notification.Builder builder = new Notification.Builder(context);
-            Intent intent = new Intent(BROADCAST_SYNC_FINISHED);
             if (error == null) {
-                builder.setContentTitle("Database fetched");
+                builder.setContentTitle(context.getString(R.string.fetch_ok));
                 KeePassFile db = KeePassStorage.getKeePassFile();
                 if (db != null && db.getMeta().getDatabaseName() != null)
                     builder.setSmallIcon(R.drawable.ic_cloud_done_white_24dp)
                             .setContentText(db.getMeta().getDatabaseName());
                 new Handler().postDelayed(() -> notificationManager.cancel(notificationId),
                         NOTIFICATION_OK_TIMEOUT_MILLS);
+                notifyFinish(null);
             } else {
                 builder.setSmallIcon(R.drawable.ic_report_problem_white_24dp)
-                        .setContentTitle("Database fetch failed")
+                        .setContentTitle(context.getString(R.string.fetch_fail))
                         .setContentText(error);
-                intent.putExtra(EXTRA_SYNC_ERROR, error);
+                notifyFinish(error);
             }
             notificationManager.notify(notificationId, builder.build());
+        }
+
+        @Override
+        protected void onCancelled(String error) {
+            notifyFinish(context.getString(R.string.fetch_cancel_by_user));
+            notificationManager.cancel(notificationId);
+        }
+
+        private void notifyFinish(String error) {
+            Intent intent = new Intent(BROADCAST_SYNC_FINISHED);
+            if (error != null)
+                intent.putExtra(EXTRA_SYNC_ERROR, error);
             LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
         }
     }
