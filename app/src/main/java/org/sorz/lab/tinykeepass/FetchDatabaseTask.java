@@ -32,6 +32,7 @@ import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
 public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
     final static private String TAG = FetchDatabaseTask.class.getName();
     final static public String DB_FILENAME = "database.kdbx";
+
     final private WeakReference<Context> context;
     final private URL url;
     final private String masterPassword;
@@ -96,8 +97,9 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
                 return "Fail to save database";
             }
         }
-        if (context.isEnqueued())
-            KeePassStorage.set(context.get(), db);
+        Context context = this.context.get();
+        if (context != null)
+            KeePassStorage.set(context, db);
         return null;
     }
 }

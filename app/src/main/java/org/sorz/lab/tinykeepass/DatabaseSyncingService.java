@@ -133,29 +133,33 @@ public class DatabaseSyncingService extends Service {
                             .setContentText(db.getMeta().getDatabaseName());
                 new Handler().postDelayed(() -> notificationManager.cancel(notificationId),
                         NOTIFICATION_OK_TIMEOUT_MILLS);
-                notifyFinish(null);
+                notifyFinish(context, null);
             } else {
                 builder.setSmallIcon(R.drawable.ic_report_problem_white_24dp)
                         .setContentTitle(context.getString(R.string.fetch_fail))
                         .setContentText(error);
-                notifyFinish(error);
+                notifyFinish(context, error);
             }
             notificationManager.notify(notificationId, builder.build());
         }
 
         @Override
         protected void onCancelled(String error) {
+            Context context = this.context.get();
+            if (context == null) {
+                notificationManager.cancel(notificationId);
+                Log.w(TAG, "task cancelled after service exited");
+                return;
+            }
             notificationManager.cancel(notificationId);
-            if (context.isEnqueued())
-                notifyFinish(context.get().getString(R.string.fetch_cancel_by_user));
+            notifyFinish(context, context.getString(R.string.fetch_cancel_by_user));
         }
 
-        private void notifyFinish(String error) {
+        private void notifyFinish(Context context, String error) {
             Intent intent = new Intent(BROADCAST_SYNC_FINISHED);
             if (error != null)
                 intent.putExtra(EXTRA_SYNC_ERROR, error);
-            if (context.isEnqueued())
-                LocalBroadcastManager.getInstance(context.get()).sendBroadcast(intent);
+            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
         }
     }
 }
