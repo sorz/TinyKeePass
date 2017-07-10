@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.URL;
@@ -31,6 +32,7 @@ import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
 public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
     final static private String TAG = FetchDatabaseTask.class.getName();
     final static public String DB_FILENAME = "database.kdbx";
+    final private WeakReference<Context> context;
     final private URL url;
     final private String masterPassword;
     final private File cacheDir;
@@ -38,6 +40,7 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
 
     public FetchDatabaseTask(Context context, URL url, String masterPwd,
                              String username, String password) {
+        this.context = new WeakReference<>(context);
         this.url = url;
         masterPassword = masterPwd;
         cacheDir = context.getCacheDir();
@@ -93,7 +96,8 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
                 return "Fail to save database";
             }
         }
-        KeePassStorage.setKeePassFile(db);
+        if (context.isEnqueued())
+            KeePassStorage.set(context.get(), db);
         return null;
     }
 }

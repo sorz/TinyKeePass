@@ -127,7 +127,7 @@ public class DatabaseSyncingService extends Service {
             Notification.Builder builder = new Notification.Builder(context);
             if (error == null) {
                 builder.setContentTitle(context.getString(R.string.fetch_ok));
-                KeePassFile db = KeePassStorage.getKeePassFile();
+                KeePassFile db = KeePassStorage.get();
                 if (db != null && db.getMeta().getDatabaseName() != null)
                     builder.setSmallIcon(R.drawable.ic_cloud_done_white_24dp)
                             .setContentText(db.getMeta().getDatabaseName());

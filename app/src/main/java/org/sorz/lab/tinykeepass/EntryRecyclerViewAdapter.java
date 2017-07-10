@@ -33,7 +33,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
     }
 
     public void reloadEntries() {
-        KeePassFile db = KeePassStorage.getKeePassFile();
+        KeePassFile db = KeePassStorage.get();
         if (db != null) {
             if (db.getMeta().getRecycleBinEnabled()) {
                 allEntries = new ArrayList<>();

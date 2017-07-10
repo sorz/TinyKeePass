@@ -14,6 +14,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -99,6 +100,13 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
     public void onStop() {
         super.onStop();
         localBroadcastManager.unregisterReceiver(broadcastReceiver);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (KeePassStorage.get() == null)
+            activity.doLockDatabase();
     }
 
     @Override

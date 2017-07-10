@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity
                     .add(R.id.fragment_container, new DatabaseLockedFragment())
                     .commit();
 
-            if (KeePassStorage.getKeePassFile() == null && !databaseFile.canRead()) {
+            if (KeePassStorage.get() == null && !databaseFile.canRead()) {
                 doConfigureDatabase();
                 finish();
             } else {
@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void doUnlockDatabase() {
-        if (KeePassStorage.getKeePassFile() != null) {
+        if (KeePassStorage.get() != null) {
             showEntryList();
         } else {
             getKeyThen(ACTION_OPEN_DB);
@@ -75,14 +75,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void doLockDatabase() {
-        KeePassStorage.setKeePassFile(null);
+        KeePassStorage.set(this, null);
         getFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, new DatabaseLockedFragment())
                 .commit();
     }
 
     public void doConfigureDatabase() {
-        KeePassStorage.setKeePassFile(null);
+        KeePassStorage.set(this, null);
         startActivity(new Intent(this, DatabaseSetupActivity.class));
     }
 
@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity
                 try {
                     KeePassFile db = KeePassDatabase.getInstance(databaseFile)
                             .openDatabase(keys.get(0));
-                    KeePassStorage.setKeePassFile(db);
+                    KeePassStorage.set(this, db);
                 } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
                     Log.w(TAG, "cannot open database.", e);
                     snackbar(e.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
