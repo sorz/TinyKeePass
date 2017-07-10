@@ -8,13 +8,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,11 +27,14 @@ import de.slackspace.openkeepass.domain.Entry;
 
 
 public class EntryFragment extends Fragment implements SearchView.OnQueryTextListener {
+    private static final long INACTIVE_AUTO_LOCK_MILLIS = 3 * 60 * 1000;
+
     private MainActivity activity;
     private EntryRecyclerViewAdapter entryAdapter;
     private ClipboardManager clipboardManager;
     private LocalBroadcastManager localBroadcastManager;
     private FloatingActionButton fab;
+    private long lastPauseTimeMillis;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -107,6 +110,15 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         super.onResume();
         if (KeePassStorage.get() == null)
             activity.doLockDatabase();
+        if (lastPauseTimeMillis > 0
+                && SystemClock.elapsedRealtime() - lastPauseTimeMillis > INACTIVE_AUTO_LOCK_MILLIS)
+            activity.doLockDatabase();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        lastPauseTimeMillis = SystemClock.elapsedRealtime();
     }
 
     @Override
