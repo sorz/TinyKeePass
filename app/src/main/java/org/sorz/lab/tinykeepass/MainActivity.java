@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity
 
     private SharedPreferences preferences;
     private KeyguardManager keyguardManager;
-    private ClipboardManager clipboardManager;
     private SecureStringStorage secureStringStorage;
     private int actionAfterGetKey;
 
@@ -46,7 +45,6 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
         keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
-        clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         databaseFile = new File(getNoBackupFilesDir(), FetchDatabaseTask.DB_FILENAME);
         try {
             secureStringStorage = new SecureStringStorage(this);
@@ -93,33 +91,6 @@ public class MainActivity extends AppCompatActivity
 
     public void doSyncDatabase() {
         getKeyThen(ACTION_SYNC_DB);
-    }
-
-    public void copyEntry(Entry entry) {
-        if (entry.getUsername() != null) {
-            clipboardManager.setPrimaryClip(
-                    ClipData.newPlainText(getString(R.string.username), entry.getUsername()));
-            Snackbar snackbar = snackbar(
-                    getString(R.string.username_copied, entry.getUsername()),
-                    Snackbar.LENGTH_LONG);
-            snackbar.setAction(getString(R.string.copy_password), v -> {
-                Intent intent = new Intent(this, PasswordCopingService.class);
-                intent.setAction(PasswordCopingService.ACTION_COPY_PASSWORD);
-                intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.getPassword());
-                startService(intent);
-                snackbar(getString(R.string.password_copied), Snackbar.LENGTH_SHORT).show();
-            }).show();
-        }
-        if (entry.getPassword() != null) {
-            Intent intent = new Intent(this, PasswordCopingService.class);
-            intent.setAction(PasswordCopingService.ACTION_NEW_NOTIFICATION);
-            intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.getPassword());
-            if (entry.getUsername() != null)
-                intent.putExtra(PasswordCopingService.EXTRA_USERNAME, entry.getUsername());
-            if (entry.getTitle() != null)
-                intent.putExtra(PasswordCopingService.EXTRA_ENTRY_TITLE, entry.getTitle());
-            startService(intent);
-        }
     }
 
     private void getKeyThen(int action) {
@@ -209,7 +180,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private Snackbar snackbar(CharSequence text, int duration) {
-        return Snackbar.make(findViewById(R.id.toolbar), text, duration);
+        return Snackbar.make(findViewById(R.id.fragment_container), text, duration);
     }
 
     @Override

@@ -1,6 +1,8 @@
 package org.sorz.lab.tinykeepass;
 
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -18,11 +20,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import de.slackspace.openkeepass.domain.Entry;
 
 
 public class EntryFragment extends Fragment implements SearchView.OnQueryTextListener {
     private MainActivity activity;
     private EntryRecyclerViewAdapter entryAdapter;
+    private ClipboardManager clipboardManager;
     private LocalBroadcastManager localBroadcastManager;
     private FloatingActionButton fab;
 
@@ -54,7 +60,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         Context context = view.getContext();
         RecyclerView recyclerView = view.findViewById(R.id.list);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
-        entryAdapter = new EntryRecyclerViewAdapter(activity);
+        entryAdapter = new EntryRecyclerViewAdapter(this::copyEntry);
         recyclerView.setAdapter(entryAdapter);
 
         fab = view.findViewById(R.id.fab);
@@ -73,6 +79,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         super.onAttach(context);
         activity = (MainActivity) context;
         localBroadcastManager = LocalBroadcastManager.getInstance(activity);
+        clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
     }
 
     @Override
@@ -124,6 +131,38 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
     public boolean onQueryTextChange(String newText) {
         entryAdapter.setFilter(newText);
         return true;
+    }
+
+    private void copyEntry(Entry entry) {
+        if (entry.getUsername() != null) {
+            clipboardManager.setPrimaryClip(
+                    ClipData.newPlainText(getString(R.string.username), entry.getUsername()));
+            String message = getString(R.string.username_copied, entry.getUsername());
+            if (getView() == null) {
+                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+            } else {
+                Snackbar.make(getView(), message, Snackbar.LENGTH_LONG)
+                        .setAction(getString(R.string.copy_password),v -> {
+                            Intent intent = new Intent(getContext(), PasswordCopingService.class);
+                            intent.setAction(PasswordCopingService.ACTION_COPY_PASSWORD);
+                            intent.putExtra(PasswordCopingService.EXTRA_PASSWORD,
+                                    entry.getPassword());
+                            getContext().startService(intent);
+                            Snackbar.make(getView(), R.string.password_copied,
+                                    Snackbar.LENGTH_SHORT).show();
+                }).show();
+            }
+        }
+        if (entry.getPassword() != null) {
+            Intent intent = new Intent(getContext(), PasswordCopingService.class);
+            intent.setAction(PasswordCopingService.ACTION_NEW_NOTIFICATION);
+            intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.getPassword());
+            if (entry.getUsername() != null)
+                intent.putExtra(PasswordCopingService.EXTRA_USERNAME, entry.getUsername());
+            if (entry.getTitle() != null)
+                intent.putExtra(PasswordCopingService.EXTRA_ENTRY_TITLE, entry.getTitle());
+            getContext().startService(intent);
+        }
     }
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {

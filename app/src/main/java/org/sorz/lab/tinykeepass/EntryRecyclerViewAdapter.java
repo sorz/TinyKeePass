@@ -12,6 +12,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import de.slackspace.openkeepass.domain.KeePassFile;
@@ -20,14 +21,14 @@ import de.slackspace.openkeepass.domain.Entry;
 
 public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
     private final static String TAG = EntryRecyclerViewAdapter.class.getName();
-    private final MainActivity activity;
+    private final Consumer<Entry> copyEntryHandler;
     private List<Entry> allEntries;
     private List<Entry> entries;
     private String filter;
 
 
-    public EntryRecyclerViewAdapter(MainActivity activity) {
-        this.activity = activity;
+    public EntryRecyclerViewAdapter(Consumer<Entry> copyEntryHandler) {
+        this.copyEntryHandler = copyEntryHandler;
         reloadEntries();
     }
 
@@ -84,11 +85,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         holder.textUrlHostname.setText(hostnamePath[0]);
         holder.textUrlPath.setText(hostnamePath.length > 1 ? "/" + hostnamePath[1] : "");
 
-        holder.view.setOnClickListener(v -> {
-            if (null != activity) {
-                activity.copyEntry(entry);
-            }
-        });
+        holder.view.setOnClickListener(v -> copyEntryHandler.accept(entry));
     }
 
     private static String parse(String s) {
