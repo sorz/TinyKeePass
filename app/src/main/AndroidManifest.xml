@@ -14,7 +14,7 @@
         android:theme="@style/AppTheme">
         <activity android:name=".DatabaseSetupActivity" />
         <activity
-            android:name=".MainActivity"
+            android:name="org.sorz.lab.tinykeepass.MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -25,11 +25,11 @@
         </activity>
 
         <service
-            android:name=".PasswordCopingService"
+            android:name="org.sorz.lab.tinykeepass.PasswordCopingService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".DatabaseSyncingService"
+            android:name="org.sorz.lab.tinykeepass.DatabaseSyncingService"
             android:enabled="true"
             android:exported="false" />
     </application>
