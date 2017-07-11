@@ -196,10 +196,10 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
                     if (getView() != null)
                         Snackbar.make(getView(), getString(R.string.fail_to_sync, error),
                                 Snackbar.LENGTH_LONG).show();
-                    entryAdapter.reloadEntries();
                 } else {
                     if (getView() != null)
                         Snackbar.make(getView(), R.string.sync_done, Snackbar.LENGTH_SHORT).show();
+                    entryAdapter.reloadEntries();
                 }
             }
         }
