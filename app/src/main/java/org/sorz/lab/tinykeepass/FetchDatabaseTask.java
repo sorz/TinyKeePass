@@ -12,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.Authenticator;
@@ -69,6 +70,9 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
             IOUtils.copy(input, output);
             input.close();
             output.close();
+        } catch (InterruptedIOException e) {
+            // task cancelled
+            return null;
         } catch (IOException e) {
             Log.w(TAG, "fail to download database file.", e);
             return e.getClass().getSimpleName() + ": " + e.getLocalizedMessage();
