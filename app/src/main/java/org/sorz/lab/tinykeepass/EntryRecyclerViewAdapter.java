@@ -3,6 +3,7 @@ package org.sorz.lab.tinykeepass;
 import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,8 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -21,14 +24,17 @@ import de.slackspace.openkeepass.domain.Entry;
 
 public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
     private final static String TAG = EntryRecyclerViewAdapter.class.getName();
-    private final Consumer<Entry> copyEntryHandler;
+    private final BiConsumer<View, Entry> onClickHandler;
+    private final BiPredicate<View, Entry> onLongClickHandler;
     private List<Entry> allEntries;
     private List<Entry> entries;
     private String filter;
 
 
-    public EntryRecyclerViewAdapter(Consumer<Entry> copyEntryHandler) {
-        this.copyEntryHandler = copyEntryHandler;
+    public EntryRecyclerViewAdapter(BiConsumer<View, Entry> onClickHandler,
+                                    BiPredicate<View, Entry> onLongClickHandler) {
+        this.onClickHandler = onClickHandler;
+        this.onLongClickHandler = onLongClickHandler;
         reloadEntries();
     }
 
@@ -85,7 +91,10 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         holder.textUrlHostname.setText(hostnamePath[0]);
         holder.textUrlPath.setText(hostnamePath.length > 1 ? "/" + hostnamePath[1] : "");
 
-        holder.view.setOnClickListener(v -> copyEntryHandler.accept(entry));
+        if (onClickHandler != null)
+            holder.view.setOnClickListener(v -> onClickHandler.accept(v, entry));
+        if (onLongClickHandler != null)
+            holder.view.setOnLongClickListener(v -> onLongClickHandler.test(v, entry));
     }
 
     private static String parse(String s) {

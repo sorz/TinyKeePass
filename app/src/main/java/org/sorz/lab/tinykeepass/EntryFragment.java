@@ -6,6 +6,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.SystemClock;
@@ -15,6 +16,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,6 +38,8 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
     private ClipboardManager clipboardManager;
     private LocalBroadcastManager localBroadcastManager;
     private FloatingActionButton fab;
+    private ActionMode actionMode;
+    private Entry selectedEntry;
     private long lastPauseTimeMillis;
 
     /**
@@ -64,7 +70,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         Context context = view.getContext();
         RecyclerView recyclerView = view.findViewById(R.id.list);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
-        entryAdapter = new EntryRecyclerViewAdapter(this::copyEntry);
+        entryAdapter = new EntryRecyclerViewAdapter((v, e) -> copyEntry(e), this::onEntryLongClick);
         recyclerView.setAdapter(entryAdapter);
 
         fab = view.findViewById(R.id.fab);
@@ -185,7 +191,60 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         }
     }
 
-    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+    private void openEntryUrl(Entry entry) {
+        if (entry.getUrl() == null || entry.getUrl().isEmpty())
+            return;
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(entry.getUrl()));
+        startActivity(intent);
+        copyEntry(entry);
+    }
+
+    private boolean onEntryLongClick(View view, Entry entry) {
+        if (getActivity() == null || actionMode != null)
+            return false;
+        selectedEntry = entry;
+        Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
+        if (toolbar == null)
+            return false;
+        actionMode = toolbar.startActionMode(entryLongClickActionModeCallback);
+        view.setSelected(true);
+        return true;
+    }
+
+    private ActionMode.Callback entryLongClickActionModeCallback = new ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            mode.getMenuInflater().inflate(R.menu.entry_context, menu);
+            if (selectedEntry.getUrl() == null || selectedEntry.getUrl().isEmpty())
+                mode.getMenu().getItem(R.id.action_open).setEnabled(false);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.action_open:
+                    openEntryUrl(selectedEntry);
+                    mode.finish();
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            actionMode = null;
+            selectedEntry = null;
+        }
+    };
+
+        private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (DatabaseSyncingService.BROADCAST_SYNC_FINISHED.equals(intent.getAction())) {
