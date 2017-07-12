@@ -156,35 +156,51 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         return true;
     }
 
-    private void copyEntry(Entry entry) {
-        if (entry.getUsername() != null) {
+    /**
+     * Immediately copy password & show count down notification.
+     * @param password to copy
+     */
+    private void copyPassword(String password) {
+        Intent intent = new Intent(getContext(), PasswordCopingService.class);
+        intent.setAction(PasswordCopingService.ACTION_COPY_PASSWORD);
+        intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, password);
+        getContext().startService(intent);
+        if (getView() != null)
+            Snackbar.make(getView(), R.string.password_copied, Snackbar.LENGTH_SHORT).show();
+        else
+            Toast.makeText(getContext(), R.string.password_copied, Toast.LENGTH_SHORT).show();
+
+    }
+
+    private void copyEntry(Entry entry, boolean copyUsername, boolean copyPassword) {
+        if (copyUsername && notEmpty(entry.getUsername())) {
             clipboardManager.setPrimaryClip(
                     ClipData.newPlainText(getString(R.string.username), entry.getUsername()));
             String message = getString(R.string.username_copied, entry.getUsername());
             if (getView() == null) {
                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
             } else {
-                Snackbar.make(getView(), message, Snackbar.LENGTH_LONG)
-                        .setAction(getString(R.string.copy_password),v -> {
-                            Intent intent = new Intent(getContext(), PasswordCopingService.class);
-                            intent.setAction(PasswordCopingService.ACTION_COPY_PASSWORD);
-                            intent.putExtra(PasswordCopingService.EXTRA_PASSWORD,
-                                    entry.getPassword());
-                            getContext().startService(intent);
-                            Snackbar.make(getView(), R.string.password_copied,
-                                    Snackbar.LENGTH_SHORT).show();
-                }).show();
+                Snackbar snackbar = Snackbar.make(getView(), message, Snackbar.LENGTH_LONG);
+                if (copyPassword)
+                    snackbar.setAction(getString(R.string.copy_password),v -> copyPassword(entry.getPassword()));
+                snackbar.show();
             }
         }
-        if (entry.getPassword() != null) {
-            Intent intent = new Intent(getContext(), PasswordCopingService.class);
-            intent.setAction(PasswordCopingService.ACTION_NEW_NOTIFICATION);
-            intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.getPassword());
-            if (entry.getUsername() != null)
-                intent.putExtra(PasswordCopingService.EXTRA_USERNAME, entry.getUsername());
-            if (entry.getTitle() != null)
-                intent.putExtra(PasswordCopingService.EXTRA_ENTRY_TITLE, entry.getTitle());
-            getContext().startService(intent);
+        if (copyPassword && notEmpty(entry.getPassword())) {
+            if (copyUsername && notEmpty(entry.getUsername())) {
+                // username already copied, waiting for user's action before copy password.
+                Intent intent = new Intent(getContext(), PasswordCopingService.class);
+                intent.setAction(PasswordCopingService.ACTION_NEW_NOTIFICATION);
+                intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.getPassword());
+                if (entry.getUsername() != null)
+                    intent.putExtra(PasswordCopingService.EXTRA_USERNAME, entry.getUsername());
+                if (entry.getTitle() != null)
+                    intent.putExtra(PasswordCopingService.EXTRA_ENTRY_TITLE, entry.getTitle());
+                getContext().startService(intent);
+            } else {
+                // username not copied, copy password immediately.
+                copyPassword(entry.getPassword());
+            }
         }
     }
 
@@ -193,14 +209,14 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
             return;
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(entry.getUrl()));
         startActivity(intent);
-        copyEntry(entry);
+        copyEntry(entry, true, true);
     }
 
     private void onEntryClick(View view, Entry entry) {
         if (actionMode != null) {
             actionMode.finish();
         } else {
-            copyEntry(entry);
+            copyEntry(entry, true, true);
         }
     }
 
@@ -215,6 +231,10 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         return true;
     }
 
+    private boolean notEmpty(String string) {
+        return string != null && !string.isEmpty();
+    }
+
     private ActionMode.Callback entryLongClickActionModeCallback = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -227,8 +247,9 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
             Entry entry = entryAdapter.getSelectedItem();
             if (entry == null)
                 return false;
-            menu.findItem(R.id.action_open)
-                    .setEnabled(entry.getUrl() != null && !entry.getUrl().isEmpty());
+            menu.findItem(R.id.action_copy_username).setEnabled(notEmpty(entry.getUsername()));
+            menu.findItem(R.id.action_copy_password).setEnabled(notEmpty(entry.getPassword()));
+            menu.findItem(R.id.action_open).setEnabled(notEmpty(entry.getUrl()));
             return true;
         }
 
@@ -238,13 +259,20 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
             if (entry == null)
                 return false;
             switch (item.getItemId()) {
+                case R.id.action_copy_username:
+                    copyEntry(entry, true, false);
+                    break;
+                case R.id.action_copy_password:
+                    copyEntry(entry, false, true);
+                    break;
                 case R.id.action_open:
                     openEntryUrl(entry);
-                    mode.finish();
-                    return true;
+                    break;
                 default:
                     return false;
             }
+            mode.finish();
+            return true;
         }
 
         @Override

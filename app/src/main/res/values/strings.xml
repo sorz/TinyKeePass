@@ -41,5 +41,7 @@
     <string name="fetch_fail">Database fetch failed</string>
     <string name="fetch_cancel_by_user">cancelled by user</string>
     <string name="action_open_in_browser">Open URL</string>
+    <string name="action_copy_username">Copy username</string>
+    <string name="action_copy_password">Copy password</string>
 
 </resources>
