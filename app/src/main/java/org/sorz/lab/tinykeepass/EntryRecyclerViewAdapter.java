@@ -1,9 +1,9 @@
 package org.sorz.lab.tinykeepass;
 
 import android.graphics.BitmapFactory;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import de.slackspace.openkeepass.domain.KeePassFile;
@@ -29,6 +28,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
     private List<Entry> allEntries;
     private List<Entry> entries;
     private String filter;
+    private int selectedItem = -1;
 
 
     public EntryRecyclerViewAdapter(BiConsumer<View, Entry> onClickHandler,
@@ -80,6 +80,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
     public void onBindViewHolder(final ViewHolder holder, int position) {
         Entry entry = entries.get(position);
         holder.entry = entry;
+        holder.view.setSelected(selectedItem == position);
         holder.imageIcon.setImageBitmap(
                 BitmapFactory.decodeByteArray(entry.getIconData(), 0,
                         entry.getIconData().length));
@@ -94,11 +95,39 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         if (onClickHandler != null)
             holder.view.setOnClickListener(v -> onClickHandler.accept(v, entry));
         if (onLongClickHandler != null)
-            holder.view.setOnLongClickListener(v -> onLongClickHandler.test(v, entry));
+            holder.view.setOnLongClickListener(v -> {
+                if (onLongClickHandler.test(v, entry)) {
+                    setSelectedItem(position);
+                    return true;
+                } else {
+                    return false;
+                }
+            });
     }
 
     private static String parse(String s) {
         return s == null ? "" : s;
+    }
+
+    private void setSelectedItem(int position) {
+        if (selectedItem >= 0)
+            notifyItemChanged(selectedItem);
+        selectedItem = position;
+        notifyItemChanged(position);
+    }
+
+    @Nullable
+    public Entry getSelectedItem() {
+        if (selectedItem >= 0 && selectedItem < entries.size())
+            return entries.get(selectedItem);
+        return null;
+    }
+
+    public void clearSelection() {
+        int item = selectedItem;
+        selectedItem = -1;
+        if (item >= 0)
+            notifyItemChanged(item);
     }
 
     @Override

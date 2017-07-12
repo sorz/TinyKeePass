@@ -16,8 +16,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -39,7 +37,6 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
     private LocalBroadcastManager localBroadcastManager;
     private FloatingActionButton fab;
     private ActionMode actionMode;
-    private Entry selectedEntry;
     private long lastPauseTimeMillis;
 
     /**
@@ -70,7 +67,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         Context context = view.getContext();
         RecyclerView recyclerView = view.findViewById(R.id.list);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
-        entryAdapter = new EntryRecyclerViewAdapter((v, e) -> copyEntry(e), this::onEntryLongClick);
+        entryAdapter = new EntryRecyclerViewAdapter(this::onEntryClick, this::onEntryLongClick);
         recyclerView.setAdapter(entryAdapter);
 
         fab = view.findViewById(R.id.fab);
@@ -199,15 +196,22 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         copyEntry(entry);
     }
 
+    private void onEntryClick(View view, Entry entry) {
+        if (actionMode != null) {
+            actionMode.finish();
+        } else {
+            copyEntry(entry);
+        }
+    }
+
     private boolean onEntryLongClick(View view, Entry entry) {
-        if (getActivity() == null || actionMode != null)
+        if (getActivity() == null)
             return false;
-        selectedEntry = entry;
-        Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
-        if (toolbar == null)
-            return false;
-        actionMode = toolbar.startActionMode(entryLongClickActionModeCallback);
-        view.setSelected(true);
+        if (actionMode != null) {
+            actionMode.invalidate();
+            return true;
+        }
+        actionMode = getActivity().startActionMode(entryLongClickActionModeCallback);
         return true;
     }
 
@@ -215,21 +219,27 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             mode.getMenuInflater().inflate(R.menu.entry_context, menu);
-            if (selectedEntry.getUrl() == null || selectedEntry.getUrl().isEmpty())
-                mode.getMenu().getItem(R.id.action_open).setEnabled(false);
             return true;
         }
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            return false;
+            Entry entry = entryAdapter.getSelectedItem();
+            if (entry == null)
+                return false;
+            menu.findItem(R.id.action_open)
+                    .setEnabled(entry.getUrl() != null && !entry.getUrl().isEmpty());
+            return true;
         }
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            Entry entry = entryAdapter.getSelectedItem();
+            if (entry == null)
+                return false;
             switch (item.getItemId()) {
                 case R.id.action_open:
-                    openEntryUrl(selectedEntry);
+                    openEntryUrl(entry);
                     mode.finish();
                     return true;
                 default:
@@ -240,7 +250,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             actionMode = null;
-            selectedEntry = null;
+            entryAdapter.clearSelection();
         }
     };
 

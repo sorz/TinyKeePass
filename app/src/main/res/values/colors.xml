@@ -6,4 +6,5 @@
     <color name="warning">#e53935</color>
     <color name="hint">#bdbdbd</color>
     <color name="success">#009688</color>
+    <color name="selectedRow">#e0e0e0</color>
 </resources>

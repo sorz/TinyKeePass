@@ -11,7 +11,7 @@
     android:paddingEnd="16dp"
     android:clickable="true"
     android:focusable="true"
-    android:background="?android:attr/selectableItemBackground">
+    android:background="@drawable/selectable_background">
 
     <TextView
         android:id="@+id/textUrlPath"
