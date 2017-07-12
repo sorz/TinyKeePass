@@ -247,9 +247,9 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
             Entry entry = entryAdapter.getSelectedItem();
             if (entry == null)
                 return false;
-            menu.findItem(R.id.action_copy_username).setEnabled(notEmpty(entry.getUsername()));
-            menu.findItem(R.id.action_copy_password).setEnabled(notEmpty(entry.getPassword()));
-            menu.findItem(R.id.action_open).setEnabled(notEmpty(entry.getUrl()));
+            menu.findItem(R.id.action_copy_username).setVisible(notEmpty(entry.getUsername()));
+            menu.findItem(R.id.action_copy_password).setVisible(notEmpty(entry.getPassword()));
+            menu.findItem(R.id.action_open).setVisible(notEmpty(entry.getUrl()));
             return true;
         }
 

@@ -96,12 +96,8 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
             holder.view.setOnClickListener(v -> onClickHandler.accept(v, entry));
         if (onLongClickHandler != null)
             holder.view.setOnLongClickListener(v -> {
-                if (onLongClickHandler.test(v, entry)) {
-                    setSelectedItem(position);
-                    return true;
-                } else {
-                    return false;
-                }
+                setSelectedItem(position);
+                return onLongClickHandler.test(v, entry);
             });
     }
 
