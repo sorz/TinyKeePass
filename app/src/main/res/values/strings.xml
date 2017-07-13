@@ -43,5 +43,6 @@
     <string name="action_open_in_browser">Open URL</string>
     <string name="action_copy_username">Copy username</string>
     <string name="action_copy_password">Copy password</string>
+    <string name="action_exit">Exit</string>
 
 </resources>

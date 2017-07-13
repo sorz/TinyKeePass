@@ -8,10 +8,15 @@
         app:showAsAction="ifRoom|collapseActionView"
         app:actionViewClass="android.support.v7.widget.SearchView"
         android:title="@string/action_search"/>
-
     <item
         android:id="@+id/action_lock_db"
-        android:orderInCategory="500"
+        android:orderInCategory="400"
         android:title="@string/action_lock_db"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_exit"
+        android:orderInCategory="500"
+        android:title="@string/action_exit"
+        app:showAsAction="never" />
+
 </menu>

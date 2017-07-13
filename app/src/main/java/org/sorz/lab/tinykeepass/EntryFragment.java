@@ -140,6 +140,10 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
                 if (activity != null)
                     activity.doLockDatabase();
                 return true;
+            case R.id.action_exit:
+                if (activity != null)
+                    getActivity().finish();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
