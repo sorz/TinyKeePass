@@ -25,7 +25,11 @@ public class KeePassStorage {
             screenOffFilter.addAction(Intent.ACTION_SCREEN_OFF);
             context.registerReceiver(broadcastReceiver, screenOffFilter);
         } else if (keePassFile != null && file == null) {
-            context.unregisterReceiver(broadcastReceiver);
+            try {
+                context.unregisterReceiver(broadcastReceiver);
+            } catch (IllegalArgumentException e) {
+                // ignore no registered error
+            }
         }
         keePassFile = file;
     }
