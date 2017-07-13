@@ -66,6 +66,13 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (isFinishing())
+            KeePassStorage.set(this, null);
+    }
+
     public void doUnlockDatabase() {
         if (KeePassStorage.get() != null) {
             showEntryList();
