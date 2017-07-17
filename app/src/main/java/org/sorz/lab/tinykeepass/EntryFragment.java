@@ -111,11 +111,13 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
     @Override
     public void onResume() {
         super.onResume();
-        if (KeePassStorage.get() == null)
+        if (KeePassStorage.get() == null ||
+                lastPauseTimeMillis > 0 &&
+                        SystemClock.elapsedRealtime() - lastPauseTimeMillis >
+                                INACTIVE_AUTO_LOCK_MILLIS) {
             activity.doLockDatabase();
-        if (lastPauseTimeMillis > 0
-                && SystemClock.elapsedRealtime() - lastPauseTimeMillis > INACTIVE_AUTO_LOCK_MILLIS)
-            activity.doLockDatabase();
+            activity.doUnlockDatabase();
+       }
     }
 
     @Override
