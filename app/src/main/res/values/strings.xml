@@ -44,5 +44,7 @@
     <string name="action_copy_username">Copy username</string>
     <string name="action_copy_password">Copy password</string>
     <string name="action_exit">Exit</string>
+    <string name="action_copy_url">Copy URL</string>
+    <string name="url_copied">URL copied</string>
 
 </resources>

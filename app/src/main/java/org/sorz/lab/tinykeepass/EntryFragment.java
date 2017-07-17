@@ -253,6 +253,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
                 return false;
             menu.findItem(R.id.action_copy_username).setVisible(notEmpty(entry.getUsername()));
             menu.findItem(R.id.action_copy_password).setVisible(notEmpty(entry.getPassword()));
+            menu.findItem(R.id.action_copy_url).setVisible(notEmpty(entry.getUrl()));
             menu.findItem(R.id.action_open).setVisible(notEmpty(entry.getUrl()));
             return true;
         }
@@ -268,6 +269,15 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
                     break;
                 case R.id.action_copy_password:
                     copyEntry(entry, false, true);
+                    break;
+                case R.id.action_copy_url:
+                    if (notEmpty(entry.getUrl())) {
+                        clipboardManager.setPrimaryClip(
+                                ClipData.newPlainText("URL", entry.getUrl()));
+                        if (getView() != null)
+                            Snackbar.make(getView(), R.string.url_copied,
+                                    Snackbar.LENGTH_SHORT).show();
+                    }
                     break;
                 case R.id.action_open:
                     openEntryUrl(entry);

@@ -12,6 +12,11 @@
         app:showAsAction="ifRoom"
         android:title="@string/action_copy_password" />
     <item
+        android:id="@+id/action_copy_url"
+        android:icon="@drawable/ic_link_white_24dp"
+        app:showAsAction="ifRoom"
+        android:title="@string/action_copy_url"/>
+    <item
         android:id="@+id/action_open"
         android:icon="@drawable/ic_open_in_browser_white_24dp"
         app:showAsAction="ifRoom"
