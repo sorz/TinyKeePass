@@ -85,6 +85,10 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    public void doUnlockDatabase(Cipher cipher) {
+        getKey(cipher, ACTION_OPEN_DB);
+    }
+
     public void doLockDatabase() {
         KeePassStorage.set(this, null);
         getFragmentManager().beginTransaction()
@@ -109,7 +113,7 @@ public class MainActivity extends AppCompatActivity
             case DatabaseSetupActivity.AUTH_METHOD_SCREEN_LOCK:
                 try {
                     Cipher cipher = secureStringStorage.getDecryptCipher();
-                    getKey(cipher);
+                    getKey(cipher, actionAfterGetKey);
                 } catch (UserNotAuthenticatedException e) {
                     // should do authentication
                     Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
@@ -130,7 +134,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @SuppressLint("StaticFieldLeak")
-    private void getKey(Cipher cipher) {
+    private void getKey(Cipher cipher, int actionAfterGetKey) {
         List<String> keys;
         try {
             keys = secureStringStorage.get(cipher);
@@ -213,6 +217,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onFingerprintSuccess(Cipher cipher) {
-        getKey(cipher);
+        getKey(cipher, actionAfterGetKey);
     }
 }
