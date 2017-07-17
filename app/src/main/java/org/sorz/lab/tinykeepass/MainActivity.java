@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity
                     .add(R.id.fragment_container, new DatabaseLockedFragment())
                     .commit();
 
-            if (KeePassStorage.get() == null && !databaseFile.canRead()) {
+            if (!hasConfiguredDatabase()) {
                 doConfigureDatabase();
                 finish();
             } else {
@@ -71,6 +71,10 @@ public class MainActivity extends AppCompatActivity
         super.onDestroy();
         if (isFinishing())
             KeePassStorage.set(this, null);
+    }
+
+    public boolean hasConfiguredDatabase() {
+        return KeePassStorage.get() != null || databaseFile.canRead();
     }
 
     public void doUnlockDatabase() {
@@ -101,8 +105,8 @@ public class MainActivity extends AppCompatActivity
         actionAfterGetKey = action;
         int authMethod = preferences.getInt("key-auth-method", 0);
         switch (authMethod) {
-            case 0: // no auth
-            case 1: // screen lock
+            case DatabaseSetupActivity.AUTH_METHOD_NONE:
+            case DatabaseSetupActivity.AUTH_METHOD_SCREEN_LOCK:
                 try {
                     Cipher cipher = secureStringStorage.getDecryptCipher();
                     getKey(cipher);
@@ -116,7 +120,7 @@ public class MainActivity extends AppCompatActivity
                     throw new RuntimeException(e);
                 }
                 break;
-            case 2: // fingerprint
+            case DatabaseSetupActivity.AUTH_METHOD_FINGERPRINT:
                 getFragmentManager().beginTransaction()
                         .add(FingerprintDialogFragment.newInstance(Cipher.DECRYPT_MODE),
                                 "fingerprint")

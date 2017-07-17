@@ -32,6 +32,10 @@ public class DatabaseSetupActivity extends AppCompatActivity
         implements FingerprintDialogFragment.OnFragmentInteractionListener {
     final private static String TAG = DatabaseSetupActivity.class.getName();
     final private static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 0;
+    public static final int AUTH_METHOD_NONE = 0;
+    public static final int AUTH_METHOD_SCREEN_LOCK = 1;
+    public static final int AUTH_METHOD_FINGERPRINT = 2;
+
     private KeyguardManager keyguardManager;
     private FingerprintManager fingerprintManager;
     private SecureStringStorage secureStringStorage;
@@ -196,18 +200,18 @@ public class DatabaseSetupActivity extends AppCompatActivity
 
         try {
             switch (spinnerAuthMethod.getSelectedItemPosition()) {
-                case 0: // no auth
+                case AUTH_METHOD_NONE:
                     secureStringStorage.generateNewKey(false, -1);
                     saveKeys(null);
                     break;
-                case 1: // lock screen
+                case AUTH_METHOD_SCREEN_LOCK:
                     secureStringStorage.generateNewKey(true, 60);
                     Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
                             getString(R.string.auth_key_title),
                             getString(R.string.auth_key_description));
                     startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL);
                     break;
-                case 2: // fingerprint
+                case AUTH_METHOD_FINGERPRINT:
                     secureStringStorage.generateNewKey(true, -1);
                     requestFingerprintToSaveKeys();
                     break;
