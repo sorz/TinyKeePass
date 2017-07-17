@@ -90,7 +90,8 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         String url = parse(entry.getUrl()).replaceFirst("https?://(www\\.)?", "");
         String[] hostnamePath = url.split("/", 2);
         holder.textUrlHostname.setText(hostnamePath[0]);
-        holder.textUrlPath.setText(hostnamePath.length > 1 ? "/" + hostnamePath[1] : "");
+        holder.textUrlPath.setText(hostnamePath.length > 1 && !hostnamePath[1].isEmpty() ?
+                "/" + hostnamePath[1] : "");
 
         if (onClickHandler != null)
             holder.view.setOnClickListener(v -> onClickHandler.accept(v, entry));
