@@ -20,22 +20,14 @@ import static android.content.Context.FINGERPRINT_SERVICE;
 
 
 /**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link FingerprintDialogFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link FingerprintDialogFragment#newInstance} factory method to
- * create an instance of this fragment.
+ * Display a fingerprint dialog.
+ * Return authenticated cipher if auth passed.
  */
 public class FingerprintDialogFragment extends DialogFragment {
-    private static final long ERROR_TIMEOUT_MILLIS = 1500;
-    private static final long SUCCESS_TIMEOUT_MILLIS = 300;
     private static final String ARGS_CIPHER_MODE = "args-cipher-mode";
 
     private OnFragmentInteractionListener listener;
-    private ImageView imageFingerprintIcon;
-    private TextView textFingerprintStatus;
-    private CancellationSignal cancellationSignal;
+    private FingerprintUiHelper fingerprintUiHelper;
 
     public FingerprintDialogFragment() {
         // Required empty public constructor
@@ -63,9 +55,17 @@ public class FingerprintDialogFragment extends DialogFragment {
         getDialog().setCancelable(true);
         getDialog().setCanceledOnTouchOutside(true);
         View view = inflater.inflate(R.layout.fragment_fingerprint_dialog, container, false);
-        imageFingerprintIcon = view.findViewById(R.id.imageFingerprintIcon);
-        textFingerprintStatus = view.findViewById(R.id.textFingerprintStatus);
+        fingerprintUiHelper = new FingerprintUiHelper(getContext(), view, this::onFingerprintFinish);
         return view;
+    }
+
+    private void onFingerprintFinish(Cipher cipher) {
+        if (listener != null)
+            if (cipher == null)
+                listener.onFingerprintCancel();
+            else
+                listener.onFingerprintSuccess(cipher);
+        dismiss();
     }
 
     @Override
@@ -83,76 +83,20 @@ public class FingerprintDialogFragment extends DialogFragment {
     public void onDetach() {
         super.onDetach();
         listener = null;
+        fingerprintUiHelper = null;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Cipher cipher;
-        try {
-            SecureStringStorage storage = new SecureStringStorage(getContext());
-            switch (getArguments().getInt(ARGS_CIPHER_MODE)) {
-                case Cipher.ENCRYPT_MODE:
-                    cipher = storage.getEncryptCipher();
-                    break;
-                case Cipher.DECRYPT_MODE:
-                    cipher = storage.getDecryptCipher();
-                    break;
-                default:
-                    throw new UnsupportedOperationException("not support such cipher mode");
-            }
-        } catch (UserNotAuthenticatedException | SecureStringStorage.SystemException e) {
-            throw new RuntimeException("cannot get cipher", e);
-        }
-        FingerprintManager.CryptoObject cryptoObject = new FingerprintManager.CryptoObject(cipher);
-        FingerprintManager fingerprintManager = (FingerprintManager)
-                getContext().getSystemService(FINGERPRINT_SERVICE);
-        cancellationSignal = new CancellationSignal();
-        fingerprintManager.authenticate(cryptoObject, cancellationSignal, 0,
-            new FingerprintManager.AuthenticationCallback() {
-                @Override
-                public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
-                    Context context = getContext();
-                    if (context == null)
-                        return;
-                    textFingerprintStatus.removeCallbacks(resetErrorTextRunnable);
-                    imageFingerprintIcon.setImageResource(R.drawable.ic_fingerprint_success);
-                    textFingerprintStatus.setText(R.string.fingerprint_success);
-                    textFingerprintStatus.setTextColor(context.getColor(R.color.success));
-                    imageFingerprintIcon.postDelayed(() -> {
-                        if (listener != null)
-                            listener.onFingerprintSuccess(result.getCryptoObject().getCipher());
-                        dismiss();
-                    }, SUCCESS_TIMEOUT_MILLIS);
-                }
-
-                @Override
-                public void onAuthenticationHelp(int helpMsgId, CharSequence helpString) {
-                    showError(helpString);
-                }
-
-                @Override
-                public void onAuthenticationFailed() {
-                    showError(getContext().getString(R.string.fingerprint_failed));
-                }
-
-                @Override
-                public void onAuthenticationError(int errMsgId, CharSequence errString) {
-                    showError(errString);
-                    imageFingerprintIcon.postDelayed(() -> {
-                        if (listener != null)
-                            listener.onFingerprintCancel();
-                        dismiss();
-                    }, ERROR_TIMEOUT_MILLIS * 2);
-                }
-            }, null);
+        fingerprintUiHelper.start(getArguments().getInt(ARGS_CIPHER_MODE));
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (cancellationSignal != null)
-            cancellationSignal.cancel();
+        if (fingerprintUiHelper != null)
+            fingerprintUiHelper.stop();
     }
 
     @Override
@@ -161,29 +105,6 @@ public class FingerprintDialogFragment extends DialogFragment {
         if (listener != null)
             listener.onFingerprintCancel();
     }
-
-    private void showError(CharSequence error) {
-        Context context = getContext();
-        if (context == null)
-            return;
-        imageFingerprintIcon.setImageResource(R.drawable.ic_fingerprint_error);
-        textFingerprintStatus.setText(error);
-        textFingerprintStatus.setTextColor(context.getColor(R.color.warning));
-        textFingerprintStatus.removeCallbacks(resetErrorTextRunnable);
-        textFingerprintStatus.postDelayed(resetErrorTextRunnable, ERROR_TIMEOUT_MILLIS);
-    }
-
-    private Runnable resetErrorTextRunnable = new Runnable() {
-        @Override
-        public void run() {
-            Context context = getContext();
-            if (context == null)
-                return;
-            imageFingerprintIcon.setImageResource(R.mipmap.ic_fp_40px);
-            textFingerprintStatus.setText(R.string.fingerprint_hint);
-            textFingerprintStatus.setTextColor(context.getColor(R.color.hint));
-        }
-    };
 
     public interface OnFragmentInteractionListener {
         void onFingerprintCancel();
