@@ -1,8 +1,14 @@
 package org.sorz.lab.tinykeepass;
 
+import android.content.Context;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,8 +29,10 @@ import de.slackspace.openkeepass.domain.Entry;
 
 public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
     private final static String TAG = EntryRecyclerViewAdapter.class.getName();
+    private final static int PASSWORD_NUM_OF_CHARS_IN_GROUP = 4;
     private final BiConsumer<View, Entry> onClickHandler;
     private final BiPredicate<View, Entry> onLongClickHandler;
+    private final Context context;
     private List<Entry> allEntries;
     private List<Entry> entries;
     private String filter;
@@ -32,8 +40,10 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
     private int passwordShownItem = -1;
 
 
-    public EntryRecyclerViewAdapter(BiConsumer<View, Entry> onClickHandler,
+    public EntryRecyclerViewAdapter(Context context,
+                                    BiConsumer<View, Entry> onClickHandler,
                                     BiPredicate<View, Entry> onLongClickHandler) {
+        this.context = context;
         this.onClickHandler = onClickHandler;
         this.onLongClickHandler = onLongClickHandler;
         reloadEntries();
@@ -94,11 +104,28 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         holder.textUrlPath.setText(hostnamePath.length > 1 && !hostnamePath[1].isEmpty() ?
                 "/" + hostnamePath[1] : "");
 
-        if (position == passwordShownItem) {
-            if (entry.getPassword() != null && !entry.getPassword().isEmpty())
-                holder.textPassword.setText(entry.getPassword());
-            else
-                holder.textPassword.setText(R.string.no_password);
+        if (position == passwordShownItem
+                && entry.getPassword() != null && !entry.getPassword().isEmpty()) {
+            SpannableStringBuilder builder = new SpannableStringBuilder();
+            int colors[] = {
+                    context.getColor(R.color.colorPrimary),
+                    context.getColor(R.color.colorPrimaryDark)
+            };
+            int colorIndex = 0;
+            boolean bold = false;
+            for (char c : entry.getPassword().toCharArray()) {
+                builder.append(c);
+                if (builder.length() >= PASSWORD_NUM_OF_CHARS_IN_GROUP) {
+                    builder.setSpan(new StyleSpan(bold ? Typeface.BOLD : Typeface.NORMAL),
+                            0, builder.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    builder.setSpan(new ForegroundColorSpan(colors[colorIndex]),
+                            0, builder.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    holder.textPassword.append(builder);
+                    builder.clear();
+                    bold = !bold;
+                    colorIndex = (colorIndex + 1) % colors.length;
+                }
+            }
             holder.textPassword.setVisibility(View.VISIBLE);
         } else {
             holder.textPassword.setVisibility(View.GONE);

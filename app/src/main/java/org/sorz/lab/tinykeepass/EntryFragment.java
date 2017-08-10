@@ -67,7 +67,8 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         Context context = view.getContext();
         RecyclerView recyclerView = view.findViewById(R.id.list);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
-        entryAdapter = new EntryRecyclerViewAdapter(this::onEntryClick, this::onEntryLongClick);
+        entryAdapter = new EntryRecyclerViewAdapter(
+                getContext(), this::onEntryClick, this::onEntryLongClick);
         recyclerView.setAdapter(entryAdapter);
 
         fab = view.findViewById(R.id.fab);
