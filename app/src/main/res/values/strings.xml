@@ -49,5 +49,6 @@
     <string name="show_password">Show password</string>
     <string name="your_password_is">Your password is %1$s</string>
     <string name="hide">Got it</string>
+    <string name="no_password">(No password)</string>
 
 </resources>

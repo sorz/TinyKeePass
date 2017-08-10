@@ -29,6 +29,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
     private List<Entry> entries;
     private String filter;
     private int selectedItem = -1;
+    private int passwordShownItem = -1;
 
 
     public EntryRecyclerViewAdapter(BiConsumer<View, Entry> onClickHandler,
@@ -93,8 +94,24 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         holder.textUrlPath.setText(hostnamePath.length > 1 && !hostnamePath[1].isEmpty() ?
                 "/" + hostnamePath[1] : "");
 
+        if (position == passwordShownItem) {
+            if (entry.getPassword() != null && !entry.getPassword().isEmpty())
+                holder.textPassword.setText(entry.getPassword());
+            else
+                holder.textPassword.setText(R.string.no_password);
+            holder.textPassword.setVisibility(View.VISIBLE);
+        } else {
+            holder.textPassword.setVisibility(View.GONE);
+            holder.textPassword.setText("");
+        }
+
         if (onClickHandler != null)
-            holder.view.setOnClickListener(v -> onClickHandler.accept(v, entry));
+            holder.view.setOnClickListener(v -> {
+                if (passwordShownItem >= 0)
+                    hidePassword();
+                else
+                    onClickHandler.accept(v, entry);
+            });
         if (onLongClickHandler != null)
             holder.view.setOnLongClickListener(v -> {
                 setSelectedItem(position);
@@ -139,6 +156,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         final TextView textUsername;
         final TextView textUrlHostname;
         final TextView textUrlPath;
+        final TextView textPassword;
         Entry entry;
 
         ViewHolder(View view) {
@@ -148,7 +166,8 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
             textTitle = view.findViewById(R.id.textTitle);
             textUsername = view.findViewById(R.id.textUsername);
             textUrlHostname = view.findViewById(R.id.textUrlHostname);
-            textUrlPath =  view.findViewById(R.id.textUrlPath);
+            textUrlPath = view.findViewById(R.id.textUrlPath);
+            textPassword = view.findViewById(R.id.textPassword);
         }
 
         @Override
@@ -175,6 +194,19 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         }
         filter = query;
         notifyDataSetChanged();
+    }
+
+    public void showPassword(Entry entry) {
+        passwordShownItem = entries.indexOf(entry);
+        notifyItemChanged(passwordShownItem);
+    }
+
+    private void hidePassword() {
+        int item = passwordShownItem;
+        passwordShownItem = -1;
+        if (item < 0 || item >= entries.size())
+            return;
+        notifyItemChanged(item);
     }
 
 }

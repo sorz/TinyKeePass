@@ -164,16 +164,16 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
 
     /**
      * Immediately copy password & show count down notification.
-     * @param password to copy
+     * @param entry to copy
      */
-    private void copyPassword(String password) {
+    private void copyPassword(Entry entry) {
         Intent intent = new Intent(getContext(), PasswordCopingService.class);
         intent.setAction(PasswordCopingService.ACTION_COPY_PASSWORD);
-        intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, password);
+        intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.getPassword());
         getContext().startService(intent);
         if (getView() != null) {
             Snackbar snackbar = Snackbar.make(getView(), R.string.password_copied, Snackbar.LENGTH_SHORT);
-            snackbar.setAction(R.string.show_password, view -> showPassword(password));
+            snackbar.setAction(R.string.show_password, view -> showPassword(entry));
             snackbar.show();
         } else {
             Toast.makeText(getContext(), R.string.password_copied, Toast.LENGTH_SHORT).show();
@@ -182,18 +182,11 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
 
     /**
      * Display password.
-     * @param password to show
+     * @param entry to show
      */
-    private void showPassword(String password) {
-        if (getView() != null) {
-            Snackbar snackbar = Snackbar.make(getView(),
-                    getString(R.string.your_password_is, password), Snackbar.LENGTH_INDEFINITE);
-            snackbar.setAction(R.string.hide, v -> snackbar.dismiss());
-            snackbar.show();
-        } else {
-            Toast.makeText(getContext(), getString(R.string.your_password_is, password),
-                    Toast.LENGTH_LONG).show();
-        }
+    private void showPassword(Entry entry) {
+        entryAdapter.showPassword(entry);
+
         Intent intent = new Intent(getContext(), PasswordCopingService.class);
         intent.setAction(PasswordCopingService.ACTION_CLEAN_CLIPBOARD);
         getContext().startService(intent);
@@ -209,7 +202,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
             } else {
                 Snackbar snackbar = Snackbar.make(getView(), message, Snackbar.LENGTH_LONG);
                 if (copyPassword)
-                    snackbar.setAction(R.string.copy_password,v -> copyPassword(entry.getPassword()));
+                    snackbar.setAction(R.string.copy_password,v -> copyPassword(entry));
                 snackbar.show();
             }
         }
@@ -226,7 +219,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
                 getContext().startService(intent);
             } else {
                 // username not copied, copy password immediately.
-                copyPassword(entry.getPassword());
+                copyPassword(entry);
             }
         }
     }

@@ -1,42 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="16dp"
-    android:paddingBottom="16dp"
-    android:paddingStart="8dp"
-    android:paddingEnd="16dp"
+    android:background="@drawable/selectable_background"
     android:clickable="true"
     android:focusable="true"
-    android:background="@drawable/selectable_background">
+    android:paddingBottom="16dp"
+    android:paddingEnd="16dp"
+    android:paddingStart="8dp"
+    android:paddingTop="16dp">
 
     <TextView
         android:id="@+id/textUrlPath"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="0dp"
+        android:layout_marginEnd="0dp"
         android:ellipsize="end"
         android:singleLine="true"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:textColor="@android:color/darker_gray"
         app:layout_constraintBottom_toBottomOf="@+id/textUrlHostname"
-        app:layout_constraintStart_toEndOf="@+id/textUrlHostname"
-        tools:text="/path/very/long/long/long/end"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginEnd="0dp" />
+        app:layout_constraintStart_toEndOf="@+id/textUrlHostname"
+        tools:text="/path/very/long/long/long/end" />
 
     <ImageView
         android:id="@+id/imageIcon"
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:layout_marginStart="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/textTitle"
         android:layout_marginTop="0dp"
-        app:layout_constraintBottom_toBottomOf="@+id/textTitle" />
+        app:layout_constraintBottom_toBottomOf="@+id/textTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textTitle" />
 
     <TextView
         android:id="@+id/textTitle"
@@ -48,10 +47,10 @@
         android:singleLine="true"
         android:textAppearance="@style/TextAppearance.AppCompat"
         android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/imageIcon"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="Entry title Entry title (very long long long end)"
-        app:layout_constraintEnd_toEndOf="parent" />
+        tools:text="Entry title Entry title (very long long long end)" />
 
     <TextView
         android:id="@+id/textUsername"
@@ -77,4 +76,18 @@
         app:layout_constraintBottom_toBottomOf="@+id/textUsername"
         app:layout_constraintStart_toEndOf="@+id/textUsername"
         tools:text="domain.name" />
+
+    <TextView
+        android:id="@+id/textPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:textAppearance="@android:style/TextAppearance.Material.Large"
+        android:textColor="@color/colorPrimary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textUsername"
+        tools:text="yOur+PasSWorD0" />
 </android.support.constraint.ConstraintLayout>
