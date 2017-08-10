@@ -286,6 +286,9 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
                 case R.id.action_copy_password:
                     copyEntry(entry, false, true);
                     break;
+                case R.id.action_show_password:
+                    showPassword(entry);
+                    break;
                 case R.id.action_copy_url:
                     if (notEmpty(entry.getUrl())) {
                         clipboardManager.setPrimaryClip(

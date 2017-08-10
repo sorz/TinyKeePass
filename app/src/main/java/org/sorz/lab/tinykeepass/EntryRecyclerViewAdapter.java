@@ -201,6 +201,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
     }
 
     public void showPassword(Entry entry) {
+        hidePassword();
         passwordShownItem = entries.indexOf(entry);
         notifyItemChanged(passwordShownItem);
     }
