@@ -16,8 +16,8 @@ public class PasswordCopingService extends Service {
     private static final String TAG = PasswordCopingService.class.getName();
     private static final int PASSWORD_IN_CLIPBOARD_SECS = 15;
     private static final int NOTIFICATION_TIMEOUT_SECS = 3 * 60;
-    private static final String ACTION_CLEAN_CLIPBOARD = "action-clean-clipboard";
     private static final String ACTION_SHOW_PASSWORD = "action-show-password";
+    public static final String ACTION_CLEAN_CLIPBOARD = "action-clean-clipboard";
     public static final String ACTION_COPY_PASSWORD = "action-copy-password";
     public static final String ACTION_NEW_NOTIFICATION = "action-new-notification";
     public static final String EXTRA_PASSWORD = "extra-password";

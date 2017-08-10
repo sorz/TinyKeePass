@@ -171,11 +171,32 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         intent.setAction(PasswordCopingService.ACTION_COPY_PASSWORD);
         intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, password);
         getContext().startService(intent);
-        if (getView() != null)
-            Snackbar.make(getView(), R.string.password_copied, Snackbar.LENGTH_SHORT).show();
-        else
+        if (getView() != null) {
+            Snackbar snackbar = Snackbar.make(getView(), R.string.password_copied, Snackbar.LENGTH_SHORT);
+            snackbar.setAction(R.string.show_password, view -> showPassword(password));
+            snackbar.show();
+        } else {
             Toast.makeText(getContext(), R.string.password_copied, Toast.LENGTH_SHORT).show();
+        }
+    }
 
+    /**
+     * Display password.
+     * @param password to show
+     */
+    private void showPassword(String password) {
+        if (getView() != null) {
+            Snackbar snackbar = Snackbar.make(getView(),
+                    getString(R.string.your_password_is, password), Snackbar.LENGTH_INDEFINITE);
+            snackbar.setAction(R.string.hide, v -> snackbar.dismiss());
+            snackbar.show();
+        } else {
+            Toast.makeText(getContext(), getString(R.string.your_password_is, password),
+                    Toast.LENGTH_LONG).show();
+        }
+        Intent intent = new Intent(getContext(), PasswordCopingService.class);
+        intent.setAction(PasswordCopingService.ACTION_CLEAN_CLIPBOARD);
+        getContext().startService(intent);
     }
 
     private void copyEntry(Entry entry, boolean copyUsername, boolean copyPassword) {
@@ -188,7 +209,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
             } else {
                 Snackbar snackbar = Snackbar.make(getView(), message, Snackbar.LENGTH_LONG);
                 if (copyPassword)
-                    snackbar.setAction(getString(R.string.copy_password),v -> copyPassword(entry.getPassword()));
+                    snackbar.setAction(R.string.copy_password,v -> copyPassword(entry.getPassword()));
                 snackbar.show();
             }
         }
