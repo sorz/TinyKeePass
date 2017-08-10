@@ -79,16 +79,17 @@
 
     <TextView
         android:id="@+id/textPassword"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
         android:fontFamily="@font/dejavu_sans_mono"
+        android:textAlignment="center"
         android:textAppearance="@android:style/TextAppearance.Material.Large"
         android:textColor="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textUsername"
-        tools:text="yOur+PasSWorD0" />
+        tools:text="yOur+PasSWorD0_A#very$looO0ongPassword" />
 </android.support.constraint.ConstraintLayout>
