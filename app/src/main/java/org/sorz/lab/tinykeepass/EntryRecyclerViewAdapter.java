@@ -107,10 +107,12 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
 
         if (onClickHandler != null)
             holder.view.setOnClickListener(v -> {
-                if (passwordShownItem >= 0)
+                if (passwordShownItem == position) {
                     hidePassword();
-                else
+                } else {
+                    hidePassword();
                     onClickHandler.accept(v, entry);
+                }
             });
         if (onLongClickHandler != null)
             holder.view.setOnLongClickListener(v -> {
@@ -181,6 +183,8 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
     }
 
     public void setFilter(String query) {
+        selectedItem = -1;
+        passwordShownItem = -1;
         if (query == null || query.isEmpty()) {
             entries = allEntries;
         } else {
