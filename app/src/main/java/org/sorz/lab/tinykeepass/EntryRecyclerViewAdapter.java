@@ -103,6 +103,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         holder.textUrlHostname.setText(hostnamePath[0]);
         holder.textUrlPath.setText(hostnamePath.length > 1 && !hostnamePath[1].isEmpty() ?
                 "/" + hostnamePath[1] : "");
+        holder.textPassword.setText("");
 
         if (position == passwordShownItem
                 && entry.getPassword() != null && !entry.getPassword().isEmpty()) {
@@ -115,7 +116,9 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
             boolean bold = false;
             for (char c : entry.getPassword().toCharArray()) {
                 builder.append(c);
-                if (builder.length() >= PASSWORD_NUM_OF_CHARS_IN_GROUP) {
+                if (builder.length() >= PASSWORD_NUM_OF_CHARS_IN_GROUP ||
+                        holder.textPassword.length() + builder.length()
+                                >= entry.getPassword().length()) {
                     builder.setSpan(new StyleSpan(bold ? Typeface.BOLD : Typeface.NORMAL),
                             0, builder.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     builder.setSpan(new ForegroundColorSpan(colors[colorIndex]),
@@ -129,7 +132,6 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
             holder.textPassword.setVisibility(View.VISIBLE);
         } else {
             holder.textPassword.setVisibility(View.GONE);
-            holder.textPassword.setText("");
         }
 
         if (onClickHandler != null)
