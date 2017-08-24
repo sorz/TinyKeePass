@@ -1,6 +1,7 @@
 package org.sorz.lab.tinykeepass;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -8,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Icon;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
@@ -22,6 +24,7 @@ import de.slackspace.openkeepass.domain.KeePassFile;
 public class DatabaseSyncingService extends Service {
     private static final String TAG = DatabaseSyncingService.class.getName();
     private static final int NOTIFICATION_OK_TIMEOUT_MILLS = 2 * 1000;
+    private static final String CHANNEL_ID_SYNCING = "channel-syncing";
 
     private static final String ACTION_CANCEL = "action-cancel";
     public static final String ACTION_FETCH = "action-fetch";
@@ -111,6 +114,15 @@ public class DatabaseSyncingService extends Service {
                     .setOngoing(true)
                     .setProgress(0, 0, true)
                     .setActions(cancel);
+
+            // Channel for Oreo+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(CHANNEL_ID_SYNCING,
+                        context.getString(R.string.channel_syncing),
+                        NotificationManager.IMPORTANCE_LOW);
+                notificationManager.createNotificationChannel(channel);
+                builder.setChannelId(CHANNEL_ID_SYNCING);
+            }
 
             notificationManager.notify(notificationId, builder.build());
         }

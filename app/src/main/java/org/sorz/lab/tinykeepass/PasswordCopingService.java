@@ -1,6 +1,7 @@
 package org.sorz.lab.tinykeepass;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -8,14 +9,15 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
 import android.graphics.drawable.Icon;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 public class PasswordCopingService extends Service {
     private static final String TAG = PasswordCopingService.class.getName();
     private static final int PASSWORD_IN_CLIPBOARD_SECS = 15;
     private static final int NOTIFICATION_TIMEOUT_SECS = 3 * 60;
+    private static final String CHANNEL_ID_COPYING = "channel-copying";
     private static final String ACTION_SHOW_PASSWORD = "action-show-password";
     public static final String ACTION_CLEAN_CLIPBOARD = "action-clean-clipboard";
     public static final String ACTION_COPY_PASSWORD = "action-copy-password";
@@ -43,6 +45,14 @@ public class PasswordCopingService extends Service {
         super.onCreate();
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+
+        // Create notification channel for Oreo+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID_COPYING,
+                    getApplicationContext().getString(R.string.channel_coping),
+                    NotificationManager.IMPORTANCE_LOW);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
     @Override
@@ -90,6 +100,8 @@ public class PasswordCopingService extends Service {
                 .setSmallIcon(R.drawable.ic_vpn_key_white_24dp)
                 .setContentTitle("Touch to copy password")
                 .setVisibility(Notification.VISIBILITY_SECRET);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            builder.setChannelId(CHANNEL_ID_COPYING);
         if (username!= null)
             builder.setContentText(
                     String.format("Copy %s's password to clipboard.", username));
@@ -133,6 +145,8 @@ public class PasswordCopingService extends Service {
                 .setContentTitle("Your password is")
                 .setContentText(password)
                 .setVisibility(Notification.VISIBILITY_SECRET);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            builder.setChannelId(CHANNEL_ID_COPYING);
 
         builder.setContentIntent(getCopyPendingIntent(password));
         notificationManager.notify(notificationId, builder.build());
@@ -146,6 +160,8 @@ public class PasswordCopingService extends Service {
                 .setSmallIcon(R.drawable.ic_vpn_key_white_24dp)
                 .setContentTitle("Password copied")
                 .setContentText("Swipe to clean clipboard now");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            builder.setChannelId(CHANNEL_ID_COPYING);
 
         Intent cleanIntent = new Intent(this, PasswordCopingService.class);
         cleanIntent.setAction(ACTION_CLEAN_CLIPBOARD);
