@@ -174,7 +174,14 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         getContext().startService(intent);
         if (getView() != null) {
             Snackbar snackbar = Snackbar.make(getView(), R.string.password_copied, Snackbar.LENGTH_SHORT);
-            snackbar.setAction(R.string.show_password, view -> showPassword(entry));
+            snackbar.setAction(R.string.show_password, view -> {
+                showPassword(entry);
+
+                // Cancel password copying
+                Intent cancelIntent = new Intent(getContext(), PasswordCopingService.class);
+                cancelIntent.setAction(PasswordCopingService.ACTION_CLEAN_CLIPBOARD);
+                getContext().startService(cancelIntent);
+            });
             snackbar.show();
         } else {
             Toast.makeText(getContext(), R.string.password_copied, Toast.LENGTH_SHORT).show();
@@ -186,11 +193,17 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
      * @param entry to show
      */
     private void showPassword(Entry entry) {
-        entryAdapter.showPassword(entry);
-
-        Intent intent = new Intent(getContext(), PasswordCopingService.class);
-        intent.setAction(PasswordCopingService.ACTION_CLEAN_CLIPBOARD);
-        getContext().startService(intent);
+        if (getActivity() == null)
+            return;
+        if (actionMode != null) {
+            actionMode.finish();
+        }
+        actionMode = getActivity().startActionMode(entryShowPasswordActionModeCallback);
+        if (actionMode != null) {
+            actionMode.setTag(entryShowPasswordActionModeCallback);
+            actionMode.setTitle(getString(R.string.title_show_password));
+            entryAdapter.showPassword(entry);
+        }
     }
 
     private void copyEntry(Entry entry, boolean copyUsername, boolean copyPassword) {
@@ -245,16 +258,49 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         if (getActivity() == null)
             return false;
         if (actionMode != null) {
-            actionMode.invalidate();
-            return true;
+            if (actionMode.getTag() == entryLongClickActionModeCallback) {
+                actionMode.invalidate();
+                return true;
+            } else {
+                // Finish show password mode
+                actionMode.finish();
+            }
         }
         actionMode = getActivity().startActionMode(entryLongClickActionModeCallback);
-        return true;
+        if (actionMode != null) {
+            actionMode.setTag(entryLongClickActionModeCallback);
+            return true;
+        }
+        return false;
     }
 
     private boolean notEmpty(String string) {
         return string != null && !string.isEmpty();
     }
+
+    private ActionMode.Callback entryShowPasswordActionModeCallback = new ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem menuItem) {
+            return false;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            actionMode = null;
+            entryAdapter.hidePassword();
+        }
+    };
+
 
     private ActionMode.Callback entryLongClickActionModeCallback = new ActionMode.Callback() {
         @Override
@@ -288,6 +334,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
                     copyEntry(entry, false, true);
                     break;
                 case R.id.action_show_password:
+                    mode.finish();
                     showPassword(entry);
                     break;
                 case R.id.action_copy_url:

@@ -52,5 +52,6 @@
     <string name="action_show_password">Show password</string>
     <string name="channel_syncing">Syncing progress</string>
     <string name="channel_coping">Click to copy</string>
+    <string name="title_show_password">Show password</string>
 
 </resources>

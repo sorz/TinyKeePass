@@ -135,14 +135,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         }
 
         if (onClickHandler != null)
-            holder.view.setOnClickListener(v -> {
-                if (passwordShownItem == position) {
-                    hidePassword();
-                } else {
-                    hidePassword();
-                    onClickHandler.accept(v, entry);
-                }
-            });
+            holder.view.setOnClickListener(v -> onClickHandler.accept(v, entry));
         if (onLongClickHandler != null)
             holder.view.setOnLongClickListener(v -> {
                 setSelectedItem(position);
@@ -235,7 +228,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         notifyItemChanged(passwordShownItem);
     }
 
-    private void hidePassword() {
+    public void hidePassword() {
         int item = passwordShownItem;
         passwordShownItem = -1;
         if (item < 0 || item >= entries.size())
