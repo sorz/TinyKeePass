@@ -71,6 +71,8 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
     public void stop() {
         if (cancellationSignal != null)
             cancellationSignal.cancel();
+        textFingerprintStatus.removeCallbacks(resetErrorTextRunnable);
+        imageFingerprintIcon.removeCallbacks(authenticationErrorRunnable);
     }
 
     private void showError(CharSequence error) {
@@ -87,9 +89,8 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
         imageFingerprintIcon.setImageResource(R.drawable.ic_fingerprint_success);
         textFingerprintStatus.setText(R.string.fingerprint_success);
         textFingerprintStatus.setTextColor(context.getColor(R.color.success));
-        imageFingerprintIcon.postDelayed(() -> {
-            finishHandler.accept(result.getCryptoObject().getCipher());
-        }, SUCCESS_TIMEOUT_MILLIS);
+        imageFingerprintIcon.postDelayed(() ->
+                finishHandler.accept(result.getCryptoObject().getCipher()), SUCCESS_TIMEOUT_MILLIS);
     }
 
     @Override
@@ -105,7 +106,8 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
     @Override
     public void onAuthenticationError(int errMsgId, CharSequence errString) {
         showError(errString);
-        imageFingerprintIcon.postDelayed(() -> finishHandler.accept(null), ERROR_TIMEOUT_MILLIS);
+        if (!cancellationSignal.isCanceled())
+            imageFingerprintIcon.postDelayed(authenticationErrorRunnable, ERROR_TIMEOUT_MILLIS);
     }
 
     private Runnable resetErrorTextRunnable = new Runnable() {
@@ -114,6 +116,13 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
             imageFingerprintIcon.setImageResource(R.mipmap.ic_fp_40px);
             textFingerprintStatus.setText(R.string.fingerprint_hint);
             textFingerprintStatus.setTextColor(context.getColor(R.color.hint));
+        }
+    };
+
+    private Runnable authenticationErrorRunnable = new Runnable() {
+        @Override
+        public void run() {
+            finishHandler.accept(null);
         }
     };
 
