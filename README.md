@@ -7,7 +7,6 @@ Only what I personally need are implemented, lacks lots of common functions, and
 ## Features
 
 * Fetch/update database from HTTP(S)/WebDav server, support HTTP basic auth.
-  (Not support load from local file, though)
 
 * Remember master password, which is protected by
   [Android Keystore System](https://developer.android.com/training/articles/keystore.html).
