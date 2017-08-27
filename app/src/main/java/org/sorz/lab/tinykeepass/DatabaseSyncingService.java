@@ -8,6 +8,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Icon;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
@@ -16,8 +17,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.lang.ref.WeakReference;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import de.slackspace.openkeepass.domain.KeePassFile;
 
@@ -55,15 +54,11 @@ public class DatabaseSyncingService extends Service {
                     && fetchTask.getStatus() == AsyncTask.Status.RUNNING) {
                 return START_NOT_STICKY;
             }
-            try {
-                URL url = new URL(intent.getStringExtra(EXTRA_URL));
-                String masterKey = intent.getStringExtra(EXTRA_MASTER_KEY);
-                String username = intent.getStringExtra(EXTRA_USERNAME);
-                String password = intent.getStringExtra(EXTRA_PASSWORD);
-                fetchTask = new FetchTask(this, url, masterKey, username, password);
-            } catch (MalformedURLException e) {
-                Log.e(TAG, "illegal url", e);
-            }
+            Uri uri = Uri.parse(intent.getStringExtra(EXTRA_URL));
+            String masterKey = intent.getStringExtra(EXTRA_MASTER_KEY);
+            String username = intent.getStringExtra(EXTRA_USERNAME);
+            String password = intent.getStringExtra(EXTRA_PASSWORD);
+            fetchTask = new FetchTask(this, uri, masterKey, username, password);
             fetchTask.execute();
         } else if (ACTION_CANCEL.equals(intent.getAction())) {
             if (fetchTask != null && fetchTask.getStatus() == AsyncTask.Status.RUNNING) {
@@ -80,14 +75,14 @@ public class DatabaseSyncingService extends Service {
         private static int nextNotificationId = 1;
 
         private final WeakReference<Context> context;
-        private final URL url;
+        private final Uri uri;
         private final NotificationManager notificationManager;
         private final int notificationId;
 
-        FetchTask(Context context, URL url, String masterPwd, String username, String password) {
-            super(context, url, masterPwd, username, password);
+        FetchTask(Context context, Uri uri, String masterPwd, String username, String password) {
+            super(context, uri, masterPwd, username, password);
             this.context = new WeakReference<>(context);
-            this.url = url;
+            this.uri = uri;
             notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
             notificationId = nextNotificationId++;
         }
@@ -110,7 +105,7 @@ public class DatabaseSyncingService extends Service {
             Notification.Builder builder = new Notification.Builder(context)
                     .setSmallIcon(R.drawable.ic_cloud_white_black_24dp)
                     .setContentTitle(context.getString(R.string.fetching_database))
-                    .setContentText(url.toString())
+                    .setContentText(uri.toString())
                     .setOngoing(true)
                     .setProgress(0, 0, true)
                     .setActions(cancel);

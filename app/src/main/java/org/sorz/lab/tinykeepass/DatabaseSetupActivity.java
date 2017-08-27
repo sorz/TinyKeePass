@@ -4,6 +4,7 @@ import android.app.KeyguardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.security.keystore.UserNotAuthenticatedException;
 import android.support.v7.app.AppCompatActivity;
@@ -20,8 +21,6 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +31,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
         implements FingerprintDialogFragment.OnFragmentInteractionListener {
     final private static String TAG = DatabaseSetupActivity.class.getName();
     final private static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 0;
+    final private static int REQUEST_OPEN_FILE = 1;
     public static final int AUTH_METHOD_NONE = 0;
     public static final int AUTH_METHOD_SCREEN_LOCK = 1;
     public static final int AUTH_METHOD_FINGERPRINT = 2;
@@ -48,6 +48,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
     private EditText editMasterPassword;
     private CheckBox checkShowPassword;
     private Button buttonConfirm;
+    private Button buttonOpenFile;
     private Spinner spinnerAuthMethod;
     private ProgressBar progressBar;
     private List<View> disabledViews = new ArrayList<>(8);
@@ -71,6 +72,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
         checkShowPassword = findViewById(R.id.checkShowPassword);
         progressBar = findViewById(R.id.progressBar);
         buttonConfirm = findViewById(R.id.buttonConfirm);
+        buttonOpenFile = findViewById(R.id.buttonOpenFIle);
 
         editDatabaseUrl.setText(preferences.getString("db-url", ""));
         editAuthUsername.setText(preferences.getString("db-auth-username", ""));
@@ -83,6 +85,13 @@ public class DatabaseSetupActivity extends AppCompatActivity
             editMasterPassword.setInputType(isChecked ?
                     InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD :
                     InputType.TYPE_TEXT_VARIATION_PASSWORD | InputType.TYPE_CLASS_TEXT);
+        });
+
+        buttonOpenFile.setOnClickListener((View button) -> {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("*/*");
+            startActivityForResult(intent, REQUEST_OPEN_FILE);
         });
 
         buttonConfirm.setOnClickListener((View button) -> {
@@ -103,6 +112,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
         spinnerAuthMethod = null;
         checkShowPassword = null;
         buttonConfirm = null;
+        buttonOpenFile = null;
     }
 
     private boolean isInputValid() {
@@ -110,6 +120,10 @@ public class DatabaseSetupActivity extends AppCompatActivity
         notEmptyInputs.add(editDatabaseUrl);
         notEmptyInputs.add(editMasterPassword);
         if (checkBasicAuth.isChecked()) {
+            if (!editDatabaseUrl.getText().toString().startsWith("http")) {
+                checkBasicAuth.setError(getString(R.string.basic_auth_with_non_http));
+                return false;
+            }
             notEmptyInputs.add(editAuthUsername);
             notEmptyInputs.add(editAuthPassword);
         }
@@ -145,13 +159,8 @@ public class DatabaseSetupActivity extends AppCompatActivity
     }
 
     private void submit() {
-        URL url;
-        try {
-            url = new URL(editDatabaseUrl.getText().toString());
-        } catch (MalformedURLException e) {
-            editDatabaseUrl.setError("Not a valid URL");
-            return;
-        }
+        Uri uri = Uri.parse(editDatabaseUrl.getText().toString());
+
         disabledViews.clear();
         disabledViews.add(checkBasicAuth);
         disabledViews.add(editDatabaseUrl);
@@ -172,7 +181,7 @@ public class DatabaseSetupActivity extends AppCompatActivity
             password = editAuthPassword.getText().toString();
         }
         String masterPwd = editMasterPassword.getText().toString();
-        new FetchTask(this, url, masterPwd, username, password).execute();
+        new FetchTask(this, uri, masterPwd, username, password).execute();
     }
 
     private void cancelSubmit() {
@@ -257,6 +266,13 @@ public class DatabaseSetupActivity extends AppCompatActivity
                 else
                     cancelSubmit();
                 break;
+            case REQUEST_OPEN_FILE:
+                if (resultCode == RESULT_OK && data != null) {
+                    Uri uri = data.getData();
+                    editDatabaseUrl.setText(uri.toString());
+                    checkBasicAuth.setChecked(false);
+                }
+                break;
             default:
                 break;
         }
@@ -276,9 +292,9 @@ public class DatabaseSetupActivity extends AppCompatActivity
     private static class FetchTask extends FetchDatabaseTask {
         private final WeakReference<DatabaseSetupActivity> activity;
 
-        FetchTask(DatabaseSetupActivity activity, URL url, String masterPwd,
+        FetchTask(DatabaseSetupActivity activity, Uri uri, String masterPwd,
                          String username, String password) {
-            super(activity, url, masterPwd, username, password);
+            super(activity, uri, masterPwd, username, password);
             this.activity = new WeakReference<>(activity);
         }
 

@@ -1,6 +1,8 @@
 package org.sorz.lab.tinykeepass;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -24,6 +26,8 @@ import de.slackspace.openkeepass.domain.KeePassFile;
 import de.slackspace.openkeepass.domain.Meta;
 import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
 
+import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
+
 /**
  * Download database and overwrite old one after checking its integrity.
  *
@@ -35,28 +39,42 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
     final static public String DB_FILENAME = "database.kdbx";
 
     final private WeakReference<Context> context;
-    final private URL url;
+    final private Uri uri;
     final private String masterPassword;
     final private File cacheDir;
     final private File filesDir;
 
-    public FetchDatabaseTask(Context context, URL url, String masterPwd,
+    public FetchDatabaseTask(Context context, Uri uri, String masterPwd,
                              String username, String password) {
         this.context = new WeakReference<>(context);
-        this.url = url;
+        this.uri = uri;
         masterPassword = masterPwd;
         cacheDir = context.getCacheDir();
         filesDir = context.getNoBackupFilesDir();
 
-        if (username != null && password != null) {
+        if (uri.getScheme().startsWith("http") && username != null && password != null) {
             Authenticator.setDefault(new Authenticator() {
                 protected PasswordAuthentication getPasswordAuthentication() {
                     if (!getRequestingURL().getAuthority()
-                            .equals(FetchDatabaseTask.this.url.getAuthority()))
+                            .equals(FetchDatabaseTask.this.uri.getAuthority()))
                         return null;
                     return new PasswordAuthentication(username, password.toCharArray());
                 }
             });
+        }
+    }
+
+    private InputStream getInputStream(Uri uri) throws IOException {
+        if (uri.getScheme().toLowerCase().matches("https?")) {
+            URL url = new URL(uri.toString());
+            return url.openStream();
+        } else {
+            Context context = this.context.get();
+            if (context == null)
+                throw new IOException("context collected");
+            ContentResolver contentResolver = context.getContentResolver();
+            contentResolver.takePersistableUriPermission(uri, FLAG_GRANT_READ_URI_PERMISSION);
+            return contentResolver.openInputStream(uri);
         }
     }
 
@@ -66,7 +84,7 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
         File dbFile = new File(filesDir, DB_FILENAME);
         try {
             OutputStream output = new BufferedOutputStream(new FileOutputStream(tmpDbFile));
-            InputStream input = url.openStream();
+            InputStream input = getInputStream(uri);
             IOUtils.copy(input, output);
             input.close();
             output.close();
