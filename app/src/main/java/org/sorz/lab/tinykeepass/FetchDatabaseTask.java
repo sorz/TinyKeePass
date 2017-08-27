@@ -73,7 +73,12 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
             if (context == null)
                 throw new IOException("context collected");
             ContentResolver contentResolver = context.getContentResolver();
-            contentResolver.takePersistableUriPermission(uri, FLAG_GRANT_READ_URI_PERMISSION);
+            try {
+                // works for OPEN_DOCUMENT, but not VIEW
+                contentResolver.takePersistableUriPermission(uri, FLAG_GRANT_READ_URI_PERMISSION);
+            } catch (SecurityException e) {
+                Log.i(TAG, "cannot take persistable permission", e);
+            }
             return contentResolver.openInputStream(uri);
         }
     }

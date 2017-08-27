@@ -98,6 +98,10 @@ public class DatabaseSetupActivity extends AppCompatActivity
             if (isInputValid())
                 submit();
         });
+
+        Intent intent = getIntent();
+        if (intent != null && intent.getData() != null)
+            editDatabaseUrl.setText(intent.getData().toString());
     }
 
     @Override
