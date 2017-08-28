@@ -173,16 +173,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.getPassword());
         getContext().startService(intent);
         if (getView() != null) {
-            Snackbar snackbar = Snackbar.make(getView(), R.string.password_copied, Snackbar.LENGTH_SHORT);
-            snackbar.setAction(R.string.show_password, view -> {
-                showPassword(entry);
-
-                // Cancel password copying
-                Intent cancelIntent = new Intent(getContext(), PasswordCopingService.class);
-                cancelIntent.setAction(PasswordCopingService.ACTION_CLEAN_CLIPBOARD);
-                getContext().startService(cancelIntent);
-            });
-            snackbar.show();
+            Snackbar.make(getView(), R.string.password_copied, Snackbar.LENGTH_SHORT).show();
         } else {
             Toast.makeText(getContext(), R.string.password_copied, Toast.LENGTH_SHORT).show();
         }
