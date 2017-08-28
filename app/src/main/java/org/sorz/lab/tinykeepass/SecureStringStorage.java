@@ -158,7 +158,7 @@ public class SecureStringStorage {
         return null;
     }
 
-    public void clear(String key) {
+    public void clear() {
         preferences.edit()
                 .remove(PREF_VALUE_NAME)
                 .remove(PREF_IV_NAME)

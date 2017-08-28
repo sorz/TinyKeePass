@@ -101,6 +101,14 @@ public class MainActivity extends AppCompatActivity
         getKeyThen(ACTION_SYNC_DB);
     }
 
+    public void doCleanDatabase() {
+        KeePassStorage.set(this, null);
+        if (!databaseFile.delete())
+            Log.w(TAG, "fail to delete database file");
+        secureStringStorage.clear();
+        snackbar(getString(R.string.clean_config_ok), Snackbar.LENGTH_SHORT).show();
+    }
+
     private void getKeyThen(int action) {
         actionAfterGetKey = action;
         int authMethod = preferences.getInt("key-auth-method", 0);

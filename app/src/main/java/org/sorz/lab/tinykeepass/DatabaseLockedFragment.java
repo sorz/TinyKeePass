@@ -1,5 +1,6 @@
 package org.sorz.lab.tinykeepass;
 
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
@@ -29,8 +30,18 @@ public class DatabaseLockedFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_database_locked, container, false);
         Button unlockDb = view.findViewById(R.id.buttonUnlockDb);
         Button configDb = view.findViewById(R.id.buttonConfigDb);
+        Button cleanDb = view.findViewById(R.id.buttonCleanDb);
+
         unlockDb.setOnClickListener(v -> activity.doUnlockDatabase());
         configDb.setOnClickListener(v -> activity.doConfigureDatabase());
+        cleanDb.setOnClickListener(v -> new AlertDialog.Builder(getContext())
+                .setTitle(R.string.clean_config)
+                .setMessage(R.string.clean_config_confirm)
+                .setPositiveButton(android.R.string.yes,
+                        (dialog, which) -> activity.doCleanDatabase())
+                .setNegativeButton(android.R.string.no,
+                        (dialog, which) -> dialog.dismiss())
+                .show());
         return view;
     }
 }

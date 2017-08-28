@@ -55,5 +55,7 @@
     <string name="title_show_password">Show password</string>
     <string name="open_file">File</string>
     <string name="basic_auth_with_non_http">Only support for HTTP/HTTPS</string>
-
+    <string name="clean_config">Reset Configure</string>
+    <string name="clean_config_confirm">Are you sure you want clean configuration including database file and password?</string>
+    <string name="clean_config_ok">Reset finished, database and password has been removed.</string>
 </resources>
