@@ -21,17 +21,25 @@ public class KeePassStorage {
 
     public static void set(Context context, KeePassFile file) {
         if (keePassFile == null && file != null) {
-            IntentFilter screenOffFilter = new IntentFilter();
-            screenOffFilter.addAction(Intent.ACTION_SCREEN_OFF);
-            context.registerReceiver(broadcastReceiver, screenOffFilter);
+            registerBroadcastReceiver(context);
         } else if (keePassFile != null && file == null) {
-            try {
-                context.unregisterReceiver(broadcastReceiver);
-            } catch (IllegalArgumentException e) {
-                // ignore no registered error
-            }
+            unregisterBroadcastReceiver(context);
         }
         keePassFile = file;
+    }
+
+    public static void registerBroadcastReceiver(Context context) {
+        IntentFilter screenOffFilter = new IntentFilter();
+        screenOffFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        context.registerReceiver(broadcastReceiver, screenOffFilter);
+    }
+
+    public static void unregisterBroadcastReceiver(Context context) {
+        try {
+            context.unregisterReceiver(broadcastReceiver);
+        } catch (IllegalArgumentException e) {
+            // ignore no registered error
+        }
     }
 
     private static BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {

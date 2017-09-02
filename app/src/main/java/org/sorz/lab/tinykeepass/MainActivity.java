@@ -60,6 +60,9 @@ public class MainActivity extends AppCompatActivity
             } else {
                 doUnlockDatabase();
             }
+        } else if (KeePassStorage.get() != null) {
+            // Restarting activity
+            KeePassStorage.registerBroadcastReceiver(this);
         }
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -71,6 +74,9 @@ public class MainActivity extends AppCompatActivity
         super.onDestroy();
         if (isFinishing())
             KeePassStorage.set(this, null);
+        else
+            // Restarting activity, re-register it after restart done.
+            KeePassStorage.unregisterBroadcastReceiver(this);
     }
 
     public boolean hasConfiguredDatabase() {
