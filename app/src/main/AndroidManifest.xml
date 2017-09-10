@@ -52,6 +52,13 @@
             android:name="org.sorz.lab.tinykeepass.DatabaseSyncingService"
             android:enabled="true"
             android:exported="false" />
+        <service
+            android:name=".TinyAutofillService"
+            android:permission="android.permission.BIND_AUTOFILL">
+            <intent-filter>
+                <action android:name="android.service.autofill.AutofillService" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
