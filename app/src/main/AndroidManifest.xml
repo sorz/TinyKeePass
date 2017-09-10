@@ -12,11 +12,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity android:name=".DatabaseSetupActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:pathPattern=".*\\.kdbx" />
                 <data android:mimeType="*/*" />
                 <data android:scheme="content" />
@@ -24,17 +25,18 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:pathPattern=".*\\.kdbx" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data android:host="*" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name="org.sorz.lab.tinykeepass.MainActivity"
+            android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -45,20 +47,22 @@
         </activity>
 
         <service
-            android:name="org.sorz.lab.tinykeepass.PasswordCopingService"
+            android:name=".PasswordCopingService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name="org.sorz.lab.tinykeepass.DatabaseSyncingService"
+            android:name=".DatabaseSyncingService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".TinyAutofillService"
+            android:name=".autofill.TinyAutofillService"
             android:permission="android.permission.BIND_AUTOFILL">
             <intent-filter>
                 <action android:name="android.service.autofill.AutofillService" />
             </intent-filter>
         </service>
+
+        <activity android:name=".autofill.AuthActivity"></activity>
     </application>
 
 </manifest>

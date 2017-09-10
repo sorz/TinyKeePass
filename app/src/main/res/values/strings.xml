@@ -58,4 +58,7 @@
     <string name="clean_config">Reset Configure</string>
     <string name="clean_config_confirm">Are you sure you want clean configuration including database file and password?</string>
     <string name="clean_config_ok">Reset finished, database and password has been removed.</string>
+    <string name="autofill_not_support_save">Not support save yet</string>
+    <string name="autofill_not_supported_field_found">Login fields not found</string>
+    <string name="autofill_unlock_db">Touch to unlock</string>
 </resources>

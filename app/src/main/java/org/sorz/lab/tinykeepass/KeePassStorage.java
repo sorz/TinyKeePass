@@ -20,6 +20,7 @@ public class KeePassStorage {
     }
 
     public static void set(Context context, KeePassFile file) {
+        // TODO: check auth timeout here
         if (keePassFile == null && file != null) {
             registerBroadcastReceiver(context);
         } else if (keePassFile != null && file == null) {
