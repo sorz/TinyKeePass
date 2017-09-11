@@ -57,8 +57,6 @@ class StructureParser {
                 result.email.add(node.getAutofillId());
             else if ((inputType & InputType.TYPE_TEXT_VARIATION_PASSWORD) > 0)
                 result.password.add(node.getAutofillId());
-            else
-                result.username.add(node.getAutofillId());
         }
 
         for (int i=0; i<node.getChildCount(); ++i)
@@ -78,10 +76,6 @@ class StructureParser {
             username = new ArrayList<>();
             email = new ArrayList<>();
             password = new ArrayList<>();
-        }
-
-        boolean isEmpty() {
-            return username.isEmpty() && email.isEmpty() && password.isEmpty();
         }
 
         AutofillId[] getAutofillIds() {

@@ -35,8 +35,8 @@ public class TinyAutofillService extends AutofillService {
         AssistStructure structure = request.getFillContexts()
                 .get(request.getFillContexts().size() - 1).getStructure();
         StructureParser.Result parseResult = new StructureParser(structure).parse();
-        if (parseResult.isEmpty()) {
-            callback.onFailure(getString(R.string.autofill_not_supported_field_found));
+        if (parseResult.password.isEmpty()) {
+            callback.onSuccess(null);
             return;
         }
 
