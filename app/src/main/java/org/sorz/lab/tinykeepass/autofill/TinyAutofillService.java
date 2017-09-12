@@ -5,7 +5,6 @@ import android.content.IntentSender;
 import android.os.Build;
 import android.os.CancellationSignal;
 import android.service.autofill.AutofillService;
-import android.service.autofill.Dataset;
 import android.service.autofill.FillCallback;
 import android.service.autofill.FillRequest;
 import android.service.autofill.FillResponse;
@@ -16,7 +15,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.TextView;
 
 import org.sorz.lab.tinykeepass.KeePassStorage;
 import org.sorz.lab.tinykeepass.R;

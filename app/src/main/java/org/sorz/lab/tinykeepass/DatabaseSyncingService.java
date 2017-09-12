@@ -71,6 +71,17 @@ public class DatabaseSyncingService extends Service {
         return START_NOT_STICKY;
     }
 
+    public static Intent getFetchIntent(Context context, String url, String masterKey,
+                                        String username, String password) {
+        Intent intent = new Intent(context, DatabaseSyncingService.class);
+        intent.setAction(DatabaseSyncingService.ACTION_FETCH);
+        intent.putExtra(DatabaseSyncingService.EXTRA_URL, url);
+        intent.putExtra(DatabaseSyncingService.EXTRA_MASTER_KEY, masterKey);
+        intent.putExtra(DatabaseSyncingService.EXTRA_USERNAME, username);
+        intent.putExtra(DatabaseSyncingService.EXTRA_PASSWORD, password);
+        return intent;
+    }
+
     private static class FetchTask extends FetchDatabaseTask {
         private static int nextNotificationId = 1;
 
