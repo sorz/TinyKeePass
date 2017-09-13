@@ -37,16 +37,6 @@ public class MainActivity extends BaseActivity {
         setSupportActionBar(toolbar);
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (isFinishing())
-            KeePassStorage.set(this, null);
-        else
-            // Restarting activity, re-register it after restart done.
-            KeePassStorage.unregisterBroadcastReceiver(this);
-    }
-
     public boolean hasConfiguredDatabase() {
         return KeePassStorage.get() != null || getDatabaseFile().canRead();
     }

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -30,6 +32,8 @@ import de.slackspace.openkeepass.domain.Entry;
 public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
     private final static String TAG = EntryRecyclerViewAdapter.class.getName();
     private final static int PASSWORD_NUM_OF_CHARS_IN_GROUP = 4;
+    private static final int ENTRY_MAX_WIDTH_DP = 350;
+
     private final BiConsumer<View, Entry> onClickHandler;
     private final BiPredicate<View, Entry> onLongClickHandler;
     private final Context context;
@@ -234,6 +238,14 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         if (item < 0 || item >= entries.size())
             return;
         notifyItemChanged(item);
+    }
+
+    static public RecyclerView.LayoutManager getDefaultLayoutManager(Context context) {
+        int spanCount = context.getResources().getConfiguration()
+                .screenWidthDp / ENTRY_MAX_WIDTH_DP;
+        return spanCount <= 1
+                ? new LinearLayoutManager(context)
+                : new GridLayoutManager(context, spanCount);
     }
 
 }

@@ -1,66 +1,52 @@
 package org.sorz.lab.tinykeepass.autofill;
 
 
+import android.content.Context;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.sorz.lab.tinykeepass.EntryRecyclerViewAdapter;
 import org.sorz.lab.tinykeepass.R;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link EntrySelectFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+
 public class EntrySelectFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
+    private AuthActivity activity;
 
     public EntrySelectFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment EntrySelectFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static EntrySelectFragment newInstance(String param1, String param2) {
-        EntrySelectFragment fragment = new EntrySelectFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+    public static EntrySelectFragment newInstance() {
+        return new EntrySelectFragment();
     }
-
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        activity = (AuthActivity) context;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_entry_select, container, false);
+        View view =  inflater.inflate(R.layout.fragment_entry_select, container, false);
+
+        // Set the adapter
+        RecyclerView recyclerView = view.findViewById(R.id.list);
+        recyclerView.setLayoutManager(EntryRecyclerViewAdapter
+                .getDefaultLayoutManager(getContext()));
+
+        EntryRecyclerViewAdapter entryAdapter = new EntryRecyclerViewAdapter(
+                getContext(),
+                (v, e) -> activity.onEntrySelected(e),
+                (v, e) -> false);
+        recyclerView.setAdapter(entryAdapter);
+
+        return view;
     }
 
 }

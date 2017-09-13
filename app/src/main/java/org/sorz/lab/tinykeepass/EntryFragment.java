@@ -13,8 +13,6 @@ import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.view.ActionMode;
@@ -31,7 +29,6 @@ import de.slackspace.openkeepass.domain.Entry;
 
 public class EntryFragment extends Fragment implements SearchView.OnQueryTextListener {
     private static final long INACTIVE_AUTO_LOCK_MILLIS = 3 * 60 * 1000;
-    private static final int ENTRY_MAX_WIDTH_DP = 350;
 
     private MainActivity activity;
     private EntryRecyclerViewAdapter entryAdapter;
@@ -65,14 +62,9 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         View view = inflater.inflate(R.layout.fragment_entry_list, container, false);
 
         // Set the adapter
-
-        Context context = view.getContext();
         RecyclerView recyclerView = view.findViewById(R.id.list);
-        int spanCount = getResources().getConfiguration().screenWidthDp / ENTRY_MAX_WIDTH_DP;
-        if (spanCount <= 1)
-            recyclerView.setLayoutManager(new LinearLayoutManager(context));
-        else
-            recyclerView.setLayoutManager(new GridLayoutManager(context, spanCount));
+        recyclerView.setLayoutManager(EntryRecyclerViewAdapter
+                .getDefaultLayoutManager(getContext()));
 
         entryAdapter = new EntryRecyclerViewAdapter(
                 getContext(), this::onEntryClick, this::onEntryLongClick);
