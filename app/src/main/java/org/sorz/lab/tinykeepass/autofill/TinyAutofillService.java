@@ -10,13 +10,11 @@ import android.service.autofill.FillRequest;
 import android.service.autofill.FillResponse;
 import android.service.autofill.SaveCallback;
 import android.service.autofill.SaveRequest;
-import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import org.sorz.lab.tinykeepass.KeePassStorage;
 import org.sorz.lab.tinykeepass.R;
 
 
@@ -39,24 +37,17 @@ public class TinyAutofillService extends AutofillService {
         }
 
         FillResponse.Builder responseBuilder = new FillResponse.Builder();
-        if (KeePassStorage.get() == null) {
-            RemoteViews presentation = getRemoteViews(getString(R.string.autofill_unlock_db),
-                    android.R.drawable.ic_lock_lock);
-            IntentSender sender = AuthActivity.getAuthIntentSenderForResponse(this);
-            responseBuilder.setAuthentication(parseResult.getAutofillIds(), sender, presentation);
-        } else {
-            // TODO: show matched accounts
-            throw new UnsupportedOperationException();
-        }
+
+        RemoteViews presentation = AutofillUtils.getRemoteViews(this,
+                getString(R.string.autofill_unlock_db),
+                android.R.drawable.ic_lock_lock);
+        IntentSender sender = AuthActivity.getAuthIntentSenderForResponse(this);
+        responseBuilder.setAuthentication(parseResult.getAutofillIds(), sender, presentation);
+
         callback.onSuccess(responseBuilder.build());
     }
 
-    RemoteViews getRemoteViews(String text, @DrawableRes int icon) {
-        RemoteViews views = new RemoteViews(getPackageName(), R.layout.autofill_service_list_item);
-        views.setTextViewText(R.id.textView, text);
-        views.setTextViewCompoundDrawables(R.id.textView, icon, 0, 0, 0);
-        return views;
-    }
+
 
     @Override
     public void onSaveRequest(@NonNull SaveRequest request, @NonNull SaveCallback callback) {

@@ -66,4 +66,5 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_autofill">Autofill</string>
     <string name="title_autofill_select">Select to autofill</string>
+    <string name="autofill_touch_to_fill">Touch to fill</string>
 </resources>
