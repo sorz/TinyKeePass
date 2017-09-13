@@ -61,4 +61,7 @@
     <string name="autofill_not_support_save">Not support save yet</string>
     <string name="autofill_not_supported_field_found">Login fields not found</string>
     <string name="autofill_unlock_db">Touch to unlock</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

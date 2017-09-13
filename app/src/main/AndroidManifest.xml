@@ -62,7 +62,9 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".autofill.AuthActivity"></activity>
+        <activity
+            android:name=".autofill.AuthActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>

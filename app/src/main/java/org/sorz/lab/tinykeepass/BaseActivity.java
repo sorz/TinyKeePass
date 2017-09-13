@@ -9,6 +9,7 @@ import android.security.keystore.UserNotAuthenticatedException;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -71,6 +72,10 @@ public abstract class BaseActivity extends AppCompatActivity
         getKey();
     }
 
+    protected File getDatabaseFile() {
+        return new File(getNoBackupFilesDir(), FetchDatabaseTask.DB_FILENAME);
+    }
+
     private void getKey() {
         int authMethod = preferences.getInt("key-auth-method", 0);
         switch (authMethod) {
@@ -116,9 +121,12 @@ public abstract class BaseActivity extends AppCompatActivity
         onKeyRetrieved.accept(keys);
     }
 
-
     protected SecureStringStorage getSecureStringStorage() {
         return secureStringStorage;
+    }
+
+    protected SharedPreferences getPreferences() {
+        return preferences;
     }
 
 }

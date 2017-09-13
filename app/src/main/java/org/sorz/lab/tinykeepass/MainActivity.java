@@ -1,14 +1,10 @@
 package org.sorz.lab.tinykeepass;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-
-import java.io.File;
 
 import de.slackspace.openkeepass.KeePassDatabase;
 import de.slackspace.openkeepass.domain.KeePassFile;
@@ -17,14 +13,9 @@ import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
 public class MainActivity extends BaseActivity {
     private final static String TAG = MainActivity.class.getName();
 
-    private SharedPreferences preferences;
-    private File databaseFile;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        databaseFile = new File(getNoBackupFilesDir(), FetchDatabaseTask.DB_FILENAME);
 
         if (savedInstanceState == null) {
             getFragmentManager().beginTransaction()
@@ -57,7 +48,7 @@ public class MainActivity extends BaseActivity {
     }
 
     public boolean hasConfiguredDatabase() {
-        return KeePassStorage.get() != null || databaseFile.canRead();
+        return KeePassStorage.get() != null || getDatabaseFile().canRead();
     }
 
     public void doUnlockDatabase() {
@@ -66,7 +57,7 @@ public class MainActivity extends BaseActivity {
         } else {
             getDatabaseKeys(keys -> {
                 try {
-                    KeePassFile db = KeePassDatabase.getInstance(databaseFile)
+                    KeePassFile db = KeePassDatabase.getInstance(getDatabaseFile())
                             .openDatabase(keys.get(0));
                     KeePassStorage.set(this, db);
                 } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
@@ -93,12 +84,12 @@ public class MainActivity extends BaseActivity {
 
     public void doSyncDatabase() {
         getDatabaseKeys(keys -> {
-            String url = preferences.getString("db-url", "");
+            String url = getPreferences().getString("db-url", "");
             String masterKey = keys.get(0);
             String username = null;
             String password = null;
-            if (preferences.getBoolean("db-auth-required", false)) {
-                username = preferences.getString("db-auth-username", "");
+            if (getPreferences().getBoolean("db-auth-required", false)) {
+                username = getPreferences().getString("db-auth-username", "");
                 password = keys.get(1);
             }
             Intent intent = DatabaseSyncingService.getFetchIntent(
@@ -109,7 +100,7 @@ public class MainActivity extends BaseActivity {
 
     public void doCleanDatabase() {
         KeePassStorage.set(this, null);
-        if (!databaseFile.delete())
+        if (!getDatabaseFile().delete())
             Log.w(TAG, "fail to delete database file");
         getSecureStringStorage().clear();
         snackbar(getString(R.string.clean_config_ok), Snackbar.LENGTH_SHORT).show();

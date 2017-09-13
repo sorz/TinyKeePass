@@ -361,7 +361,7 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         }
     };
 
-        private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (DatabaseSyncingService.BROADCAST_SYNC_FINISHED.equals(intent.getAction())) {
