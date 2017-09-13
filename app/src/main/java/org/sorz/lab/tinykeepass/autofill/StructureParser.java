@@ -23,6 +23,7 @@ class StructureParser {
 
     final private AssistStructure structure;
     private Result result;
+    private AutofillId usernameCandidate;
 
     StructureParser(AssistStructure structure) {
         this.structure = structure;
@@ -30,13 +31,17 @@ class StructureParser {
 
     Result parse() {
         result = new Result();
+        usernameCandidate = null;
         for (int i=0; i<structure.getWindowNodeCount(); ++i) {
             AssistStructure.WindowNode windowNode = structure.getWindowNodeAt(i);
             result.title.add(windowNode.getTitle());
             result.webDomain.add(windowNode.getRootViewNode().getWebDomain());
             parseViewNode(windowNode.getRootViewNode());
         }
-        structure.getWindowNodeCount();
+        // If not explicit username field found, add the field just before password field.
+        if (result.username.isEmpty() && result.email.isEmpty()
+                && !result.password.isEmpty() && usernameCandidate != null)
+            result.username.add(usernameCandidate);
         return result;
     }
 
@@ -57,6 +62,8 @@ class StructureParser {
                 result.email.add(node.getAutofillId());
             else if ((inputType & InputType.TYPE_TEXT_VARIATION_PASSWORD) > 0)
                 result.password.add(node.getAutofillId());
+            else if (result.password.isEmpty())
+                usernameCandidate = node.getAutofillId();
         }
 
         for (int i=0; i<node.getChildCount(); ++i)

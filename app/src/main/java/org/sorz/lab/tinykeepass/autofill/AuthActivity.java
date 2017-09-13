@@ -47,10 +47,17 @@ public class AuthActivity extends BaseActivity {
         if (getSupportActionBar() != null)
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        getDatabaseKeys(this::unlockDatabase, error -> {
-            Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
-            finish();
-        });
+        if (KeePassStorage.get() != null) {
+            showList();
+        } else {
+            getDatabaseKeys(keys -> {
+                unlockDatabase(keys);
+                showList();
+            }, error -> {
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+                finish();
+            });
+        }
     }
 
     @Override
@@ -102,7 +109,7 @@ public class AuthActivity extends BaseActivity {
         return string != null && !string.isEmpty();
     }
 
-    protected void unlockDatabase(List<String> keys) {
+    private void unlockDatabase(List<String> keys) {
         try {
             KeePassFile db = KeePassDatabase.getInstance(getDatabaseFile())
                     .openDatabase(keys.get(0));
@@ -112,12 +119,16 @@ public class AuthActivity extends BaseActivity {
             Toast.makeText(this, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             finish();
         }
+    }
+
+    private void showList() {
         getFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, EntrySelectFragment.newInstance())
                 .commit();
         if (getSupportActionBar() != null)
             getSupportActionBar().setTitle(R.string.title_autofill_select);
     }
+
 
     static IntentSender getAuthIntentSenderForResponse(Context context) {
         Intent intent = new Intent(context, AuthActivity.class);
