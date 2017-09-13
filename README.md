@@ -16,7 +16,9 @@ Only what I personally need are implemented, lacks lots of common functions, and
 
 * Copy username and/or password to clipboard, with counting down on notification.
 
-* Search entries.
+* Searching.
+
+* Autofill on Oreo (experimental)
 
 * No support: any edit/delete operations, groups, display fields other than title, username, password, and URL.
 
