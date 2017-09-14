@@ -3,6 +3,9 @@ package org.sorz.lab.tinykeepass.autofill.search;
 import org.sorz.lab.tinykeepass.keepass.KeePassHelper;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import de.slackspace.openkeepass.domain.Entry;
@@ -11,9 +14,17 @@ import de.slackspace.openkeepass.domain.Entry;
  * Parse strings into tokens (a list of words).
  */
 public class Tokenizer {
+    final static private Set<String> IGNORE_TOKENS = Collections.unmodifiableSet(
+            new HashSet<>(Arrays.asList(
+                    "com", "net", "org"
+            ))
+    );
+
     static public Stream<String> parse(String str) {
         String[] tokens = str.split("\\b");
-        return Arrays.stream(tokens).filter(s -> s.matches("\\w{2,}"));
+        return Arrays.stream(tokens)
+                .filter(s -> s.matches("\\w{2,}"))
+                .filter(s -> !IGNORE_TOKENS.contains(s));
     }
 
     static public Stream<String> parse(Entry entry) {
