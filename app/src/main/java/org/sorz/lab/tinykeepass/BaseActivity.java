@@ -9,6 +9,8 @@ import android.security.keystore.UserNotAuthenticatedException;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
+
 import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;

@@ -18,9 +18,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.sorz.lab.tinykeepass.keepass.KeePassHelper;
+import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
@@ -56,15 +58,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
     public void reloadEntries() {
         KeePassFile db = KeePassStorage.get();
         if (db != null) {
-            if (db.getMeta().getRecycleBinEnabled()) {
-                allEntries = new ArrayList<>();
-                UUID recycleBin = db.getMeta().getRecycleBinUuid();
-                db.getGroups().stream()
-                        .filter(g -> !g.getUuid().equals(recycleBin))
-                        .forEach(g -> allEntries.addAll(g.getEntries()));
-            } else {
-                allEntries = db.getEntries();
-            }
+            allEntries = KeePassHelper.allEntriesNotInRecycleBin(db).collect(Collectors.toList());
             allEntries.sort((a, b) -> {
                 if (a.getTitle() != null && b.getTitle() != null)
                     return a.getTitle().compareTo(b.getTitle());

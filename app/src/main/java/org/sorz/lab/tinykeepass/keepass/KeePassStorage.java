@@ -1,4 +1,4 @@
-package org.sorz.lab.tinykeepass;
+package org.sorz.lab.tinykeepass.keepass;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

@@ -6,6 +6,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
+import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
+
 import de.slackspace.openkeepass.KeePassDatabase;
 import de.slackspace.openkeepass.domain.KeePassFile;
 import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;

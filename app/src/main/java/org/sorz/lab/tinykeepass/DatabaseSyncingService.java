@@ -16,6 +16,8 @@ import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
+
 import java.lang.ref.WeakReference;
 
 import de.slackspace.openkeepass.domain.KeePassFile;

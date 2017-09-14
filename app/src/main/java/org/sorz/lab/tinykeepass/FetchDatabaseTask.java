@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import org.apache.commons.io.IOUtils;
+import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

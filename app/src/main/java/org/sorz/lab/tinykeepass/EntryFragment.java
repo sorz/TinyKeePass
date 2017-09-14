@@ -24,7 +24,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
+
 import de.slackspace.openkeepass.domain.Entry;
+
+import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.notEmpty;
 
 
 public class EntryFragment extends Fragment implements SearchView.OnQueryTextListener {
@@ -262,10 +266,6 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
             return true;
         }
         return false;
-    }
-
-    private boolean notEmpty(String string) {
-        return string != null && !string.isEmpty();
     }
 
     private ActionMode.Callback entryShowPasswordActionModeCallback = new ActionMode.Callback() {
