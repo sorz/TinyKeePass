@@ -30,6 +30,10 @@ public abstract class BaseEntryFragment extends Fragment implements SearchView.O
 
     abstract protected boolean onEntryLongClick(View view, Entry entry);
 
+    protected EntryRecyclerViewAdapter getEntryAdapter() {
+        return entryAdapter;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                       Bundle savedInstanceState) {

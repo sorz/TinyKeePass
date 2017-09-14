@@ -35,7 +35,6 @@ public class EntryFragment extends BaseEntryFragment {
     private static final long INACTIVE_AUTO_LOCK_MILLIS = 3 * 60 * 1000;
 
     private MainActivity activity;
-    private EntryRecyclerViewAdapter entryAdapter;
     private ClipboardManager clipboardManager;
     private LocalBroadcastManager localBroadcastManager;
     private FloatingActionButton fab;
@@ -172,7 +171,7 @@ public class EntryFragment extends BaseEntryFragment {
         if (actionMode != null) {
             actionMode.setTag(entryShowPasswordActionModeCallback);
             actionMode.setTitle(getString(R.string.title_show_password));
-            entryAdapter.showPassword(entry);
+            getEntryAdapter().showPassword(entry);
         }
     }
 
@@ -265,7 +264,7 @@ public class EntryFragment extends BaseEntryFragment {
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             actionMode = null;
-            entryAdapter.hidePassword();
+            getEntryAdapter().hidePassword();
         }
     };
 
@@ -279,7 +278,7 @@ public class EntryFragment extends BaseEntryFragment {
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            Entry entry = entryAdapter.getSelectedItem();
+            Entry entry = getEntryAdapter().getSelectedItem();
             if (entry == null)
                 return false;
             menu.findItem(R.id.action_copy_username).setVisible(notEmpty(entry.getUsername()));
@@ -291,7 +290,7 @@ public class EntryFragment extends BaseEntryFragment {
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            Entry entry = entryAdapter.getSelectedItem();
+            Entry entry = getEntryAdapter().getSelectedItem();
             if (entry == null)
                 return false;
             switch (item.getItemId()) {
@@ -327,7 +326,7 @@ public class EntryFragment extends BaseEntryFragment {
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             actionMode = null;
-            entryAdapter.clearSelection();
+            getEntryAdapter().clearSelection();
         }
     };
 
@@ -345,7 +344,7 @@ public class EntryFragment extends BaseEntryFragment {
                 } else {
                     if (getView() != null)
                         Snackbar.make(getView(), R.string.sync_done, Snackbar.LENGTH_SHORT).show();
-                    entryAdapter.reloadEntries();
+                    getEntryAdapter().reloadEntries();
                 }
             }
         }
