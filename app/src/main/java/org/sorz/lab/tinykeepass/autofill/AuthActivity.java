@@ -79,12 +79,9 @@ public class AuthActivity extends BaseActivity {
                 .map(keePass::getEntryByUUID)
                 .limit(MAX_NUM_CANDIDATE_ENTRIES);
 
-
         FillResponse.Builder responseBuilder = new FillResponse.Builder();
         entryStream.forEach(entry -> {
-            RemoteViews presentation = AutofillUtils.getRemoteViews(this,
-                    makeEntryTitle(entry),
-                    R.drawable.ic_person_blue_24dp);
+            RemoteViews presentation = AutofillUtils.getRemoteViews(this, entry);
             Dataset.Builder datasetBuilder = new Dataset.Builder(presentation);
 
             if (notEmpty(entry.getPassword())) {
@@ -118,17 +115,7 @@ public class AuthActivity extends BaseActivity {
         }
     }
 
-    private String makeEntryTitle(Entry entry) {
-        if (notEmpty(entry.getTitle()) && notEmpty(entry.getUsername()))
-            return String.format("%s (%s)", entry.getTitle(), entry.getUsername());
-        if (notEmpty(entry.getTitle()))
-            return entry.getTitle();
-        if (notEmpty(entry.getUsername()))
-            return entry.getUsername();
-        if (notEmpty(entry.getNotes()))
-            return entry.getNotes().trim();
-        return getString(R.string.autofill_not_title);
-    }
+
 
     static IntentSender getAuthIntentSenderForResponse(Context context) {
         Intent intent = new Intent(context, AuthActivity.class);

@@ -1,5 +1,8 @@
 package org.sorz.lab.tinykeepass.keepass;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -34,4 +37,8 @@ public class KeePassHelper {
         return str != null && !str.isEmpty();
     }
 
+    static public Bitmap getIcon(Entry entry) {
+        return BitmapFactory.decodeByteArray(entry.getIconData(), 0,
+                entry.getIconData().length);
+    }
 }

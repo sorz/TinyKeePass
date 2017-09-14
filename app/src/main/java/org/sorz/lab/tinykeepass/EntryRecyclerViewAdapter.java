@@ -1,7 +1,6 @@
 package org.sorz.lab.tinykeepass;
 
 import android.content.Context;
-import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.GridLayoutManager;
@@ -29,6 +28,8 @@ import java.util.stream.Collectors;
 
 import de.slackspace.openkeepass.domain.KeePassFile;
 import de.slackspace.openkeepass.domain.Entry;
+
+import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.getIcon;
 
 
 public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
@@ -90,9 +91,7 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         Entry entry = entries.get(position);
         holder.entry = entry;
         holder.view.setSelected(selectedItem == position);
-        holder.imageIcon.setImageBitmap(
-                BitmapFactory.decodeByteArray(entry.getIconData(), 0,
-                        entry.getIconData().length));
+        holder.imageIcon.setImageBitmap(getIcon(entry));
         holder.textTitle.setText(parse(entry.getTitle()));
         holder.textUsername.setText(parse(entry.getUsername()));
 
