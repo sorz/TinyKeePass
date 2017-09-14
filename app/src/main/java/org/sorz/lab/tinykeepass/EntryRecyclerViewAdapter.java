@@ -35,7 +35,6 @@ import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.getIcon;
 public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
     private final static String TAG = EntryRecyclerViewAdapter.class.getName();
     private final static int PASSWORD_NUM_OF_CHARS_IN_GROUP = 4;
-    private static final int ENTRY_MAX_WIDTH_DP = 350;
 
     private final BiConsumer<View, Entry> onClickHandler;
     private final BiPredicate<View, Entry> onLongClickHandler;
@@ -231,14 +230,6 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         if (item < 0 || item >= entries.size())
             return;
         notifyItemChanged(item);
-    }
-
-    static public RecyclerView.LayoutManager getDefaultLayoutManager(Context context) {
-        int spanCount = context.getResources().getConfiguration()
-                .screenWidthDp / ENTRY_MAX_WIDTH_DP;
-        return spanCount <= 1
-                ? new LinearLayoutManager(context)
-                : new GridLayoutManager(context, spanCount);
     }
 
 }

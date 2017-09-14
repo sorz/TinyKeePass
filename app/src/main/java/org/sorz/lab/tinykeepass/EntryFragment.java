@@ -31,7 +31,7 @@ import de.slackspace.openkeepass.domain.Entry;
 import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.notEmpty;
 
 
-public class EntryFragment extends Fragment implements SearchView.OnQueryTextListener {
+public class EntryFragment extends BaseEntryFragment {
     private static final long INACTIVE_AUTO_LOCK_MILLIS = 3 * 60 * 1000;
 
     private MainActivity activity;
@@ -55,24 +55,14 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
+    protected int getFragmentLayout() {
+        return R.layout.fragment_entry_list;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_entry_list, container, false);
-
-        // Set the adapter
-        RecyclerView recyclerView = view.findViewById(R.id.list);
-        recyclerView.setLayoutManager(EntryRecyclerViewAdapter
-                .getDefaultLayoutManager(getContext()));
-
-        entryAdapter = new EntryRecyclerViewAdapter(
-                getContext(), this::onEntryClick, this::onEntryLongClick);
-        recyclerView.setAdapter(entryAdapter);
+        View view = super.onCreateView(inflater, container, savedInstanceState);
 
         fab = view.findViewById(R.id.fab);
         fab.setOnClickListener(v -> {
@@ -133,9 +123,6 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_main, menu);
-        MenuItem searchMenu = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) searchMenu.getActionView();
-        searchView.setOnQueryTextListener(this);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -153,17 +140,6 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    @Override
-    public boolean onQueryTextSubmit(String query) {
-        return onQueryTextChange(query);
-    }
-
-    @Override
-    public boolean onQueryTextChange(String newText) {
-        entryAdapter.setFilter(newText);
-        return true;
     }
 
     /**
@@ -240,7 +216,8 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         copyEntry(entry, true, true);
     }
 
-    private void onEntryClick(View view, Entry entry) {
+    @Override
+    protected void onEntryClick(View view, Entry entry) {
         if (actionMode != null) {
             actionMode.finish();
         } else {
@@ -248,7 +225,8 @@ public class EntryFragment extends Fragment implements SearchView.OnQueryTextLis
         }
     }
 
-    private boolean onEntryLongClick(View view, Entry entry) {
+    @Override
+    protected boolean onEntryLongClick(View view, Entry entry) {
         if (getActivity() == null)
             return false;
         if (actionMode != null) {

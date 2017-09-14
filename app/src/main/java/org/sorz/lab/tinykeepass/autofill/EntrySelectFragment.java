@@ -3,20 +3,17 @@ package org.sorz.lab.tinykeepass.autofill;
 
 import android.content.Context;
 import android.os.Build;
-import android.os.Bundle;
-import android.app.Fragment;
 import android.support.annotation.RequiresApi;
-import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 
-import org.sorz.lab.tinykeepass.EntryRecyclerViewAdapter;
+import org.sorz.lab.tinykeepass.BaseEntryFragment;
 import org.sorz.lab.tinykeepass.R;
+
+import de.slackspace.openkeepass.domain.Entry;
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)
-public class EntrySelectFragment extends Fragment {
+public class EntrySelectFragment extends BaseEntryFragment {
     private EntrySelectActivity activity;
 
     public EntrySelectFragment() {
@@ -26,6 +23,7 @@ public class EntrySelectFragment extends Fragment {
     public static EntrySelectFragment newInstance() {
         return new EntrySelectFragment();
     }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -33,23 +31,18 @@ public class EntrySelectFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View view =  inflater.inflate(R.layout.fragment_entry_select, container, false);
+    protected int getFragmentLayout() {
+        return R.layout.fragment_entry_select;
+    }
 
-        // Set the adapter
-        RecyclerView recyclerView = view.findViewById(R.id.list);
-        recyclerView.setLayoutManager(EntryRecyclerViewAdapter
-                .getDefaultLayoutManager(getContext()));
+    @Override
+    protected void onEntryClick(View view, Entry entry) {
+        activity.onEntrySelected(entry);
+    }
 
-        EntryRecyclerViewAdapter entryAdapter = new EntryRecyclerViewAdapter(
-                getContext(),
-                (v, e) -> activity.onEntrySelected(e),
-                (v, e) -> false);
-        recyclerView.setAdapter(entryAdapter);
-
-        return view;
+    @Override
+    protected boolean onEntryLongClick(View view, Entry entry) {
+        return false;
     }
 
 }
