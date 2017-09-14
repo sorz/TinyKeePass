@@ -2,8 +2,10 @@ package org.sorz.lab.tinykeepass.autofill;
 
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.annotation.RequiresApi;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,8 +15,9 @@ import org.sorz.lab.tinykeepass.EntryRecyclerViewAdapter;
 import org.sorz.lab.tinykeepass.R;
 
 
+@RequiresApi(api = Build.VERSION_CODES.O)
 public class EntrySelectFragment extends Fragment {
-    private AuthActivity activity;
+    private EntrySelectActivity activity;
 
     public EntrySelectFragment() {
         // Required empty public constructor
@@ -26,7 +29,7 @@ public class EntrySelectFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        activity = (AuthActivity) context;
+        activity = (EntrySelectActivity) context;
     }
 
     @Override

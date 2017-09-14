@@ -1,16 +1,24 @@
 package org.sorz.lab.tinykeepass.autofill;
 
 import android.content.Context;
+import android.os.Build;
+import android.service.autofill.Dataset;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.RequiresApi;
+import android.view.autofill.AutofillId;
+import android.view.autofill.AutofillValue;
 import android.widget.RemoteViews;
 
 import org.sorz.lab.tinykeepass.R;
+
+import java.util.stream.Stream;
 
 import de.slackspace.openkeepass.domain.Entry;
 
 import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.getIcon;
 import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.notEmpty;
 
+@RequiresApi(api = Build.VERSION_CODES.O)
 class AutofillUtils {
 
     static RemoteViews getRemoteViews(Context context, String text, @DrawableRes int icon) {
@@ -21,12 +29,26 @@ class AutofillUtils {
         return views;
     }
 
-    static RemoteViews getRemoteViews(Context context, Entry entry) {
+    static Dataset buildDataset(Context context, Entry entry, StructureParser.Result struct) {
         String title = makeEntryTitle(context, entry);
         RemoteViews views = getRemoteViews(context, title, R.drawable.ic_person_blue_24dp);
         views.setImageViewBitmap(R.id.imageIcon, getIcon(entry));
-        return views;
+        Dataset.Builder builder = new Dataset.Builder(views);
+
+        if (notEmpty(entry.getPassword())) {
+            AutofillValue value = AutofillValue.forText(entry.getPassword());
+            struct.password.forEach(id -> builder.setValue(id, value));
+        }
+        if (notEmpty(entry.getUsername())) {
+            AutofillValue value = AutofillValue.forText(entry.getUsername());
+            Stream<AutofillId> ids = struct.username.stream();
+            if (entry.getUsername().contains("@") || struct.username.isEmpty())
+                ids = Stream.concat(ids, struct.email.stream());
+            ids.forEach(id -> builder.setValue(id, value));
+        }
+        return builder.build();
     }
+
 
     static private String makeEntryTitle(Context context, Entry entry) {
         if (notEmpty(entry.getTitle()) && notEmpty(entry.getUsername()))
@@ -39,4 +61,5 @@ class AutofillUtils {
             return entry.getNotes().trim();
         return context.getString(R.string.autofill_not_title);
     }
+
 }

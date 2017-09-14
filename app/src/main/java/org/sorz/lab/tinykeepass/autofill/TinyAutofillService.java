@@ -13,6 +13,7 @@ import android.service.autofill.SaveRequest;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
+import android.view.autofill.AutofillId;
 import android.widget.RemoteViews;
 
 import org.sorz.lab.tinykeepass.R;
@@ -42,7 +43,8 @@ public class TinyAutofillService extends AutofillService {
                 getString(R.string.autofill_unlock_db),
                 android.R.drawable.ic_lock_lock);
         IntentSender sender = AuthActivity.getAuthIntentSenderForResponse(this);
-        responseBuilder.setAuthentication(parseResult.getAutofillIds(), sender, presentation);
+        AutofillId[] autofillIds = parseResult.allAutofillIds().toArray(AutofillId[]::new);
+        responseBuilder.setAuthentication(autofillIds, sender, presentation);
 
         callback.onSuccess(responseBuilder.build());
     }

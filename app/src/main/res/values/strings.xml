@@ -68,4 +68,5 @@
     <string name="title_autofill_select">Select to autofill</string>
     <string name="autofill_touch_to_fill">Touch to fill</string>
     <string name="autofill_not_title">(unnamed)</string>
+    <string name="autofill_item_show_all">Show all</string>
 </resources>

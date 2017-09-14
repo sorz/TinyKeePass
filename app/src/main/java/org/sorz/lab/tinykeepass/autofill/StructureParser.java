@@ -85,10 +85,9 @@ class StructureParser {
             password = new ArrayList<>();
         }
 
-        AutofillId[] getAutofillIds() {
+        Stream<AutofillId> allAutofillIds() {
             return Stream.concat(Stream.concat(
-                        username.stream(), email.stream()), password.stream())
-                    .toArray(AutofillId[]::new);
+                        username.stream(), email.stream()), password.stream());
         }
     }
 }

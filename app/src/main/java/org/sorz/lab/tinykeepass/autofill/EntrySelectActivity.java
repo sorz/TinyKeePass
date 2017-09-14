@@ -6,22 +6,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Build;
-import android.os.Bundle;
-import android.service.autofill.Dataset;
 import android.service.autofill.FillResponse;
 import android.support.annotation.RequiresApi;
+import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.autofill.AutofillManager;
-import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import org.sorz.lab.tinykeepass.BaseActivity;
 import org.sorz.lab.tinykeepass.R;
-import org.sorz.lab.tinykeepass.autofill.search.SearchIndex;
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import de.slackspace.openkeepass.KeePassDatabase;
 import de.slackspace.openkeepass.domain.Entry;
@@ -30,9 +27,9 @@ import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)
-public class AuthActivity extends BaseActivity {
-    private final static String TAG = AuthActivity.class.getName();
-    private final static int MAX_NUM_CANDIDATE_ENTRIES = 5;
+public class EntrySelectActivity extends BaseActivity {
+    private final static String TAG = EntrySelectActivity.class.getName();
+
     private Intent replyIntent;
 
     @Override
@@ -40,11 +37,11 @@ public class AuthActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
 
         if (KeePassStorage.get() != null) {
-            buildAndReturnAuthenticationResult();
+            showList();
         } else {
             getDatabaseKeys(keys -> {
                 unlockDatabase(keys);
-                buildAndReturnAuthenticationResult();
+                showList();
             }, error -> {
                 Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
                 finish();
@@ -63,35 +60,32 @@ public class AuthActivity extends BaseActivity {
         super.finish();
     }
 
-    private void buildAndReturnAuthenticationResult() {
+    void onEntrySelected(Entry entry) {
         AssistStructure structure =
                 getIntent().getParcelableExtra(AutofillManager.EXTRA_ASSIST_STRUCTURE);
         StructureParser.Result result = new StructureParser(structure).parse();
-        KeePassFile keePass = KeePassStorage.get();
-        SearchIndex index = new SearchIndex(keePass);
-        StringBuilder queryBuilder = new StringBuilder();
-        result.title.forEach(title -> queryBuilder.append(title).append(' '));
-        Stream<Entry> entryStream = index.search(queryBuilder.toString())
-                .map(keePass::getEntryByUUID)
-                .limit(MAX_NUM_CANDIDATE_ENTRIES);
 
-        FillResponse.Builder responseBuilder = new FillResponse.Builder();
-        // add matched entities
-        entryStream.forEach(entry ->
-                responseBuilder.addDataset(AutofillUtils.buildDataset(this, entry, result)));
-        // add "show all" item
-        RemoteViews presentation = AutofillUtils.getRemoteViews(this,
-                getString(R.string.autofill_item_show_all),
-                R.drawable.ic_more_horiz_gray_24dp);
-        presentation.setTextColor(R.id.textView, getColor(R.color.hint));
-        Dataset.Builder datasetBuilder = new Dataset.Builder(presentation)
-                .setAuthentication(EntrySelectActivity.getAuthIntentSenderForResponse(this));
-        result.allAutofillIds().forEach(id -> datasetBuilder.setValue(id, null));
-        responseBuilder.addDataset(datasetBuilder.build());
+        FillResponse response = new FillResponse.Builder()
+                .addDataset(AutofillUtils.buildDataset(this, entry, result))
+                .build();
 
         replyIntent = new Intent();
-        replyIntent.putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, responseBuilder.build());
+        replyIntent.putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, response);
         finish();
+    }
+
+    private void showList() {
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        getFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, EntrySelectFragment.newInstance())
+                .commit();
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(R.string.title_autofill_select);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
     }
 
     private void unlockDatabase(List<String> keys) {
@@ -108,7 +102,7 @@ public class AuthActivity extends BaseActivity {
 
 
     static IntentSender getAuthIntentSenderForResponse(Context context) {
-        Intent intent = new Intent(context, AuthActivity.class);
+        Intent intent = new Intent(context, EntrySelectActivity.class);
         return PendingIntent.getActivity(context, 0, intent,
                 PendingIntent.FLAG_CANCEL_CURRENT).getIntentSender();
     }
