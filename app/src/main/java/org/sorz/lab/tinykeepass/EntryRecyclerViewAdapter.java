@@ -3,8 +3,6 @@ package org.sorz.lab.tinykeepass;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -32,7 +30,8 @@ import de.slackspace.openkeepass.domain.Entry;
 import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.getIcon;
 
 
-public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
+public class EntryRecyclerViewAdapter
+        extends RecyclerView.Adapter<EntryRecyclerViewAdapter.ViewHolder> {
     private final static String TAG = EntryRecyclerViewAdapter.class.getName();
     private final static int PASSWORD_NUM_OF_CHARS_IN_GROUP = 4;
 
@@ -88,7 +87,6 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         Entry entry = entries.get(position);
-        holder.entry = entry;
         holder.view.setSelected(selectedItem == position);
         holder.imageIcon.setImageBitmap(getIcon(entry));
         holder.textTitle.setText(parse(entry.getTitle()));
@@ -177,7 +175,6 @@ public class EntryRecyclerViewAdapter extends RecyclerView.Adapter<EntryRecycler
         final TextView textUrlHostname;
         final TextView textUrlPath;
         final TextView textPassword;
-        Entry entry;
 
         ViewHolder(View view) {
             super(view);

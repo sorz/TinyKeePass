@@ -84,11 +84,10 @@ public class DatabaseSetupActivity extends AppCompatActivity
             editAuthUsername.setVisibility(isChecked ? View.VISIBLE : View.GONE);
             editAuthPassword.setVisibility(editAuthUsername.getVisibility());
         });
-        checkShowPassword.setOnCheckedChangeListener((CompoundButton button, boolean isChecked) -> {
-            editMasterPassword.setInputType(isChecked ?
-                    InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD :
-                    InputType.TYPE_TEXT_VARIATION_PASSWORD | InputType.TYPE_CLASS_TEXT);
-        });
+        checkShowPassword.setOnCheckedChangeListener((CompoundButton button, boolean isChecked) ->
+                editMasterPassword.setInputType(isChecked
+                        ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                        : InputType.TYPE_TEXT_VARIATION_PASSWORD | InputType.TYPE_CLASS_TEXT));
 
         buttonOpenFile.setOnClickListener((View button) -> {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);

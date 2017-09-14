@@ -8,13 +8,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -63,16 +60,17 @@ public class EntryFragment extends BaseEntryFragment {
                              Bundle savedInstanceState) {
         View view = super.onCreateView(inflater, container, savedInstanceState);
 
-        fab = view.findViewById(R.id.fab);
-        fab.setOnClickListener(v -> {
-            if (activity != null) {
-                fab.hide();
-                activity.doSyncDatabase();
-            }
-        });
+        if (view != null) {
+            fab = view.findViewById(R.id.fab);
+            fab.setOnClickListener(v -> {
+                if (activity != null) {
+                    fab.hide();
+                    activity.doSyncDatabase();
+                }
+            });
+        }
         return view;
     }
-
 
     @Override
     public void onAttach(Context context) {

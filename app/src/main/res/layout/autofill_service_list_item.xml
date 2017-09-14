@@ -17,7 +17,7 @@
         android:layout_height="16dp"
         android:layout_marginEnd="5dp"
         android:layout_gravity="center_vertical"
-        android:contentDescription="icon"
+        android:contentDescription="@string/image_alt_icon"
         android:src="@android:drawable/ic_lock_lock" />
 
     <TextView
