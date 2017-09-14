@@ -34,6 +34,7 @@ class AutofillUtils {
         RemoteViews views = getRemoteViews(context, title, R.drawable.ic_person_blue_24dp);
         views.setImageViewBitmap(R.id.imageIcon, getIcon(entry));
         Dataset.Builder builder = new Dataset.Builder(views);
+        builder.setId(entry.getUuid().toString());
 
         if (notEmpty(entry.getPassword())) {
             AutofillValue value = AutofillValue.forText(entry.getPassword());
