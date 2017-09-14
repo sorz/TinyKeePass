@@ -145,17 +145,20 @@ public class DatabaseSetupActivity extends AppCompatActivity
                 break;
             case 1: // lock screen
                 if (!keyguardManager.isDeviceSecure()) {
-                    Toast.makeText(this, R.string.no_screen_lock, Toast.LENGTH_LONG).show();
+                    Toast.makeText(this,
+                            R.string.no_screen_lock, Toast.LENGTH_LONG).show();
                     return false;
                 }
                 break;
             case 2: // fingerprint
                 if (!fingerprintManager.isHardwareDetected()) {
-                    Toast.makeText(this, R.string.no_fingerprint_detected, Toast.LENGTH_LONG).show();
+                    Toast.makeText(this,
+                            R.string.no_fingerprint_detected, Toast.LENGTH_LONG).show();
                     return false;
                 }
                 if (!fingerprintManager.hasEnrolledFingerprints()) {
-                    Toast.makeText(this, R.string.no_fingerprint_enrolled, Toast.LENGTH_LONG).show();
+                    Toast.makeText(this,
+                            R.string.no_fingerprint_enrolled, Toast.LENGTH_LONG).show();
                     return false;
                 }
                 break;

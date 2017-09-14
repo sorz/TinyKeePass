@@ -39,6 +39,12 @@ public class MainActivity extends BaseActivity {
         setSupportActionBar(toolbar);
     }
 
+    @Override
+    public void onNewIntent(Intent intent) {
+        if (KeePassStorage.get() != null)
+            showEntryList();
+    }
+
     public boolean hasConfiguredDatabase() {
         return KeePassStorage.get() != null || getDatabaseFile().canRead();
     }
