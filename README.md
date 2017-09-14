@@ -4,6 +4,8 @@ Another simple read-only KeePass Android app.
 
 Only what I personally need are implemented, lacks lots of common functions, and possibly buggy.
 
+[Google Play](https://play.google.com/store/apps/details?id=org.sorz.lab.tinykeepass)
+
 ## Features
 
 * Fetch/update database from HTTP(S)/WebDav server, support HTTP basic auth.
