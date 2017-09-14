@@ -24,7 +24,8 @@ public class Tokenizer {
         String[] tokens = str.split("\\b");
         return Arrays.stream(tokens)
                 .filter(s -> s.matches("\\w{2,}"))
-                .filter(s -> !IGNORE_TOKENS.contains(s));
+                .filter(s -> !IGNORE_TOKENS.contains(s))
+                .map(String::toLowerCase);
     }
 
     static public Stream<String> parse(Entry entry) {
