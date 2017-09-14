@@ -18,6 +18,8 @@ import de.slackspace.openkeepass.KeePassDatabase;
 import de.slackspace.openkeepass.domain.KeePassFile;
 import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
 
+import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.getDatabaseFile;
+
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 abstract class BaseActivity extends org.sorz.lab.tinykeepass.BaseActivity {
@@ -62,7 +64,7 @@ abstract class BaseActivity extends org.sorz.lab.tinykeepass.BaseActivity {
 
     protected void unlockDatabase(List<String> keys) {
         try {
-            KeePassFile db = KeePassDatabase.getInstance(getDatabaseFile())
+            KeePassFile db = KeePassDatabase.getInstance(getDatabaseFile(this))
                     .openDatabase(keys.get(0));
             KeePassStorage.set(this, db);
         } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {

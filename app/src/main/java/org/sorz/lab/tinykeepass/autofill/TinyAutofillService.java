@@ -18,6 +18,8 @@ import android.widget.RemoteViews;
 
 import org.sorz.lab.tinykeepass.R;
 
+import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.hasDatabaseConfigured;
+
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class TinyAutofillService extends AutofillService {
@@ -26,8 +28,11 @@ public class TinyAutofillService extends AutofillService {
     public void onFillRequest(@NonNull FillRequest request,
                               @NonNull CancellationSignal cancellationSignal,
                               @NonNull FillCallback callback) {
-
         cancellationSignal.setOnCancelListener(() -> Log.d(TAG, "autofill canceled."));
+        if (!hasDatabaseConfigured(this)) {
+            callback.onSuccess(null);
+            return;
+        }
 
         AssistStructure structure = request.getFillContexts()
                 .get(request.getFillContexts().size() - 1).getStructure();
@@ -48,8 +53,6 @@ public class TinyAutofillService extends AutofillService {
 
         callback.onSuccess(responseBuilder.build());
     }
-
-
 
     @Override
     public void onSaveRequest(@NonNull SaveRequest request, @NonNull SaveCallback callback) {

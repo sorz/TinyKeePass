@@ -12,6 +12,9 @@ import de.slackspace.openkeepass.KeePassDatabase;
 import de.slackspace.openkeepass.domain.KeePassFile;
 import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
 
+import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.getDatabaseFile;
+import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.hasDatabaseConfigured;
+
 public class MainActivity extends BaseActivity {
     private final static String TAG = MainActivity.class.getName();
 
@@ -24,7 +27,7 @@ public class MainActivity extends BaseActivity {
                     .add(R.id.fragment_container, new DatabaseLockedFragment())
                     .commit();
 
-            if (!hasConfiguredDatabase()) {
+            if (!hasDatabaseConfigured(this)) {
                 doConfigureDatabase();
                 finish();
             } else {
@@ -45,17 +48,13 @@ public class MainActivity extends BaseActivity {
             showEntryList();
     }
 
-    public boolean hasConfiguredDatabase() {
-        return KeePassStorage.get() != null || getDatabaseFile().canRead();
-    }
-
     public void doUnlockDatabase() {
         if (KeePassStorage.get() != null) {
             showEntryList();
         } else {
             getDatabaseKeys(keys -> {
                 try {
-                    KeePassFile db = KeePassDatabase.getInstance(getDatabaseFile())
+                    KeePassFile db = KeePassDatabase.getInstance(getDatabaseFile(this))
                             .openDatabase(keys.get(0));
                     KeePassStorage.set(this, db);
                 } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
@@ -98,7 +97,7 @@ public class MainActivity extends BaseActivity {
 
     public void doCleanDatabase() {
         KeePassStorage.set(this, null);
-        if (!getDatabaseFile().delete())
+        if (!getDatabaseFile(this).delete())
             Log.w(TAG, "fail to delete database file");
         getSecureStringStorage().clear();
         snackbar(getString(R.string.clean_config_ok), Snackbar.LENGTH_SHORT).show();

@@ -86,10 +86,6 @@ public abstract class BaseActivity extends AppCompatActivity
         getKey();
     }
 
-    protected File getDatabaseFile() {
-        return new File(getNoBackupFilesDir(), FetchDatabaseTask.DB_FILENAME);
-    }
-
     private void getKey() {
         int authMethod = preferences.getInt("key-auth-method", 0);
         switch (authMethod) {

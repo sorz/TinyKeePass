@@ -1,8 +1,12 @@
 package org.sorz.lab.tinykeepass.keepass;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import org.sorz.lab.tinykeepass.FetchDatabaseTask;
+
+import java.io.File;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -40,5 +44,13 @@ public class KeePassHelper {
     static public Bitmap getIcon(Entry entry) {
         return BitmapFactory.decodeByteArray(entry.getIconData(), 0,
                 entry.getIconData().length);
+    }
+
+    static public File getDatabaseFile(Context context) {
+        return new File(context.getNoBackupFilesDir(), FetchDatabaseTask.DB_FILENAME);
+    }
+
+    static public boolean hasDatabaseConfigured(Context context) {
+        return KeePassStorage.get() != null || getDatabaseFile(context).canRead();
     }
 }
