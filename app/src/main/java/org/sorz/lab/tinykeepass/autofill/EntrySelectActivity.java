@@ -8,6 +8,7 @@ import android.os.Build;
 import android.service.autofill.FillResponse;
 import android.support.annotation.RequiresApi;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 
 import org.sorz.lab.tinykeepass.R;
 
@@ -39,6 +40,16 @@ public class EntrySelectActivity extends BaseActivity {
             getSupportActionBar().setTitle(R.string.title_autofill_select);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     static IntentSender getAuthIntentSenderForResponse(Context context) {
