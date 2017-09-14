@@ -1,4 +1,4 @@
-package org.sorz.lab.tinykeepass;
+package org.sorz.lab.tinykeepass.auth;
 
 import android.content.Context;
 import android.content.SharedPreferences;

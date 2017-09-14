@@ -9,6 +9,8 @@ import android.security.keystore.UserNotAuthenticatedException;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import org.sorz.lab.tinykeepass.auth.FingerprintDialogFragment;
+import org.sorz.lab.tinykeepass.auth.SecureStringStorage;
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 
 import java.io.File;

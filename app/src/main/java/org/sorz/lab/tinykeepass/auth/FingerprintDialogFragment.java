@@ -1,4 +1,4 @@
-package org.sorz.lab.tinykeepass;
+package org.sorz.lab.tinykeepass.auth;
 
 import android.app.DialogFragment;
 import android.content.Context;
@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import org.sorz.lab.tinykeepass.R;
 
 import javax.crypto.Cipher;
 

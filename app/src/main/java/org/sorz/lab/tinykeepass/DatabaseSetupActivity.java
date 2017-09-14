@@ -20,6 +20,9 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import org.sorz.lab.tinykeepass.auth.FingerprintDialogFragment;
+import org.sorz.lab.tinykeepass.auth.SecureStringStorage;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;

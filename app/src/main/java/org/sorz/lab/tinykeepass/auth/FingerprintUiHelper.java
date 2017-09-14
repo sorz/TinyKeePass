@@ -1,4 +1,4 @@
-package org.sorz.lab.tinykeepass;
+package org.sorz.lab.tinykeepass.auth;
 
 import android.content.Context;
 import android.hardware.fingerprint.FingerprintManager;
@@ -7,6 +7,8 @@ import android.security.keystore.UserNotAuthenticatedException;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import org.sorz.lab.tinykeepass.R;
 
 import java.util.function.Consumer;
 
