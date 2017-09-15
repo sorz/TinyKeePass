@@ -1,6 +1,7 @@
 package org.sorz.lab.tinykeepass;
 
 import android.app.KeyguardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -12,14 +13,16 @@ import android.util.Log;
 import org.sorz.lab.tinykeepass.auth.FingerprintDialogFragment;
 import org.sorz.lab.tinykeepass.auth.SecureStringStorage;
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
+import org.sorz.lab.tinykeepass.keepass.OpenKeePassTask;
 
-import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+
+import de.slackspace.openkeepass.domain.KeePassFile;
 
 
 public abstract class BaseActivity extends AppCompatActivity
@@ -131,6 +134,11 @@ public abstract class BaseActivity extends AppCompatActivity
         onKeyRetrieved.accept(keys);
     }
 
+    protected void openDatabase(String masterKey,
+                                Consumer<KeePassFile> onSuccess, Consumer<String> onError) {
+        new OpenTask(this, masterKey, onSuccess, onError).execute();
+    }
+
     protected SecureStringStorage getSecureStringStorage() {
         return secureStringStorage;
     }
@@ -139,4 +147,28 @@ public abstract class BaseActivity extends AppCompatActivity
         return preferences;
     }
 
+    private static class OpenTask extends OpenKeePassTask {
+        private final Consumer<KeePassFile> onSuccess;
+        private final Consumer<String> onError;
+
+        OpenTask(Context context, String masterKey,
+                 Consumer<KeePassFile> onSuccess, Consumer<String> onError) {
+            super(context, masterKey);
+            // TODO: memory leaks?
+            this.onSuccess = onSuccess;
+            this.onError = onError;
+        }
+
+        @Override
+        protected void onErrorMessage(String error) {
+            onError.accept(error);
+        }
+
+        @Override
+        protected void onPostExecute(KeePassFile db) {
+            super.onPostExecute(db);
+            if (db != null)
+                onSuccess.accept(db);
+        }
+    }
 }

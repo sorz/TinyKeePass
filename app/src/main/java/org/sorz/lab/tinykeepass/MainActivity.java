@@ -1,5 +1,6 @@
 package org.sorz.lab.tinykeepass;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -7,10 +8,6 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
-
-import de.slackspace.openkeepass.KeePassDatabase;
-import de.slackspace.openkeepass.domain.KeePassFile;
-import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
 
 import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.getDatabaseFile;
 import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.hasDatabaseConfigured;
@@ -52,18 +49,14 @@ public class MainActivity extends BaseActivity {
         if (KeePassStorage.get() != null) {
             showEntryList();
         } else {
-            getDatabaseKeys(keys -> {
-                try {
-                    KeePassFile db = KeePassDatabase.getInstance(getDatabaseFile(this))
-                            .openDatabase(keys.get(0));
-                    KeePassStorage.set(this, db);
-                } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
-                    Log.w(TAG, "cannot open database.", e);
-                    snackbar(e.getLocalizedMessage(), Snackbar.LENGTH_LONG).show();
-                    return;
-                }
-                showEntryList();
-            }, this::showError);
+            getDatabaseKeys(keys ->
+                    openDatabase(keys.get(0),
+                            db -> {
+                                KeePassStorage.set(this, db);
+                                showEntryList();
+                            },
+                            this::showError)
+            , this::showError);
         }
     }
 

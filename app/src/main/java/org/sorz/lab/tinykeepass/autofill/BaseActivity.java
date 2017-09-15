@@ -34,14 +34,19 @@ abstract class BaseActivity extends org.sorz.lab.tinykeepass.BaseActivity {
         if (KeePassStorage.get() != null) {
             onDatabaseOpened();
         } else {
-            getDatabaseKeys(keys -> {
-                unlockDatabase(keys);
-                onDatabaseOpened();
-            }, error -> {
-                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
-                finish();
-            });
+            getDatabaseKeys(keys ->
+                    openDatabase(keys.get(0),
+                            db -> {
+                                KeePassStorage.set(this, db);
+                                onDatabaseOpened();
+                            }, this::onError)
+            , this::onError);
         }
+    }
+
+    private void onError(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        finish();
     }
 
     @Override
@@ -62,17 +67,6 @@ abstract class BaseActivity extends org.sorz.lab.tinykeepass.BaseActivity {
         return new StructureParser(structure).parse();
     }
 
-    protected void unlockDatabase(List<String> keys) {
-        try {
-            KeePassFile db = KeePassDatabase.getInstance(getDatabaseFile(this))
-                    .openDatabase(keys.get(0));
-            KeePassStorage.set(this, db);
-        } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
-            Log.w(TAG, "cannot open database.", e);
-            Toast.makeText(this, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-            finish();
-        }
-    }
 
     protected void setFillResponse(FillResponse response) {
         replyIntent = new Intent();
