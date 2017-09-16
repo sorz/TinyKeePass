@@ -33,7 +33,7 @@ public class OpenKeePassDialogFragment extends DialogFragment {
                              Bundle savedInstanceState) {
         getDialog().setTitle(R.string.open_db_dialog_title);
         getDialog().setCancelable(false);
-        getDialog().setCanceledOnTouchOutside(true);
+        getDialog().setCanceledOnTouchOutside(false);
         return inflater.inflate(R.layout.fragment_open_database_dialog,
                 container, false);
     }
@@ -49,6 +49,7 @@ public class OpenKeePassDialogFragment extends DialogFragment {
         note.setText(message);
         progressBar.setVisibility(View.INVISIBLE);
         setCancelable(true);
+        getDialog().setCanceledOnTouchOutside(true);
     }
 
     void onOpenOk() {
