@@ -35,11 +35,7 @@ abstract class BaseActivity extends org.sorz.lab.tinykeepass.BaseActivity {
             onDatabaseOpened();
         } else {
             getDatabaseKeys(keys ->
-                    openDatabase(keys.get(0),
-                            db -> {
-                                KeePassStorage.set(this, db);
-                                onDatabaseOpened();
-                            }, this::onError)
+                    openDatabase(keys.get(0), db -> onDatabaseOpened())
             , this::onError);
         }
     }

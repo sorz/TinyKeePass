@@ -1,11 +1,8 @@
 package org.sorz.lab.tinykeepass.keepass;
 
-import android.app.ProgressDialog;
-import android.content.Context;
+import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
-
-import org.sorz.lab.tinykeepass.R;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -22,19 +19,15 @@ import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.getDatabaseFile;
 public class OpenKeePassTask extends AsyncTask<Void, Void, KeePassFile> {
     static private final String TAG = OpenKeePassTask.class.getName();
 
-    private final WeakReference<Context> context;
+    private final WeakReference<Activity> activity;
     private final File path;
     private final String key;
-    private ProgressDialog dialog;
+    private String errorMessage;
 
-    public OpenKeePassTask(Context context, String masterKey) {
-        this.context = new WeakReference<>(context);
-        path = getDatabaseFile(context);
+    public OpenKeePassTask(Activity activity, String masterKey) {
+        this.activity = new WeakReference<>(activity);
+        path = getDatabaseFile(activity);
         key = masterKey;
-    }
-
-    protected void onErrorMessage(String error) {
-        // To be override
     }
 
     @Override
@@ -49,26 +42,35 @@ public class OpenKeePassTask extends AsyncTask<Void, Void, KeePassFile> {
             return keePassFile;
         } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
             Log.w(TAG, "cannot open database.", e);
-            onErrorMessage(e.getLocalizedMessage());
+            errorMessage = e.getLocalizedMessage();
         }
         return null;
     }
 
     @Override
     protected void onPreExecute(){
-        Context context = this.context.get();
-        if (context == null)
+        Activity activity = this.activity.get();
+        if (activity == null)
             return;
-        dialog = new ProgressDialog(context);
-        dialog.setTitle(R.string.title_db_decrypting);
-        dialog.setIndeterminate(true);
-        dialog.setCancelable(false);
-        dialog.show();
+        activity.getFragmentManager().beginTransaction()
+                .add(OpenKeePassDialogFragment.newInstance(), "dialog")
+                .commit();
     }
 
     @Override
     protected void onPostExecute(KeePassFile result){
-        if (dialog != null)
-            dialog.dismiss();
+        Activity activity = this.activity.get();
+        if (activity == null)
+            return;
+        OpenKeePassDialogFragment dialogFragment = (OpenKeePassDialogFragment)
+                activity.getFragmentManager().findFragmentByTag("dialog");
+        if (dialogFragment == null)
+            return;
+        if (result == null) {
+            dialogFragment.onOpenError(errorMessage);
+        } else {
+            dialogFragment.onOpenOk();
+            KeePassStorage.set(activity, result);
+        }
     }
 }

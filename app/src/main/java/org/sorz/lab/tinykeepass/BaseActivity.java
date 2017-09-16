@@ -1,7 +1,7 @@
 package org.sorz.lab.tinykeepass;
 
+import android.app.Activity;
 import android.app.KeyguardManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -134,9 +134,8 @@ public abstract class BaseActivity extends AppCompatActivity
         onKeyRetrieved.accept(keys);
     }
 
-    protected void openDatabase(String masterKey,
-                                Consumer<KeePassFile> onSuccess, Consumer<String> onError) {
-        new OpenTask(this, masterKey, onSuccess, onError).execute();
+    protected void openDatabase(String masterKey, Consumer<KeePassFile> onSuccess) {
+        new OpenTask(this, masterKey, onSuccess).execute();
     }
 
     protected SecureStringStorage getSecureStringStorage() {
@@ -149,19 +148,11 @@ public abstract class BaseActivity extends AppCompatActivity
 
     private static class OpenTask extends OpenKeePassTask {
         private final Consumer<KeePassFile> onSuccess;
-        private final Consumer<String> onError;
 
-        OpenTask(Context context, String masterKey,
-                 Consumer<KeePassFile> onSuccess, Consumer<String> onError) {
-            super(context, masterKey);
+        OpenTask(Activity activity, String masterKey, Consumer<KeePassFile> onSuccess) {
+            super(activity, masterKey);
             // TODO: memory leaks?
             this.onSuccess = onSuccess;
-            this.onError = onError;
-        }
-
-        @Override
-        protected void onErrorMessage(String error) {
-            onError.accept(error);
         }
 
         @Override

@@ -50,12 +50,7 @@ public class MainActivity extends BaseActivity {
             showEntryList();
         } else {
             getDatabaseKeys(keys ->
-                    openDatabase(keys.get(0),
-                            db -> {
-                                KeePassStorage.set(this, db);
-                                showEntryList();
-                            },
-                            this::showError)
+                    openDatabase(keys.get(0), db -> showEntryList())
             , this::showError);
         }
     }

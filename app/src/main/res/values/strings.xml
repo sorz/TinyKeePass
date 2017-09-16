@@ -62,5 +62,7 @@
     <string name="autofill_item_show_all">Show all</string>
     <string name="button_confirm">Confirm</string>
     <string name="image_alt_icon">icon</string>
-    <string name="title_db_decrypting">Decrypting</string>
+    <string name="open_db_dialog_title">Decrypting…</string>
+    <string name="open_db_dialog_note">It may take several seconds</string>
+    <string name="open_db_dialog_fail">Fail to open database</string>
 </resources>
