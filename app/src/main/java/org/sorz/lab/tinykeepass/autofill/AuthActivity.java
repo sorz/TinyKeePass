@@ -11,7 +11,7 @@ import android.support.annotation.RequiresApi;
 import android.widget.RemoteViews;
 
 import org.sorz.lab.tinykeepass.R;
-import org.sorz.lab.tinykeepass.autofill.search.SearchIndex;
+import org.sorz.lab.tinykeepass.search.SearchIndex;
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 
 import java.util.stream.Stream;

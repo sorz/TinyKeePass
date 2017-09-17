@@ -1,4 +1,4 @@
-package org.sorz.lab.tinykeepass.autofill.search;
+package org.sorz.lab.tinykeepass.search;
 
 import org.sorz.lab.tinykeepass.keepass.KeePassHelper;
 
