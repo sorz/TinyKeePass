@@ -31,6 +31,7 @@ public class OpenKeePassDialogFragment extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        setCancelable(false);
         getDialog().setTitle(R.string.open_db_dialog_title);
         getDialog().setCancelable(false);
         getDialog().setCanceledOnTouchOutside(false);

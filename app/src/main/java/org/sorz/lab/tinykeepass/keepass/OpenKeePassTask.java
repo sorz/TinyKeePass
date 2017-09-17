@@ -65,7 +65,6 @@ public class OpenKeePassTask extends AsyncTask<Void, Void, KeePassFile> {
         OpenKeePassDialogFragment dialogFragment = (OpenKeePassDialogFragment)
                 activity.getFragmentManager().findFragmentByTag("dialog");
         if (dialogFragment != null) {
-            // TODO: handle cancel
             if (result == null)
                 dialogFragment.onOpenError(errorMessage);
             else
