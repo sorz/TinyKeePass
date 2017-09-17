@@ -17,9 +17,9 @@ import android.widget.TextView;
 
 import org.sorz.lab.tinykeepass.keepass.KeePassHelper;
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
+import org.sorz.lab.tinykeepass.search.EntryQueryRelevance;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
@@ -194,24 +194,19 @@ public class EntryRecyclerViewAdapter
         }
     }
 
-    private static boolean contains(String string, String query) {
-        return string != null && string.toLowerCase().contains(query);
-    }
-
-    public void setFilter(String query) {
+    public void setFilter(@Nullable String query) {
         selectedItem = -1;
         passwordShownItem = -1;
         if (query == null || query.isEmpty()) {
             entries = allEntries;
         } else {
-            final String[] words = query.toLowerCase().trim().split(" ");
+            final String[] keywords = query.toLowerCase().trim().split(" ");
             entries = allEntries.parallelStream()
-                    .filter(e -> Arrays.stream(words).allMatch(w ->
-                            contains(e.getTitle(), w) ||
-                            contains(e.getUrl(), w)  ||
-                            contains(e.getNotes(), w)  ||
-                            contains(e.getUsername(), w)
-            )).collect(Collectors.toList());
+                    .map(e -> new EntryQueryRelevance(e, keywords))
+                    .filter(EntryQueryRelevance::isRelated)
+                    .sorted()
+                    .map(EntryQueryRelevance::getEntry)
+                    .collect(Collectors.toList());
         }
         filter = query;
         notifyDataSetChanged();
