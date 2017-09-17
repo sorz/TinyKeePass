@@ -102,7 +102,7 @@ public class EntryFragment extends BaseEntryFragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (KeePassStorage.get() == null ||
+        if (KeePassStorage.get(getContext()) == null ||
                 lastPauseTimeMillis > 0 &&
                         SystemClock.elapsedRealtime() - lastPauseTimeMillis >
                                 INACTIVE_AUTO_LOCK_MILLIS) {
@@ -342,7 +342,7 @@ public class EntryFragment extends BaseEntryFragment {
                 } else {
                     if (getView() != null)
                         Snackbar.make(getView(), R.string.sync_done, Snackbar.LENGTH_SHORT).show();
-                    getEntryAdapter().reloadEntries();
+                    getEntryAdapter().reloadEntries(context);
                 }
             }
         }

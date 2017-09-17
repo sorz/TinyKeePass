@@ -51,6 +51,6 @@ public class KeePassHelper {
     }
 
     static public boolean hasDatabaseConfigured(Context context) {
-        return KeePassStorage.get() != null || getDatabaseFile(context).canRead();
+        return KeePassStorage.get(context) != null || getDatabaseFile(context).canRead();
     }
 }

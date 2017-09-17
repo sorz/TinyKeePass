@@ -1,6 +1,5 @@
 package org.sorz.lab.tinykeepass;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -30,7 +29,7 @@ public class MainActivity extends BaseActivity {
             } else {
                 doUnlockDatabase();
             }
-        } else if (KeePassStorage.get() != null) {
+        } else if (KeePassStorage.get(this) != null) {
             // Restarting activity
             KeePassStorage.registerBroadcastReceiver(this);
         }
@@ -41,12 +40,12 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public void onNewIntent(Intent intent) {
-        if (KeePassStorage.get() != null)
+        if (KeePassStorage.get(this) != null)
             showEntryList();
     }
 
     public void doUnlockDatabase() {
-        if (KeePassStorage.get() != null) {
+        if (KeePassStorage.get(this) != null) {
             showEntryList();
         } else {
             getDatabaseKeys(keys ->

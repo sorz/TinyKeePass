@@ -51,11 +51,11 @@ public class EntryRecyclerViewAdapter
         this.context = context;
         this.onClickHandler = onClickHandler;
         this.onLongClickHandler = onLongClickHandler;
-        reloadEntries();
+        reloadEntries(context);
     }
 
-    public void reloadEntries() {
-        KeePassFile db = KeePassStorage.get();
+    public void reloadEntries(Context context) {
+        KeePassFile db = KeePassStorage.get(context);
         if (db != null) {
             allEntries = KeePassHelper.allEntriesNotInRecycleBin(db).collect(Collectors.toList());
             allEntries.sort((a, b) -> {

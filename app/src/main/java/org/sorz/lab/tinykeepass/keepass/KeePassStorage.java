@@ -4,43 +4,50 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.SystemClock;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import de.slackspace.openkeepass.domain.KeePassFile;
 
 /**
- * Created by xierch on 2017/6/30.
+ * Keep unlocked KeePass file here statically & globally.
+ * It will be dropped when:
+ *   - process killed by the system (of course;
+ *   - just after screen off;
+ *   - call get() after AUTH_TIMEOUT_MILLS since last set().
  */
 public class KeePassStorage {
-    private final static String TAG = KeePassStorage.class.getName();
+    private static final String TAG = KeePassStorage.class.getName();
+    private static final long AUTH_TIMEOUT_MILLS = 5 * 60 * 1000;  // 5 minutes
     private static KeePassFile keePassFile;
+    private static long lastAuthTime;
 
-    public static KeePassFile get() {
+    public static @Nullable KeePassFile get(Context context) {
+        if (keePassFile != null &&
+                SystemClock.elapsedRealtime() - lastAuthTime > AUTH_TIMEOUT_MILLS)
+            set(context, null);
         return keePassFile;
     }
 
-    public static void set(Context context, KeePassFile file) {
-        // TODO: check auth timeout here
+    public static void set(Context context, @Nullable KeePassFile file) {
         if (keePassFile == null && file != null) {
+            // first set file, register screen-off receiver.
             registerBroadcastReceiver(context);
         } else if (keePassFile != null && file == null) {
-            unregisterBroadcastReceiver(context);
+            // clear file, unregister it.
+            context.getApplicationContext().unregisterReceiver(broadcastReceiver);
         }
         keePassFile = file;
+        lastAuthTime = SystemClock.elapsedRealtime();
     }
 
     public static void registerBroadcastReceiver(Context context) {
         IntentFilter screenOffFilter = new IntentFilter();
         screenOffFilter.addAction(Intent.ACTION_SCREEN_OFF);
-        context.registerReceiver(broadcastReceiver, screenOffFilter);
-    }
-
-    public static void unregisterBroadcastReceiver(Context context) {
-        try {
-            context.unregisterReceiver(broadcastReceiver);
-        } catch (IllegalArgumentException e) {
-            // ignore no registered error
-        }
+        // use application context because it's bound to the process instead of an activity.
+        context.getApplicationContext()
+                .registerReceiver(broadcastReceiver, screenOffFilter);
     }
 
     private static BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {

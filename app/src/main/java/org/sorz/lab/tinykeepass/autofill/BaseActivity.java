@@ -31,7 +31,7 @@ abstract class BaseActivity extends org.sorz.lab.tinykeepass.BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (KeePassStorage.get() != null) {
+        if (KeePassStorage.get(this) != null) {
             onDatabaseOpened();
         } else {
             getDatabaseKeys(keys ->

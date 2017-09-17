@@ -67,9 +67,6 @@ public abstract class BaseActivity extends AppCompatActivity
         super.onDestroy();
         if (isFinishing())
             KeePassStorage.set(this, null);
-        else
-            // Restarting activity, re-register it after restart done.
-            KeePassStorage.unregisterBroadcastReceiver(this);
     }
 
     @Override

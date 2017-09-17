@@ -27,7 +27,7 @@ public class AuthActivity extends BaseActivity {
     @Override
     protected void onDatabaseOpened() {
         StructureParser.Result result = parseStructure();
-        KeePassFile keePass = KeePassStorage.get();
+        KeePassFile keePass = KeePassStorage.get(this);
         SearchIndex index = new SearchIndex(keePass);
         StringBuilder queryBuilder = new StringBuilder();
         result.title.forEach(title -> queryBuilder.append(title).append(' '));
