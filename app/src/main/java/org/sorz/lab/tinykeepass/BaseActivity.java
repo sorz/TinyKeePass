@@ -63,13 +63,6 @@ public abstract class BaseActivity extends AppCompatActivity
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (isFinishing())
-            KeePassStorage.set(this, null);
-    }
-
-    @Override
     public void onFingerprintCancel() {
         onKeyAuthFailed.accept(getString(R.string.fail_to_auth));
     }

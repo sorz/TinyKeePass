@@ -44,6 +44,13 @@ public class MainActivity extends BaseActivity {
             showEntryList();
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (isFinishing())
+            KeePassStorage.set(this, null);
+    }
+
     public void doUnlockDatabase() {
         if (KeePassStorage.get(this) != null) {
             showEntryList();
