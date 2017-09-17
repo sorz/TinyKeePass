@@ -19,6 +19,7 @@ import org.sorz.lab.tinykeepass.keepass.KeePassHelper;
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
@@ -203,13 +204,14 @@ public class EntryRecyclerViewAdapter
         if (query == null || query.isEmpty()) {
             entries = allEntries;
         } else {
-            final String q = query.toLowerCase().trim();
-            entries = allEntries.parallelStream().filter(e ->
-                    contains(e.getTitle(), q) ||
-                    contains(e.getUrl(), q)  ||
-                    contains(e.getNotes(), q)  ||
-                    contains(e.getUsername(), q)
-            ).collect(Collectors.toList());
+            final String[] words = query.toLowerCase().trim().split(" ");
+            entries = allEntries.parallelStream()
+                    .filter(e -> Arrays.stream(words).allMatch(w ->
+                            contains(e.getTitle(), w) ||
+                            contains(e.getUrl(), w)  ||
+                            contains(e.getNotes(), w)  ||
+                            contains(e.getUsername(), w)
+            )).collect(Collectors.toList());
         }
         filter = query;
         notifyDataSetChanged();
