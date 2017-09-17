@@ -18,14 +18,17 @@ public class EntryQueryRelevance implements Comparable<EntryQueryRelevance> {
 
     private Entry entry;
     private double rank;
+    private int unrelatedKeywords;
 
     public EntryQueryRelevance(Entry entry, String[] keywords) {
         this.entry = entry;
-        rank = Arrays.stream(keywords).mapToDouble(w ->
+        double[] ranks = Arrays.stream(keywords).mapToDouble(w ->
                 fieldScore(entry.getTitle(), w) * WEIGHT_KW_IN_TITLE +
-                fieldScore(entry.getUsername(), w) * WEIGHT_KW_IN_USERNAME +
-                fieldScore(entry.getNotes(), w) * WEIGHT_KW_IN_NOTES +
-                fieldScore(entry.getUrl(), w) * WEIGHT_KW_IN_URL).sum();
+                        fieldScore(entry.getUsername(), w) * WEIGHT_KW_IN_USERNAME +
+                        fieldScore(entry.getNotes(), w) * WEIGHT_KW_IN_NOTES +
+                        fieldScore(entry.getUrl(), w) * WEIGHT_KW_IN_URL).toArray();
+        rank = Arrays.stream(ranks).sum();
+        unrelatedKeywords = (int) Arrays.stream(ranks).filter(r -> r == 0).count();
     }
 
     public boolean isRelated() {
@@ -47,6 +50,9 @@ public class EntryQueryRelevance implements Comparable<EntryQueryRelevance> {
 
     @Override
     public int compareTo(@NonNull EntryQueryRelevance entryQueryRelevance) {
-        return -Double.compare(rank, entryQueryRelevance.rank);
+        if (unrelatedKeywords != entryQueryRelevance.unrelatedKeywords)
+            return Integer.compare(unrelatedKeywords, entryQueryRelevance.unrelatedKeywords);
+        else
+            return -Double.compare(rank, entryQueryRelevance.rank);
     }
 }
