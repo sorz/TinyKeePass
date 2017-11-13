@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">TinyKeePass</string>
-    <string name="database_url">https://database-url.kdbx</string>
+    <string name="database_url" translatable="false">https://database-url.kdbx</string>
     <string name="no_screen_lock">No secure screen lock (PIN/pattern/password)</string>
     <string name="no_fingerprint_detected">No fingerprint scanner detected on this device</string>
     <string name="no_fingerprint_enrolled">No enrolled fingerprint found</string>
@@ -17,7 +17,7 @@
     <string name="fingerprint_dialog_title">User Authentication</string>
     <string name="fingerprint_failed">Fingerprint not recognized</string>
     <string name="fingerprint_success">Fingerprint recognized</string>
-    <string name="title_activity_main">TinyKeepPass</string>
+    <string name="title_activity_main">TinyKeePass</string>
     <string name="action_lock_db">Lock database</string>
     <string name="action_search">Search</string>
     <string name="username">Username</string>
@@ -27,7 +27,7 @@
     <string name="show">Show</string>
     <string name="unlock">Unlock</string>
     <string name="configure">Configure</string>
-    <string name="db_is_locked_or_unconfigured">Keepass database is locked or un-configured</string>
+    <string name="db_is_locked_or_unconfigured">KeePass database is locked or un-configured</string>
     <string name="username_copied">Username \"%s\" copied</string>
     <string name="copy_password">Copy password</string>
     <string name="password_copied">Password copied</string>
@@ -39,7 +39,7 @@
     <string name="fetching_database">Fetching database</string>
     <string name="fetch_ok">Database fetched</string>
     <string name="fetch_fail">Database fetch failed</string>
-    <string name="fetch_cancel_by_user">cancelled by user</string>
+    <string name="fetch_cancel_by_user">Cancelled by user</string>
     <string name="action_open_in_browser">Open URL</string>
     <string name="action_copy_username">Copy username</string>
     <string name="action_copy_password">Copy password</string>
