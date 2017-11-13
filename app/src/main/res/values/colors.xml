@@ -7,4 +7,9 @@
     <color name="hint">#bdbdbd</color>
     <color name="success">#009688</color>
     <color name="selectedRow">#e0e0e0</color>
+
+    <color name="password1">#0D47A1</color>
+    <color name="password2">#BF360C</color>
+    <color name="passwordBackground1">#00000000</color>
+    <color name="passwordBackground2">#33BBDEFB</color>
 </resources>

@@ -1,13 +1,12 @@
 package org.sorz.lab.tinykeepass;
 
 import android.content.Context;
-import android.graphics.Typeface;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -103,25 +102,27 @@ public class EntryRecyclerViewAdapter
         if (position == passwordShownItem
                 && entry.getPassword() != null && !entry.getPassword().isEmpty()) {
             SpannableStringBuilder builder = new SpannableStringBuilder();
-            int colors[] = {
-                    context.getColor(R.color.colorPrimary),
-                    context.getColor(R.color.colorPrimaryDark)
+            int textColors[] = {
+                    context.getColor(R.color.password1),
+                    context.getColor(R.color.password2)
+            };
+            int backgroundColors[] = {
+                    context.getColor(R.color.passwordBackground1),
+                    context.getColor(R.color.passwordBackground2)
             };
             int colorIndex = 0;
-            boolean bold = false;
             for (char c : entry.getPassword().toCharArray()) {
                 builder.append(c);
                 if (builder.length() >= PASSWORD_NUM_OF_CHARS_IN_GROUP ||
                         holder.textPassword.length() + builder.length()
                                 >= entry.getPassword().length()) {
-                    builder.setSpan(new StyleSpan(bold ? Typeface.BOLD : Typeface.NORMAL),
+                    builder.setSpan(new BackgroundColorSpan(backgroundColors[colorIndex]),
                             0, builder.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    builder.setSpan(new ForegroundColorSpan(colors[colorIndex]),
+                    builder.setSpan(new ForegroundColorSpan(textColors[colorIndex]),
                             0, builder.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     holder.textPassword.append(builder);
                     builder.clear();
-                    bold = !bold;
-                    colorIndex = (colorIndex + 1) % colors.length;
+                    colorIndex = (colorIndex + 1) % textColors.length;
                 }
             }
             holder.textPassword.setVisibility(View.VISIBLE);
