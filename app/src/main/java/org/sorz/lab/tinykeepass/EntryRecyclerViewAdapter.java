@@ -59,7 +59,6 @@ public class EntryRecyclerViewAdapter
         if (db != null) {
             allEntries = KeePassHelper.allEntriesNotInRecycleBin(db).collect(Collectors.toList());
             allEntries.sort((a, b) -> {
-                // FIXME: crash with IllegalArgumentException
                 if (a.getTitle() != null && b.getTitle() != null)
                     return a.getTitle().compareTo(b.getTitle());
                 else if (a.getUsername() != null && b.getUsername() != null)
@@ -67,7 +66,7 @@ public class EntryRecyclerViewAdapter
                 else if (a.getUrl() != null && b.getUrl() != null)
                     return a.getUrl().compareTo(b.getUrl());
                 else
-                    return 0;
+                    return a.getTimes().getCreationTime().compareTo(b.getTimes().getCreationTime());
             });
 
             Log.d(TAG, allEntries.size() + " entries loaded");
