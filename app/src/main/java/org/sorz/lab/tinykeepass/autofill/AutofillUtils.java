@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Build;
 import android.service.autofill.Dataset;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.view.autofill.AutofillId;
 import android.view.autofill.AutofillValue;
@@ -29,7 +30,8 @@ class AutofillUtils {
         return views;
     }
 
-    static Dataset buildDataset(Context context, Entry entry, StructureParser.Result struct) {
+    static @Nullable Dataset buildDataset(Context context, Entry entry,
+                                          StructureParser.Result struct) {
         String title = makeEntryTitle(context, entry);
         RemoteViews views = getRemoteViews(context, title, R.drawable.ic_person_blue_24dp);
         views.setImageViewBitmap(R.id.imageIcon, getIcon(entry));
@@ -47,7 +49,12 @@ class AutofillUtils {
                 ids = Stream.concat(ids, struct.email.stream());
             ids.forEach(id -> builder.setValue(id, value));
         }
-        return builder.build();
+        try {
+            return builder.build();
+        } catch (IllegalArgumentException e) {
+            // if not value be set
+            return null;
+        }
     }
 
 
