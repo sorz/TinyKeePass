@@ -19,6 +19,8 @@ import java.util.stream.Stream;
 import de.slackspace.openkeepass.domain.Entry;
 import de.slackspace.openkeepass.domain.KeePassFile;
 
+import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.notEmpty;
+
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class AuthActivity extends BaseActivity {
@@ -37,8 +39,11 @@ public class AuthActivity extends BaseActivity {
 
         FillResponse.Builder responseBuilder = new FillResponse.Builder();
         // add matched entities
-        entryStream.forEach(entry ->
-                responseBuilder.addDataset(AutofillUtils.buildDataset(this, entry, result)));
+        entryStream
+                .filter(entry -> notEmpty(entry.getUsername()) || notEmpty(entry.getPassword()))
+                .forEach(entry ->
+                        responseBuilder.addDataset(
+                                AutofillUtils.buildDataset(this, entry, result)));
         // add "show all" item
         RemoteViews presentation = AutofillUtils.getRemoteViews(this,
                 getString(R.string.autofill_item_show_all),

@@ -38,6 +38,7 @@ public class TinyAutofillService extends AutofillService {
                 .get(request.getFillContexts().size() - 1).getStructure();
         StructureParser.Result parseResult = new StructureParser(structure).parse();
         if (parseResult.password.isEmpty()) {
+            Log.d(TAG, "no password field found");
             callback.onSuccess(null);
             return;
         }
