@@ -7,8 +7,8 @@ android {
         applicationId "org.sorz.lab.tinykeepass"
         minSdkVersion 24
         targetSdkVersion 26
-        versionCode 8
-        versionName "0.3.2"
+        versionCode 9
+        versionName "0.3.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
