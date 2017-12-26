@@ -36,6 +36,8 @@ public class DatabaseSyncingService extends Service {
     public static final String BROADCAST_SYNC_FINISHED = "broadcast-sync-finished";
     public static final String EXTRA_SYNC_ERROR = "extra-sync-error";
 
+    private static boolean running = false;
+
     private FetchTask fetchTask;
 
 
@@ -84,6 +86,10 @@ public class DatabaseSyncingService extends Service {
         return intent;
     }
 
+    public static boolean isRunning() {
+        return running;
+    }
+
     private static class FetchTask extends FetchDatabaseTask {
         private static int nextNotificationId = 1;
 
@@ -105,6 +111,7 @@ public class DatabaseSyncingService extends Service {
             Context context = this.context.get();
             if (context == null)
                 return;
+            running = true;
 
             Intent intent = new Intent(context, DatabaseSyncingService.class);
             intent.setAction(ACTION_CANCEL);
@@ -176,6 +183,7 @@ public class DatabaseSyncingService extends Service {
         }
 
         private void notifyFinish(Context context, String error) {
+            running = false;
             Intent intent = new Intent(BROADCAST_SYNC_FINISHED);
             if (error != null)
                 intent.putExtra(EXTRA_SYNC_ERROR, error);

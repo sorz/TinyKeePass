@@ -89,14 +89,11 @@ public class EntryFragment extends BaseEntryFragment {
     @Override
     public void onStart() {
         super.onStart();
-        localBroadcastManager.registerReceiver(broadcastReceiver,
-                new IntentFilter(DatabaseSyncingService.BROADCAST_SYNC_FINISHED));
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        localBroadcastManager.unregisterReceiver(broadcastReceiver);
     }
 
     @Override
@@ -106,15 +103,24 @@ public class EntryFragment extends BaseEntryFragment {
                 lastPauseTimeMillis > 0 &&
                         SystemClock.elapsedRealtime() - lastPauseTimeMillis >
                                 INACTIVE_AUTO_LOCK_MILLIS) {
+            // time outed, lock and exit to unlock dialog.
             activity.doLockDatabase();
             activity.doUnlockDatabase();
-       }
+       } else {
+            localBroadcastManager.registerReceiver(broadcastReceiver,
+                    new IntentFilter(DatabaseSyncingService.BROADCAST_SYNC_FINISHED));
+            // sync done event may have lost, check its state now
+            if (!DatabaseSyncingService.isRunning())
+                fab.show();
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        localBroadcastManager.unregisterReceiver(broadcastReceiver);
         lastPauseTimeMillis = SystemClock.elapsedRealtime();
+
     }
 
     @Override
