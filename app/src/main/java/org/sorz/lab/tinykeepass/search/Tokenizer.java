@@ -20,22 +20,35 @@ public class Tokenizer {
             ))
     );
 
+    static private String canonicalize(String token) {
+        return token.toLowerCase();
+    }
+
     static public Stream<String> parse(String str) {
         String[] tokens = str.split("\\b");
         return Arrays.stream(tokens)
                 .filter(s -> s.matches("\\w{2,}"))
                 .filter(s -> !IGNORE_TOKENS.contains(s))
-                .map(String::toLowerCase);
+                .map(Tokenizer::canonicalize);
     }
 
     static public Stream<String> parse(Entry entry) {
         String[] str = {
                 entry.getTitle(),
                 entry.getNotes(),
-                entry.getUrl()
+                entry.getUrl(),
         };
-        return Arrays.stream(str)
+        Stream<String> tokens = Arrays.stream(str)
                 .filter(KeePassHelper::notEmpty)
                 .flatMap(Tokenizer::parse);
+
+        if (entry.getTags() != null) {
+            tokens = Stream.concat(tokens,
+                    entry.getTags().stream()
+                            .distinct()
+                            .map(Tokenizer::canonicalize)
+            );
+        }
+        return tokens;
     }
 }
