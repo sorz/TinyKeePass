@@ -84,6 +84,10 @@ public class EntryRecyclerViewAdapter
         return new ViewHolder(view);
     }
 
+    private void showTextViewOnlyIfNotEmpty(TextView view) {
+        view.setVisibility(view.length() == 0 ? View.GONE : View.VISIBLE);
+    }
+
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         Entry entry = entries.get(position);
@@ -125,10 +129,11 @@ public class EntryRecyclerViewAdapter
                     colorIndex = (colorIndex + 1) % textColors.length;
                 }
             }
-            holder.textPassword.setVisibility(View.VISIBLE);
-        } else {
-            holder.textPassword.setVisibility(View.GONE);
         }
+        showTextViewOnlyIfNotEmpty(holder.textUsername);
+        showTextViewOnlyIfNotEmpty(holder.textUrlHostname);
+        showTextViewOnlyIfNotEmpty(holder.textUrlPath);
+        showTextViewOnlyIfNotEmpty(holder.textPassword);
 
         if (onClickHandler != null)
             holder.view.setOnClickListener(v -> onClickHandler.accept(v, entry));
