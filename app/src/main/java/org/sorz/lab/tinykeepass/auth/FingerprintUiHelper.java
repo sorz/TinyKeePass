@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import org.sorz.lab.tinykeepass.R;
 
+import java.security.KeyException;
 import java.util.function.Consumer;
 
 import javax.crypto.Cipher;
@@ -46,7 +47,7 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
                     "and textFingerprintStatus");
     }
 
-    public void start(int cipherMode) {
+    public void start(int cipherMode) throws KeyException {
         Cipher cipher;
         try {
             SecureStringStorage storage = new SecureStringStorage(context);
@@ -60,7 +61,7 @@ public class FingerprintUiHelper extends FingerprintManager.AuthenticationCallba
                 default:
                     throw new UnsupportedOperationException("not support such cipher mode");
             }
-        } catch (UserNotAuthenticatedException | SecureStringStorage.SystemException e) {
+        } catch (SecureStringStorage.SystemException e) {
             throw new RuntimeException("cannot get cipher", e);
         }
         FingerprintManager.CryptoObject cryptoObject = new FingerprintManager.CryptoObject(cipher);

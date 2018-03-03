@@ -24,6 +24,7 @@ import org.sorz.lab.tinykeepass.auth.FingerprintDialogFragment;
 import org.sorz.lab.tinykeepass.auth.SecureStringStorage;
 
 import java.lang.ref.WeakReference;
+import java.security.KeyException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -247,16 +248,14 @@ public class DatabaseSetupActivity extends AppCompatActivity
             strings.add(editMasterPassword.getText().toString());
             strings.add(editAuthPassword.getText().toString());
             secureStringStorage.put(cipher, strings);
-        } catch (SecureStringStorage.SystemException e) {
-            throw new RuntimeException("cannot get save keys", e);
         } catch (UserNotAuthenticatedException e) {
-            Log.e(TAG, "cannot get cipher from system", e);
-            cancelSubmit();
-            return;
+                Log.e(TAG, "cannot get cipher from system", e);
+                cancelSubmit();
+                return;
+        } catch (SecureStringStorage.SystemException | KeyException e) {
+            throw new RuntimeException("cannot get save keys", e);
         }
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        startActivity(new Intent(this, MainActivity.class));
+        setResult(RESULT_OK);
         finish();
     }
 
@@ -295,6 +294,13 @@ public class DatabaseSetupActivity extends AppCompatActivity
     @Override
     public void onFingerprintSuccess(Cipher cipher) {
         saveKeys(cipher);
+    }
+
+    @Override
+    public void onKeyException(KeyException e) {
+        // The key are new added here (by calling `secureStringStorage.generateNewKey()`),
+        // so no KeyException happen here.
+        throw new IllegalStateException(e);
     }
 
 

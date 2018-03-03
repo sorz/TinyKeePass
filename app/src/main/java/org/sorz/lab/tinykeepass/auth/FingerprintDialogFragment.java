@@ -10,6 +10,8 @@ import android.view.ViewGroup;
 
 import org.sorz.lab.tinykeepass.R;
 
+import java.security.KeyException;
+
 import javax.crypto.Cipher;
 
 
@@ -83,7 +85,13 @@ public class FingerprintDialogFragment extends DialogFragment {
     @Override
     public void onResume() {
         super.onResume();
-        fingerprintUiHelper.start(getArguments().getInt(ARGS_CIPHER_MODE));
+        try {
+            fingerprintUiHelper.start(getArguments().getInt(ARGS_CIPHER_MODE));
+        } catch (KeyException e) {
+            if (listener != null)
+                listener.onKeyException(e);
+            dismiss();
+        }
     }
 
     @Override
@@ -103,5 +111,6 @@ public class FingerprintDialogFragment extends DialogFragment {
     public interface OnFragmentInteractionListener {
         void onFingerprintCancel();
         void onFingerprintSuccess(Cipher cipher);
+        void onKeyException(KeyException e);
     }
 }

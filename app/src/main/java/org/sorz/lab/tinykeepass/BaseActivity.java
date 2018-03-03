@@ -12,9 +12,9 @@ import android.util.Log;
 
 import org.sorz.lab.tinykeepass.auth.FingerprintDialogFragment;
 import org.sorz.lab.tinykeepass.auth.SecureStringStorage;
-import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 import org.sorz.lab.tinykeepass.keepass.OpenKeePassTask;
 
+import java.security.KeyException;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -28,7 +28,8 @@ import de.slackspace.openkeepass.domain.KeePassFile;
 public abstract class BaseActivity extends AppCompatActivity
         implements FingerprintDialogFragment.OnFragmentInteractionListener {
     private final static String TAG = MainActivity.class.getName();
-    private final static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 0;
+    private final static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 100;
+    private final static int REQUEST_SETUP_DATABASE = 101;
 
     private SharedPreferences preferences;
     private KeyguardManager keyguardManager;
@@ -57,6 +58,12 @@ public abstract class BaseActivity extends AppCompatActivity
                 else
                     onKeyAuthFailed.accept(getString(R.string.fail_to_auth));
                 break;
+            case REQUEST_SETUP_DATABASE:
+                if (resultCode == RESULT_OK)
+                    getKey();
+                else
+                    onKeyAuthFailed.accept(getString(R.string.fail_to_decrypt));
+                break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
@@ -79,6 +86,13 @@ public abstract class BaseActivity extends AppCompatActivity
         getKey();
     }
 
+    @Override
+    public void onKeyException(KeyException e) {
+        // Key is invalided, have to reconfigure passwords.
+        Intent intent = new Intent(this, DatabaseSetupActivity.class);
+        startActivityForResult(intent, REQUEST_SETUP_DATABASE);
+    }
+
     private void getKey() {
         int authMethod = preferences.getInt("key-auth-method", 0);
         switch (authMethod) {
@@ -93,6 +107,8 @@ public abstract class BaseActivity extends AppCompatActivity
                             getString(R.string.auth_key_title),
                             getString(R.string.auth_key_description));
                     startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL);
+                } catch (KeyException e) {
+                    onKeyException(e);
                 } catch (SecureStringStorage.SystemException e) {
                     throw new RuntimeException(e);
                 }

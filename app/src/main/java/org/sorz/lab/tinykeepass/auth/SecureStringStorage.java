@@ -17,7 +17,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.UTFDataFormatException;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
+import java.security.KeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -80,8 +80,7 @@ public class SecureStringStorage {
         keyGenerator.generateKey();
     }
 
-    private Cipher getCipher(int mode, byte[] iv) throws SystemException,
-            UserNotAuthenticatedException {
+    private Cipher getCipher(int mode, byte[] iv) throws SystemException, KeyException {
         try {
             SecretKey key = (SecretKey) keyStore.getKey(KEY_ALIAS, null);
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
@@ -92,21 +91,19 @@ public class SecureStringStorage {
                 cipher.init(mode, key);
             }
             return cipher;
-        } catch (UserNotAuthenticatedException e) {
+        } catch (KeyException e) {
             throw e;
         } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException
-                | NoSuchPaddingException | InvalidAlgorithmParameterException
-                | InvalidKeyException e) {
+                | NoSuchPaddingException | InvalidAlgorithmParameterException e) {
             throw new SystemException(e);
         }
     }
 
-    public Cipher getEncryptCipher() throws UserNotAuthenticatedException, SystemException {
+    public Cipher getEncryptCipher() throws KeyException, SystemException {
         return getCipher(Cipher.ENCRYPT_MODE, null);
     }
 
-    public Cipher getDecryptCipher()
-            throws UserNotAuthenticatedException, SystemException {
+    public Cipher getDecryptCipher() throws KeyException, SystemException {
         String iv = preferences.getString(PREF_IV_NAME, null);
         if (iv == null)
             return null;

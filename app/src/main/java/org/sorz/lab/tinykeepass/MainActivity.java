@@ -13,6 +13,7 @@ import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.hasDatabaseConfigur
 
 public class MainActivity extends BaseActivity {
     private final static String TAG = MainActivity.class.getName();
+    private final static int REQUEST_SETUP_DATABASE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +26,6 @@ public class MainActivity extends BaseActivity {
 
             if (!hasDatabaseConfigured(this)) {
                 doConfigureDatabase();
-                finish();
             } else {
                 doUnlockDatabase();
             }
@@ -51,6 +51,19 @@ public class MainActivity extends BaseActivity {
             KeePassStorage.set(this, null);
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_SETUP_DATABASE:
+                if (resultCode == RESULT_OK)
+                    doUnlockDatabase();
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+                break;
+        }
+    }
+
     public void doUnlockDatabase() {
         if (KeePassStorage.get(this) != null) {
             showEntryList();
@@ -70,7 +83,8 @@ public class MainActivity extends BaseActivity {
 
     public void doConfigureDatabase() {
         KeePassStorage.set(this, null);
-        startActivity(new Intent(this, DatabaseSetupActivity.class));
+        Intent intent = new Intent(this, DatabaseSetupActivity.class);
+        startActivityForResult(intent, REQUEST_SETUP_DATABASE);
     }
 
     public void doSyncDatabase() {

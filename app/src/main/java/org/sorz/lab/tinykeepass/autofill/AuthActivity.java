@@ -14,6 +14,7 @@ import org.sorz.lab.tinykeepass.R;
 import org.sorz.lab.tinykeepass.search.SearchIndex;
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 
+import java.security.KeyException;
 import java.util.Objects;
 import java.util.stream.Stream;
 
