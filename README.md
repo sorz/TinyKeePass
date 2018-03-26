@@ -5,6 +5,7 @@ Another simple read-only KeePass Android app.
 Only what I personally need are implemented, lacks lots of common functions, and possibly buggy.
 
 [Google Play](https://play.google.com/store/apps/details?id=org.sorz.lab.tinykeepass)
+[F-Droid](https://f-droid.org/packages/org.sorz.lab.tinykeepass/)
 
 ## Features
 
@@ -20,7 +21,7 @@ Only what I personally need are implemented, lacks lots of common functions, and
 
 * Searching.
 
-* Autofill on Oreo (experimental)
+* Autofill on Oreo or above
 
 * No support: any edit/delete operations, groups, display fields other than title, username, password, and URL.
 
