@@ -80,7 +80,12 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
             } catch (SecurityException e) {
                 Log.i(TAG, "cannot take persistable permission", e);
             }
-            return contentResolver.openInputStream(uri);
+            try {
+                return contentResolver.openInputStream(uri);
+            } catch (SecurityException e) {
+                Log.i(TAG, "cannot open from provider", e);
+                throw new IOException(e);
+            }
         }
     }
 
@@ -98,7 +103,7 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
             // task cancelled
             return null;
         } catch (IOException e) {
-            Log.w(TAG, "fail to download database file.", e);
+            Log.w(TAG, "fail to open database file.", e);
             return e.getClass().getSimpleName() + ": " + e.getLocalizedMessage();
         }
         KeePassFile db;
