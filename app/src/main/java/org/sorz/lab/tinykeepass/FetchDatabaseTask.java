@@ -107,6 +107,10 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
         } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
             Log.w(TAG, "cannot open database.", e);
             return e.getLocalizedMessage();
+        } catch (NullPointerException e) {
+            // happen on try to open a KDBX 4 database with Argon2 (openkeepass 8.0)
+            Log.e(TAG, "Underlying library throw null pointer exception", e);
+            return "Database broken or not support";
         }
         Meta meta = db.getMeta();
         Log.d(TAG, "Database opened, name: " + meta.getDatabaseName());

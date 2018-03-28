@@ -50,6 +50,8 @@ public class DatabaseSetupActivity extends AppCompatActivity
     private SecureStringStorage secureStringStorage;
     private SharedPreferences preferences;
 
+    private boolean launchMainActivityAfterSave = false;
+
     private CheckBox checkBasicAuth;
     private EditText editDatabaseUrl;
     private EditText editAuthUsername;
@@ -108,8 +110,10 @@ public class DatabaseSetupActivity extends AppCompatActivity
         });
 
         Intent intent = getIntent();
-        if (intent != null && intent.getData() != null)
+        if (intent != null && intent.getData() != null) {
             editDatabaseUrl.setText(intent.getData().toString());
+            launchMainActivityAfterSave = true;
+        }
     }
 
     @Override
@@ -270,6 +274,8 @@ public class DatabaseSetupActivity extends AppCompatActivity
             throw new RuntimeException("cannot get save keys", e);
         }
         setResult(RESULT_OK);
+        if (launchMainActivityAfterSave)
+            startActivity(new Intent(this, MainActivity.class));
         finish();
     }
 
