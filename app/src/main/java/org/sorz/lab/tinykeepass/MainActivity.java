@@ -108,6 +108,7 @@ public class MainActivity extends BaseActivity {
         if (!getDatabaseFile(this).delete())
             Log.w(TAG, "fail to delete database file");
         getSecureStringStorage().clear();
+        DatabaseSetupActivity.clearDatabaseConfigs(getPreferences());
         snackbar(getString(R.string.clean_config_ok), Snackbar.LENGTH_SHORT).show();
     }
 

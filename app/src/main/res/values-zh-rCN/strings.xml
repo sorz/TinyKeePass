@@ -26,7 +26,7 @@
     <string name="copy_password">复制密码</string>
     <string name="password_copied">密码已复制</string>
     <string name="fail_to_decrypt">解密失败</string>
-    <string name="broken_keys">密钥错误</string>
+    <string name="broken_keys">密钥错误或不存在</string>
     <string name="sync_done">同步完成</string>
     <string name="fail_to_auth">用户认证失败</string>
     <string name="fail_to_sync">下载数据失败：%s</string>

@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.security.keystore.UserNotAuthenticatedException;
+import android.support.annotation.Nullable;
 import android.util.Base64;
 import android.util.Log;
 
@@ -110,8 +110,7 @@ public class SecureStringStorage {
         return getCipher(Cipher.DECRYPT_MODE, Base64.decode(iv, Base64.DEFAULT));
     }
 
-    public void put(Cipher cipher, List<String> strings)
-            throws SystemException, UserNotAuthenticatedException {
+    public void put(Cipher cipher, List<String> strings) throws SystemException {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         DataOutputStream output = new DataOutputStream(bytes);
         byte[] ciphertext;
@@ -133,8 +132,8 @@ public class SecureStringStorage {
                 .apply();
     }
 
-    public List<String> get(Cipher cipher) throws SystemException, BadPaddingException,
-            IllegalBlockSizeException, UserNotAuthenticatedException {
+    @Nullable
+    public List<String> get(Cipher cipher) throws BadPaddingException, IllegalBlockSizeException {
         String ciphertext = preferences.getString(PREF_VALUE_NAME , null);
         if (ciphertext == null)
             return null;
@@ -163,7 +162,7 @@ public class SecureStringStorage {
     }
 
     public static class SystemException extends Exception {
-        public SystemException(Throwable cause) {
+        SystemException(Throwable cause) {
             super(cause);
         }
     }

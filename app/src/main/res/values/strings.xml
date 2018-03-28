@@ -32,7 +32,7 @@
     <string name="copy_password">Copy password</string>
     <string name="password_copied">Password copied</string>
     <string name="fail_to_decrypt">Failed to decrypt keys</string>
-    <string name="broken_keys">Broken keys</string>
+    <string name="broken_keys">Keys are broken or unconfigured</string>
     <string name="sync_done">Synchronize finished</string>
     <string name="fail_to_auth">Failed to authenticate user</string>
     <string name="fail_to_sync">Failed to fetch database: %s</string>

@@ -36,9 +36,14 @@ public class DatabaseSetupActivity extends AppCompatActivity
     final private static String TAG = DatabaseSetupActivity.class.getName();
     final private static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 0;
     final private static int REQUEST_OPEN_FILE = 1;
+    public static final int AUTH_METHOD_UNDEFINED = -1;
     public static final int AUTH_METHOD_NONE = 0;
     public static final int AUTH_METHOD_SCREEN_LOCK = 1;
     public static final int AUTH_METHOD_FINGERPRINT = 2;
+    public static final String PREF_DB_URL = "db-url";
+    public static final String PREF_DB_AUTH_USERNAME = "db-auth-username";
+    public static final String PREF_DB_AUTH_REQUIRED = "db-auth-required";
+    public static final String PREF_KEY_AUTH_METHOD = "key-auth-method";
 
     private KeyguardManager keyguardManager;
     private FingerprintManager fingerprintManager;
@@ -201,12 +206,21 @@ public class DatabaseSetupActivity extends AppCompatActivity
         progressBar.setVisibility(View.INVISIBLE);
     }
 
+    static void clearDatabaseConfigs(SharedPreferences preferences) {
+        preferences.edit()
+                .remove(PREF_DB_URL)
+                .remove(PREF_DB_AUTH_USERNAME)
+                .remove(PREF_DB_AUTH_REQUIRED)
+                .remove(PREF_KEY_AUTH_METHOD)
+                .apply();
+    }
+
     private void saveDatabaseConfigs() {
         preferences.edit()
-                .putString("db-url", editDatabaseUrl.getText().toString())
-                .putString("db-auth-username", editAuthUsername.getText().toString())
-                .putBoolean("db-auth-required", checkBasicAuth.isChecked())
-                .putInt("key-auth-method", spinnerAuthMethod.getSelectedItemPosition())
+                .putString(PREF_DB_URL, editDatabaseUrl.getText().toString())
+                .putString(PREF_DB_AUTH_USERNAME, editAuthUsername.getText().toString())
+                .putBoolean(PREF_DB_AUTH_REQUIRED, checkBasicAuth.isChecked())
+                .putInt(PREF_KEY_AUTH_METHOD, spinnerAuthMethod.getSelectedItemPosition())
                 .apply();
 
         if (secureStringStorage == null) {

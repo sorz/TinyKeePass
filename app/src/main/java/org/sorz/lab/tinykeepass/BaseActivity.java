@@ -24,6 +24,11 @@ import javax.crypto.IllegalBlockSizeException;
 
 import de.slackspace.openkeepass.domain.KeePassFile;
 
+import static org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_NONE;
+import static org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_SCREEN_LOCK;
+import static org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_UNDEFINED;
+import static org.sorz.lab.tinykeepass.DatabaseSetupActivity.PREF_KEY_AUTH_METHOD;
+
 
 public abstract class BaseActivity extends AppCompatActivity
         implements FingerprintDialogFragment.OnFragmentInteractionListener {
@@ -94,10 +99,13 @@ public abstract class BaseActivity extends AppCompatActivity
     }
 
     private void getKey() {
-        int authMethod = preferences.getInt("key-auth-method", 0);
+        int authMethod = preferences.getInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED);
         switch (authMethod) {
-            case DatabaseSetupActivity.AUTH_METHOD_NONE:
-            case DatabaseSetupActivity.AUTH_METHOD_SCREEN_LOCK:
+            case AUTH_METHOD_UNDEFINED:
+                onKeyAuthFailed.accept(getString(R.string.broken_keys));
+                break;
+            case AUTH_METHOD_NONE:
+            case AUTH_METHOD_SCREEN_LOCK:
                 try {
                     Cipher cipher = secureStringStorage.getDecryptCipher();
                     decryptKey(cipher);
@@ -126,14 +134,12 @@ public abstract class BaseActivity extends AppCompatActivity
         List<String> keys;
         try {
             keys = secureStringStorage.get(cipher);
-        } catch (SecureStringStorage.SystemException e) {
-            throw new RuntimeException(e);
-        } catch (BadPaddingException | IllegalBlockSizeException | UserNotAuthenticatedException e) {
+        } catch (BadPaddingException | IllegalBlockSizeException e) {
             Log.w(TAG, "fail to decrypt keys", e);
             onKeyAuthFailed.accept(getString(R.string.fail_to_decrypt));
             return;
         }
-        if (keys.size() < 2) {
+        if (keys == null || keys.size() < 2) {
             onKeyAuthFailed.accept(getString(R.string.broken_keys));
             return;
         }
