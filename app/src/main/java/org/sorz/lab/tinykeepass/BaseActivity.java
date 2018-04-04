@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.security.keystore.UserNotAuthenticatedException;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -24,6 +25,7 @@ import javax.crypto.IllegalBlockSizeException;
 
 import de.slackspace.openkeepass.domain.KeePassFile;
 
+import static org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_FINGERPRINT;
 import static org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_NONE;
 import static org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_SCREEN_LOCK;
 import static org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_UNDEFINED;
@@ -41,6 +43,8 @@ public abstract class BaseActivity extends AppCompatActivity
     private SecureStringStorage secureStringStorage;
     private Consumer<List<String>> onKeyRetrieved;
     private Consumer<String> onKeyAuthFailed;
+    private Runnable onKeySaved;
+    private List<String> keysToEncrypt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,27 +65,39 @@ public abstract class BaseActivity extends AppCompatActivity
                 if (resultCode == RESULT_OK)
                     getKey();
                 else
-                    onKeyAuthFailed.accept(getString(R.string.fail_to_auth));
+                    authFail(getString(R.string.fail_to_auth));
                 break;
             case REQUEST_SETUP_DATABASE:
                 if (resultCode == RESULT_OK)
                     getKey();
                 else
-                    onKeyAuthFailed.accept(getString(R.string.fail_to_decrypt));
+                    authFail(getString(R.string.fail_to_decrypt));
                 break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
+    private void authFail(String message) {
+        if (onKeyAuthFailed != null)
+            onKeyAuthFailed.accept(message);
+        onKeyAuthFailed = null;
+        onKeySaved = null;
+        onKeyRetrieved = null;
+        keysToEncrypt = null;
+    }
+
     @Override
     public void onFingerprintCancel() {
-        onKeyAuthFailed.accept(getString(R.string.fail_to_auth));
+        authFail(getString(R.string.fail_to_auth));
     }
 
     @Override
     public void onFingerprintSuccess(Cipher cipher) {
-        decryptKey(cipher);
+        if (onKeyRetrieved != null)
+            decryptKey(cipher);
+        else if (onKeySaved != null)
+            encryptKeys(cipher);
     }
 
     protected void getDatabaseKeys(Consumer<List<String>> onKeyRetrieved,
@@ -91,6 +107,13 @@ public abstract class BaseActivity extends AppCompatActivity
         getKey();
     }
 
+    protected void saveDatabaseKeys(@NonNull List<String> keys, Runnable onKeySaved,
+                                    Consumer<String> onKeyAuthFailed) {
+        this.onKeySaved = onKeySaved;
+        this.onKeyAuthFailed = onKeyAuthFailed;
+        saveKey(keys);
+    }
+
     @Override
     public void onKeyException(KeyException e) {
         // Key is invalided, have to reconfigure passwords.
@@ -98,11 +121,66 @@ public abstract class BaseActivity extends AppCompatActivity
         startActivityForResult(intent, REQUEST_SETUP_DATABASE);
     }
 
+    /**
+     * Authenticate user, then call {@link #encryptKeys(Cipher)} to save keys.
+     * Finally, either {@link #onKeySaved} or {@link #onKeyAuthFailed} will be called.
+     */
+    private void saveKey(@NonNull List<String> keys) {
+        keysToEncrypt = keys;
+        int authMethod = preferences.getInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED);
+        try {
+            switch (authMethod) {
+                case AUTH_METHOD_NONE:
+                    secureStringStorage.generateNewKey(false, -1);
+                    encryptKeys(null);
+                    break;
+                case AUTH_METHOD_SCREEN_LOCK:
+                    secureStringStorage.generateNewKey(true, 60);
+                    Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
+                            getString(R.string.auth_key_title),
+                            getString(R.string.auth_key_description));
+                    startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL);
+                    break;
+                case AUTH_METHOD_FINGERPRINT:
+                    secureStringStorage.generateNewKey(true, -1);
+                    getFragmentManager().beginTransaction()
+                            .add(FingerprintDialogFragment.newInstance(Cipher.ENCRYPT_MODE),
+                                "fingerprint")
+                            .commit();
+                    break;
+            }
+        } catch (SecureStringStorage.SystemException e) {
+            throw new RuntimeException("cannot generate new key", e);
+        }
+    }
+
+    private void encryptKeys(Cipher cipher) {
+        try {
+            if (cipher == null)
+                cipher = secureStringStorage.getEncryptCipher();
+            secureStringStorage.put(cipher, keysToEncrypt);
+        } catch (UserNotAuthenticatedException e) {
+            Log.e(TAG, "cannot get cipher from system", e);
+            onKeyAuthFailed.accept("cannot get cipher from system");
+            return;
+        } catch (SecureStringStorage.SystemException | KeyException e) {
+            throw new RuntimeException("cannot get save keys", e);
+        }
+        onKeySaved.run();
+        onKeySaved = null;
+        onKeyAuthFailed = null;
+        keysToEncrypt = null;
+    }
+
+    /**
+     * Authenticate user, then call {@link #decryptKey(Cipher)} to get keys.
+     * Finally, either {@link #onKeyRetrieved} or {@link #onKeyAuthFailed} will be called.
+     */
     private void getKey() {
         int authMethod = preferences.getInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED);
         switch (authMethod) {
             case AUTH_METHOD_UNDEFINED:
-                onKeyAuthFailed.accept(getString(R.string.broken_keys));
+                authFail(getString(R.string.broken_keys));
                 break;
             case AUTH_METHOD_NONE:
             case AUTH_METHOD_SCREEN_LOCK:
@@ -121,7 +199,7 @@ public abstract class BaseActivity extends AppCompatActivity
                     throw new RuntimeException(e);
                 }
                 break;
-            case DatabaseSetupActivity.AUTH_METHOD_FINGERPRINT:
+            case AUTH_METHOD_FINGERPRINT:
                 getFragmentManager().beginTransaction()
                         .add(FingerprintDialogFragment.newInstance(Cipher.DECRYPT_MODE),
                                 "fingerprint")
@@ -136,14 +214,16 @@ public abstract class BaseActivity extends AppCompatActivity
             keys = secureStringStorage.get(cipher);
         } catch (BadPaddingException | IllegalBlockSizeException e) {
             Log.w(TAG, "fail to decrypt keys", e);
-            onKeyAuthFailed.accept(getString(R.string.fail_to_decrypt));
+            authFail(getString(R.string.fail_to_decrypt));
             return;
         }
         if (keys == null || keys.size() < 2) {
-            onKeyAuthFailed.accept(getString(R.string.broken_keys));
+            authFail(getString(R.string.broken_keys));
             return;
         }
         onKeyRetrieved.accept(keys);
+        onKeyAuthFailed = null;
+        onKeyRetrieved = null;
     }
 
     protected void openDatabase(String masterKey, Consumer<KeePassFile> onSuccess) {

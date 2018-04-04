@@ -5,12 +5,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
 import android.net.Uri;
-import android.preference.PreferenceManager;
-import android.security.keystore.UserNotAuthenticatedException;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.InputType;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -20,21 +16,16 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import org.sorz.lab.tinykeepass.auth.FingerprintDialogFragment;
-import org.sorz.lab.tinykeepass.auth.SecureStringStorage;
-
 import java.lang.ref.WeakReference;
-import java.security.KeyException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.crypto.Cipher;
-
-
-public class DatabaseSetupActivity extends AppCompatActivity
-        implements FingerprintDialogFragment.OnFragmentInteractionListener {
+/**
+ *  Provide UI for configure a new db.
+ *
+ */
+public class DatabaseSetupActivity extends BaseActivity {
     final private static String TAG = DatabaseSetupActivity.class.getName();
-    final private static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 0;
     final private static int REQUEST_OPEN_FILE = 1;
     public static final int AUTH_METHOD_UNDEFINED = -1;
     public static final int AUTH_METHOD_NONE = 0;
@@ -47,8 +38,6 @@ public class DatabaseSetupActivity extends AppCompatActivity
 
     private KeyguardManager keyguardManager;
     private FingerprintManager fingerprintManager;
-    private SecureStringStorage secureStringStorage;
-    private SharedPreferences preferences;
 
     private boolean launchMainActivityAfterSave = false;
 
@@ -72,7 +61,6 @@ public class DatabaseSetupActivity extends AppCompatActivity
 
         keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
         fingerprintManager = (FingerprintManager) getSystemService(FINGERPRINT_SERVICE);
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         checkBasicAuth = findViewById(R.id.checkBasicAuth);
         editDatabaseUrl = findViewById(R.id.editDatabaseUrl);
@@ -85,9 +73,6 @@ public class DatabaseSetupActivity extends AppCompatActivity
         buttonConfirm = findViewById(R.id.buttonConfirm);
         buttonOpenFile = findViewById(R.id.buttonOpenFIle);
 
-        editDatabaseUrl.setText(preferences.getString("db-url", ""));
-        editAuthUsername.setText(preferences.getString("db-auth-username", ""));
-
         checkBasicAuth.setOnCheckedChangeListener((CompoundButton button, boolean isChecked) -> {
             editAuthUsername.setVisibility(isChecked ? View.VISIBLE : View.GONE);
             editAuthPassword.setVisibility(editAuthUsername.getVisibility());
@@ -96,23 +81,32 @@ public class DatabaseSetupActivity extends AppCompatActivity
                 editMasterPassword.setInputType(isChecked
                         ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
                         : InputType.TYPE_TEXT_VARIATION_PASSWORD | InputType.TYPE_CLASS_TEXT));
-
         buttonOpenFile.setOnClickListener((View button) -> {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.setType("*/*");
             startActivityForResult(intent, REQUEST_OPEN_FILE);
         });
-
         buttonConfirm.setOnClickListener((View button) -> {
             if (isInputValid())
                 submit();
         });
 
+        editDatabaseUrl.setText(getPreferences().getString("db-url", ""));
+        editAuthUsername.setText(getPreferences().getString("db-auth-username", ""));
+        checkBasicAuth.setChecked(getPreferences().getBoolean(PREF_DB_AUTH_REQUIRED, false));
+
+        // Handle VIEW action
         Intent intent = getIntent();
         if (intent != null && intent.getData() != null) {
             editDatabaseUrl.setText(intent.getData().toString());
+            editDatabaseUrl.setEnabled(false);
+            buttonOpenFile.setEnabled(false);
             launchMainActivityAfterSave = true;
+
+            //int authMethod = preferences.getInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED);
+            //if (authMethod != AUTH_METHOD_UNDEFINED)
+            // TODO: try open with saved keys.
         }
     }
 
@@ -220,80 +214,30 @@ public class DatabaseSetupActivity extends AppCompatActivity
     }
 
     private void saveDatabaseConfigs() {
-        preferences.edit()
+        getPreferences().edit()
                 .putString(PREF_DB_URL, editDatabaseUrl.getText().toString())
                 .putString(PREF_DB_AUTH_USERNAME, editAuthUsername.getText().toString())
                 .putBoolean(PREF_DB_AUTH_REQUIRED, checkBasicAuth.isChecked())
                 .putInt(PREF_KEY_AUTH_METHOD, spinnerAuthMethod.getSelectedItemPosition())
                 .apply();
 
-        if (secureStringStorage == null) {
-            try {
-                secureStringStorage = new SecureStringStorage(this);
-            } catch (SecureStringStorage.SystemException e) {
-                throw new RuntimeException("cannot get SecureStringStorage", e);
-            }
-        }
-
-        try {
-            switch (spinnerAuthMethod.getSelectedItemPosition()) {
-                case AUTH_METHOD_NONE:
-                    secureStringStorage.generateNewKey(false, -1);
-                    saveKeys(null);
-                    break;
-                case AUTH_METHOD_SCREEN_LOCK:
-                    secureStringStorage.generateNewKey(true, 60);
-                    Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
-                            getString(R.string.auth_key_title),
-                            getString(R.string.auth_key_description));
-                    startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL);
-                    break;
-                case AUTH_METHOD_FINGERPRINT:
-                    secureStringStorage.generateNewKey(true, -1);
-                    requestFingerprintToSaveKeys();
-                    break;
-            }
-        } catch (SecureStringStorage.SystemException e) {
-            throw new RuntimeException("cannot generate new key", e);
-        }
-    }
-
-    private void saveKeys(Cipher cipher) {
-        try {
-            if (cipher == null)
-                cipher = secureStringStorage.getEncryptCipher();
-            List<String> strings = new ArrayList<>(2);
-            strings.add(editMasterPassword.getText().toString());
-            strings.add(editAuthPassword.getText().toString());
-            secureStringStorage.put(cipher, strings);
-        } catch (UserNotAuthenticatedException e) {
-                Log.e(TAG, "cannot get cipher from system", e);
-                cancelSubmit();
-                return;
-        } catch (SecureStringStorage.SystemException | KeyException e) {
-            throw new RuntimeException("cannot get save keys", e);
-        }
-        setResult(RESULT_OK);
-        if (launchMainActivityAfterSave)
-            startActivity(new Intent(this, MainActivity.class));
-        finish();
-    }
-
-    private void requestFingerprintToSaveKeys() {
-        getFragmentManager().beginTransaction()
-                .add(FingerprintDialogFragment.newInstance(Cipher.ENCRYPT_MODE), "fingerprint")
-                .commit();
+        List<String> keys = new ArrayList<>(2);
+        keys.add(editMasterPassword.getText().toString());
+        keys.add(editAuthPassword.getText().toString());
+        saveDatabaseKeys(keys, () -> {
+            setResult(RESULT_OK);
+            if (launchMainActivityAfterSave)
+                startActivity(new Intent(this, MainActivity.class));
+            finish();
+        }, error -> {
+            Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+            cancelSubmit();
+        });
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case REQUEST_CONFIRM_DEVICE_CREDENTIAL:
-                if (resultCode == RESULT_OK)
-                    saveKeys(null);
-                else
-                    cancelSubmit();
-                break;
             case REQUEST_OPEN_FILE:
                 if (resultCode == RESULT_OK && data != null) {
                     Uri uri = data.getData();
@@ -304,23 +248,6 @@ public class DatabaseSetupActivity extends AppCompatActivity
             default:
                 break;
         }
-    }
-
-    @Override
-    public void onFingerprintCancel() {
-        cancelSubmit();
-    }
-
-    @Override
-    public void onFingerprintSuccess(Cipher cipher) {
-        saveKeys(cipher);
-    }
-
-    @Override
-    public void onKeyException(KeyException e) {
-        // The key are new added here (by calling `secureStringStorage.generateNewKey()`),
-        // so no KeyException happen here.
-        throw new IllegalStateException(e);
     }
 
 
