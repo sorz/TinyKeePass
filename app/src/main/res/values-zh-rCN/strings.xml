@@ -11,7 +11,7 @@
     <string name="fingerprint_dialog_title">用户认证</string>
     <string name="fingerprint_failed">无法识别</string>
     <string name="fingerprint_success">已确认</string>
-    <string name="title_activity_main">TinyKeePss</string>
+    <string name="title_activity_main">TinyKeePass</string>
     <string name="action_lock_db">锁定数据库</string>
     <string name="action_search">搜索</string>
     <string name="username">用户名</string>
