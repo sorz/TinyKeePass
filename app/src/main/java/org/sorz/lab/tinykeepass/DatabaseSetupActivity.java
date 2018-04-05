@@ -16,6 +16,8 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -231,6 +233,10 @@ public class DatabaseSetupActivity extends BaseActivity {
             finish();
         }, error -> {
             Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+            getPreferences().edit()
+                    .putInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED)
+                    .apply();
+            KeePassStorage.set(this, null);
             cancelSubmit();
         });
     }
