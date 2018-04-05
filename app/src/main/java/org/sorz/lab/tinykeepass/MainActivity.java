@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 
@@ -109,7 +111,7 @@ public class MainActivity extends BaseActivity {
             Log.w(TAG, "fail to delete database file");
         getSecureStringStorage().clear();
         DatabaseSetupActivity.clearDatabaseConfigs(getPreferences());
-        snackbar(getString(R.string.clean_config_ok), Snackbar.LENGTH_SHORT).show();
+        showMessage(getString(R.string.clean_config_ok), Snackbar.LENGTH_SHORT);
     }
 
     private void showEntryList() {
@@ -119,10 +121,17 @@ public class MainActivity extends BaseActivity {
     }
 
     private void showError(String message) {
-        snackbar(message, Snackbar.LENGTH_LONG).show();
+        showMessage(message, Snackbar.LENGTH_LONG);
     }
 
-    private Snackbar snackbar(CharSequence text, int duration) {
-        return Snackbar.make(findViewById(R.id.fragment_container), text, duration);
+    private void showMessage(CharSequence text, int duration) {
+        View view = findViewById(R.id.fragment_container);
+        // view will be null if this method called on onCreate().
+        if (view != null) {
+            Snackbar.make(view, text, duration).show();
+        } else {
+            duration = duration == Snackbar.LENGTH_SHORT ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG;
+            Toast.makeText(this, text, duration).show();
+        }
     }
 }
