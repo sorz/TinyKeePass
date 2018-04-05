@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.security.keystore.UserNotAuthenticatedException;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -35,8 +36,9 @@ import static org.sorz.lab.tinykeepass.DatabaseSetupActivity.PREF_KEY_AUTH_METHO
 public abstract class BaseActivity extends AppCompatActivity
         implements FingerprintDialogFragment.OnFragmentInteractionListener {
     private final static String TAG = MainActivity.class.getName();
-    private final static int REQUEST_CONFIRM_DEVICE_CREDENTIAL = 100;
-    private final static int REQUEST_SETUP_DATABASE = 101;
+    private final static int REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_READ_KEY = 100;
+    private final static int REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_SAVE_KEY = 101;
+    private final static int REQUEST_SETUP_DATABASE = 102;
 
     private SharedPreferences preferences;
     private KeyguardManager keyguardManager;
@@ -61,11 +63,17 @@ public abstract class BaseActivity extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case REQUEST_CONFIRM_DEVICE_CREDENTIAL:
-                if (resultCode == RESULT_OK)
+            case REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_READ_KEY:
+                if (resultCode == RESULT_OK) {
                     getKey();
-                else
-                    authFail(getString(R.string.fail_to_auth));
+                    break;
+                }
+            case REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_SAVE_KEY:
+                if (resultCode == RESULT_OK) {
+                    encryptKeys(null);
+                    break;
+                }
+                authFail(getString(R.string.fail_to_auth));
                 break;
             case REQUEST_SETUP_DATABASE:
                 if (resultCode == RESULT_OK)
@@ -139,7 +147,7 @@ public abstract class BaseActivity extends AppCompatActivity
                     Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
                             getString(R.string.auth_key_title),
                             getString(R.string.auth_key_description));
-                    startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL);
+                    startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_SAVE_KEY);
                     break;
                 case AUTH_METHOD_FINGERPRINT:
                     secureStringStorage.generateNewKey(true, -1);
@@ -154,7 +162,7 @@ public abstract class BaseActivity extends AppCompatActivity
         }
     }
 
-    private void encryptKeys(Cipher cipher) {
+    private void encryptKeys(@Nullable Cipher cipher) {
         try {
             if (cipher == null)
                 cipher = secureStringStorage.getEncryptCipher();
@@ -192,7 +200,7 @@ public abstract class BaseActivity extends AppCompatActivity
                     Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
                             getString(R.string.auth_key_title),
                             getString(R.string.auth_key_description));
-                    startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL);
+                    startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_READ_KEY);
                 } catch (KeyException e) {
                     onKeyException(e);
                 } catch (SecureStringStorage.SystemException e) {

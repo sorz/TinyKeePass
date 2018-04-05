@@ -246,6 +246,7 @@ public class DatabaseSetupActivity extends BaseActivity {
                 }
                 break;
             default:
+                super.onActivityResult(requestCode, resultCode, data);
                 break;
         }
     }
