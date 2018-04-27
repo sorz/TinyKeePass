@@ -1,4 +1,30 @@
 Tinykeepass is a read-only software for reading keepass database. 
 
-It has a simple navigation interface that can be understood by anyone. 
-Tinykeepass doesn't contain any unnecessary ad pop ups, it is totally open source and absolutely free to use. Some other basic functions are missing and you may experience some malfunctions while utilizing the app. Overall it is a good app.
+Some other basic functions are missing and you may experience some malfunctions while utilizing the app. Overall it is a good app.
+
+## App Features
+
+* It has a simple navigation interface that can be understood by anyone. 
+
+* Autofill on Android Oreo (8.0) and above.
+
+* Tinykeepass doesn't contain any unnecessary ad pop ups.
+
+* It is totally open source and absolutely free to use. 
+
+* Quick user/password copy to clipboard.
+
+* Quick search
+
+* Supports finger print and device lockscreen authentication. 
+
+* Reset function to clear configuration, database file and password<hr>
+
+## Credits
+
+* [KeePass](keepass.info): the free, open source, light-weight and easy-to-use password manager.
+
+* [openkeepass](https://github.com/cternes/openkeepass/): a java library for reading and writing KeePass databases
+
+Tinykeepass is available on [google playstore](https://play.google.com/store/apps/details?id=org.sorz.lab.tinykeepass)
+Also on [Fdroid](f-droid.org/packages/org.sorz.lab.tinykeepass/)
