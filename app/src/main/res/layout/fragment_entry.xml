@@ -56,8 +56,8 @@
         android:id="@+id/textUsername"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="0dp"
         android:layout_marginTop="8dp"
+        android:paddingRight="8dp"
         android:singleLine="true"
         app:layout_constraintStart_toStartOf="@+id/textTitle"
         app:layout_constraintTop_toBottomOf="@+id/textTitle"
@@ -67,14 +67,13 @@
         android:id="@+id/textUrlHostname"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="0dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:singleLine="true"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:textColor="@android:color/darker_gray"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@+id/textUsername"
         app:layout_constraintStart_toEndOf="@+id/textUsername"
+        app:layout_constraintTop_toBottomOf="@+id/textTitle"
         tools:text="domain.name" />
 
     <TextView
