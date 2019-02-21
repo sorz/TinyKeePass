@@ -6,8 +6,8 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Build;
 import android.service.autofill.FillResponse;
-import android.support.annotation.RequiresApi;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.widget.Toolbar;
 import android.view.MenuItem;
 
 import org.sorz.lab.tinykeepass.R;

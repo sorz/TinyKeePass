@@ -1,6 +1,6 @@
 package org.sorz.lab.tinykeepass.search;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.util.Arrays;
 import java.util.List;

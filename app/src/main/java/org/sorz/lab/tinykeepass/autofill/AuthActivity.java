@@ -7,14 +7,13 @@ import android.content.IntentSender;
 import android.os.Build;
 import android.service.autofill.Dataset;
 import android.service.autofill.FillResponse;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.widget.RemoteViews;
 
 import org.sorz.lab.tinykeepass.R;
 import org.sorz.lab.tinykeepass.search.SearchIndex;
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 
-import java.security.KeyException;
 import java.util.Objects;
 import java.util.stream.Stream;
 

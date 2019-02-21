@@ -5,20 +5,12 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.service.autofill.FillResponse;
-import android.support.annotation.RequiresApi;
-import android.util.Log;
+import androidx.annotation.RequiresApi;
+
 import android.view.autofill.AutofillManager;
 import android.widget.Toast;
 
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
-
-import java.util.List;
-
-import de.slackspace.openkeepass.KeePassDatabase;
-import de.slackspace.openkeepass.domain.KeePassFile;
-import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
-
-import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.getDatabaseFile;
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)

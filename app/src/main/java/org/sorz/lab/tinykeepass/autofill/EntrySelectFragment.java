@@ -3,7 +3,7 @@ package org.sorz.lab.tinykeepass.autofill;
 
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.view.View;
 
 import org.sorz.lab.tinykeepass.BaseEntryFragment;
