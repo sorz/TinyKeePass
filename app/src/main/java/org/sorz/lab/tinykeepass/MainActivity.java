@@ -116,7 +116,7 @@ public class MainActivity extends BaseActivity {
 
     private void showEntryList() {
         getFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, EntryFragment.newInstance())
+                .replace(R.id.fragment_container, EntryFragment.Companion.newInstance())
                 .commit();
     }
 
