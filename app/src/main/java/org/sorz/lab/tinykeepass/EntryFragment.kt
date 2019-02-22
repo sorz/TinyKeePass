@@ -18,6 +18,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import android.widget.Toast
 
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage
@@ -46,7 +47,7 @@ class EntryFragment : BaseEntryFragment() {
         override fun onActionItemClicked(mode: ActionMode, menuItem: MenuItem): Boolean = false
         override fun onDestroyActionMode(mode: ActionMode) {
             actionMode = null
-            entryAdapter.hidePassword()
+            hidePassword()
         }
     }
 
@@ -158,7 +159,8 @@ class EntryFragment : BaseEntryFragment() {
         super.onPause()
         localBroadcastManager!!.unregisterReceiver(broadcastReceiver)
         lastPauseTimeMillis = SystemClock.elapsedRealtime()
-
+        if (actionMode?.tag == entryShowPasswordActionModeCallback)
+            actionMode?.finish()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -196,16 +198,19 @@ class EntryFragment : BaseEntryFragment() {
      * Display password.
      * @param entry to show
      */
-    private fun showPassword(entry: Entry?) {
-        actionMode?.run {
-            finish()
-            return
-        }
-        actionMode = activity?.startActionMode(entryShowPasswordActionModeCallback)?.apply {
+    private fun showPassword(entry: Entry) {
+        activity.window.setFlags(FLAG_SECURE, FLAG_SECURE)
+        actionMode?.finish()
+        actionMode = activity.startActionMode(entryShowPasswordActionModeCallback)?.apply {
             tag = entryShowPasswordActionModeCallback
             title = getString(R.string.title_show_password)
             entryAdapter.showPassword(entry)
         }
+    }
+
+    private fun hidePassword() {
+        entryAdapter.hidePassword()
+        activity.window.setFlags(0, FLAG_SECURE)
     }
 
     private fun copyEntry(entry: Entry, copyUsername: Boolean, copyPassword: Boolean) {
