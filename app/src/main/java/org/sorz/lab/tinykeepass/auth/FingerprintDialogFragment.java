@@ -1,12 +1,13 @@
 package org.sorz.lab.tinykeepass.auth;
 
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.fragment.app.DialogFragment;
 
 import org.sorz.lab.tinykeepass.R;
 

@@ -151,7 +151,7 @@ public abstract class BaseActivity extends AppCompatActivity
                     break;
                 case AUTH_METHOD_FINGERPRINT:
                     secureStringStorage.generateNewKey(true, -1);
-                    getFragmentManager().beginTransaction()
+                    getSupportFragmentManager().beginTransaction()
                             .add(FingerprintDialogFragment.newInstance(Cipher.ENCRYPT_MODE),
                                 "fingerprint")
                             .commit();
@@ -208,7 +208,7 @@ public abstract class BaseActivity extends AppCompatActivity
                 }
                 break;
             case AUTH_METHOD_FINGERPRINT:
-                getFragmentManager().beginTransaction()
+                getSupportFragmentManager().beginTransaction()
                         .add(FingerprintDialogFragment.newInstance(Cipher.DECRYPT_MODE),
                                 "fingerprint")
                         .commit();

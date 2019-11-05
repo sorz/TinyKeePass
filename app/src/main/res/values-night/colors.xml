@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#fff</color>
+    <color name="colorPrimaryVariant">#000</color>
+    <color name="actionModeBackground">#333</color>
+    <color name="selectedRow">#333</color>
+    <color name="password1">#1366e8</color>
+    <color name="password2">#ef440f</color>
+</resources>

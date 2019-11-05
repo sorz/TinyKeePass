@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">#3f51b5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#ff4081</color>
+    <color name="colorPrimaryVariant">#303F9F</color>
+    <color name="colorSecondary">#ff4081</color>
+    <color name="colorOnSecondary">#fff</color>
+
+    <color name="actionModeBackground">@color/colorPrimaryVariant</color>
+
     <color name="warning">#e53935</color>
     <color name="hint">#bdbdbd</color>
     <color name="success">#009688</color>

@@ -65,7 +65,7 @@
 
         <activity
             android:name=".autofill.AuthActivity"
-            android:theme="@style/Theme.Dialog" />
+            android:theme="@style/AppTheme.Dialog" />
         <activity
             android:name=".autofill.EntrySelectActivity"
             android:theme="@style/AppTheme.NoActionBar" />

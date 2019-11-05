@@ -83,7 +83,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/editMasterPassword"
         app:layout_constraintRight_toRightOf="parent" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonConfirm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -114,7 +114,8 @@
         app:layout_constraintEnd_toStartOf="@+id/buttonConfirm"
         app:layout_constraintTop_toTopOf="@+id/buttonConfirm" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:id="@+id/buttonOpenFIle"
         android:layout_width="wrap_content"
         android:layout_height="46dp"
