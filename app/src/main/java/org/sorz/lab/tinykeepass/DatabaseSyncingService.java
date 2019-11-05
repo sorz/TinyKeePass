@@ -151,6 +151,8 @@ public class DatabaseSyncingService extends Service {
             }
 
             Notification.Builder builder = new Notification.Builder(service);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                builder.setChannelId(CHANNEL_ID_SYNCING);
             if (error == null) {
                 builder.setContentTitle(service.getString(R.string.fetch_ok));
                 KeePassFile db = KeePassStorage.get(service);
