@@ -152,7 +152,11 @@ class EntryFragment : BaseEntryFragment() {
 
     override fun onPause() {
         super.onPause()
-        requireActivity().unregisterReceiver(broadcastReceiver)
+        try {
+            requireActivity().unregisterReceiver(broadcastReceiver)
+        } catch (_: IllegalArgumentException) {
+            // not register, ignored
+        }
         lastPauseTimeMillis = SystemClock.elapsedRealtime()
         if (actionMode?.tag == entryShowPasswordActionModeCallback)
             actionMode?.finish()
