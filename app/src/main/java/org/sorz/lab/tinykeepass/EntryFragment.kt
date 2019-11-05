@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import com.google.android.material.snackbar.Snackbar
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.view.ActionMode
 import android.view.LayoutInflater
 import android.view.Menu
@@ -20,6 +19,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import android.widget.Toast
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage
 
@@ -36,8 +36,9 @@ private const val INACTIVE_AUTO_LOCK_MILLIS = (3 * 60 * 1000).toLong()
  * fragment (e.g. upon screen orientation changes).
  */
 class EntryFragment : BaseEntryFragment() {
-    private var clipboardManager: ClipboardManager? = null
-    private var localBroadcastManager: LocalBroadcastManager? = null
+    private val clipboardManager by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    }
     private var actionMode: ActionMode? = null
     private var lastPauseTimeMillis: Long = 0
 
@@ -78,7 +79,7 @@ class EntryFragment : BaseEntryFragment() {
                     showPassword(entry)
                 }
                 R.id.action_copy_url -> if (notEmpty(entry.url)) {
-                    clipboardManager!!.primaryClip = ClipData.newPlainText("URL", entry.url)
+                    clipboardManager.setPrimaryClip(ClipData.newPlainText("URL", entry.url))
                     if (view != null)
                         Snackbar.make(view!!, R.string.url_copied,
                                 Snackbar.LENGTH_SHORT).show()
@@ -119,9 +120,9 @@ class EntryFragment : BaseEntryFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val view = super.onCreateView(inflater, container, savedInstanceState)
+        val view = super.onCreateView(inflater, container, savedInstanceState)!!
 
-        fab?.setOnClickListener {
+        view.findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             fab.hide()
             activity.run {
                 if (this is MainActivity) doSyncDatabase()
@@ -129,12 +130,6 @@ class EntryFragment : BaseEntryFragment() {
         }
 
         return view
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        localBroadcastManager = LocalBroadcastManager.getInstance(context)
-        clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     }
 
     override fun onResume() {
@@ -147,7 +142,7 @@ class EntryFragment : BaseEntryFragment() {
                 doUnlockDatabase()
             }
         } else {
-            localBroadcastManager!!.registerReceiver(broadcastReceiver,
+            requireActivity().registerReceiver(broadcastReceiver,
                     IntentFilter(DatabaseSyncingService.BROADCAST_SYNC_FINISHED))
             // sync done event may have lost, check its state now
             if (!DatabaseSyncingService.isRunning())
@@ -157,7 +152,7 @@ class EntryFragment : BaseEntryFragment() {
 
     override fun onPause() {
         super.onPause()
-        localBroadcastManager!!.unregisterReceiver(broadcastReceiver)
+        requireActivity().unregisterReceiver(broadcastReceiver)
         lastPauseTimeMillis = SystemClock.elapsedRealtime()
         if (actionMode?.tag == entryShowPasswordActionModeCallback)
             actionMode?.finish()
@@ -174,7 +169,7 @@ class EntryFragment : BaseEntryFragment() {
             true
         }
         R.id.action_exit -> {
-            activity.finish()
+            requireActivity().finish()
             true
         }
         else -> super.onOptionsItemSelected(item)
@@ -185,10 +180,11 @@ class EntryFragment : BaseEntryFragment() {
      * @param entry to copy
      */
     private fun copyPassword(entry: Entry) {
-        val intent = Intent(context, PasswordCopingService::class.java)
-        intent.action = PasswordCopingService.ACTION_COPY_PASSWORD
-        intent.putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.password)
-        context.startService(intent)
+        Intent(context, PasswordCopingService::class.java).apply {
+            action = PasswordCopingService.ACTION_COPY_PASSWORD
+            putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.password)
+            requireContext().startService(this)
+        }
         view?.also { view ->
             Snackbar.make(view, R.string.password_copied, Snackbar.LENGTH_SHORT).show()
         } ?: Toast.makeText(context, R.string.password_copied, Toast.LENGTH_SHORT).show()
@@ -199,9 +195,9 @@ class EntryFragment : BaseEntryFragment() {
      * @param entry to show
      */
     private fun showPassword(entry: Entry) {
-        activity.window.setFlags(FLAG_SECURE, FLAG_SECURE)
+        requireActivity().window.setFlags(FLAG_SECURE, FLAG_SECURE)
         actionMode?.finish()
-        actionMode = activity.startActionMode(entryShowPasswordActionModeCallback)?.apply {
+        actionMode = requireActivity().startActionMode(entryShowPasswordActionModeCallback)?.apply {
             tag = entryShowPasswordActionModeCallback
             title = getString(R.string.title_show_password)
             entryAdapter.showPassword(entry)
@@ -210,12 +206,14 @@ class EntryFragment : BaseEntryFragment() {
 
     private fun hidePassword() {
         entryAdapter.hidePassword()
-        activity.window.setFlags(0, FLAG_SECURE)
+        requireActivity().window.setFlags(0, FLAG_SECURE)
     }
 
     private fun copyEntry(entry: Entry, copyUsername: Boolean, copyPassword: Boolean) {
         if (copyUsername && !entry.username.isNullOrEmpty()) {
-            clipboardManager!!.primaryClip = ClipData.newPlainText(getString(R.string.username), entry.username)
+            ClipData.newPlainText(getString(R.string.username), entry.username).apply {
+                clipboardManager.setPrimaryClip(this)
+            }
             val message = getString(R.string.username_copied, entry.username)
             view.also { view ->
                 Snackbar.make(view!!, message, Snackbar.LENGTH_LONG).apply {
@@ -237,7 +235,7 @@ class EntryFragment : BaseEntryFragment() {
                         putExtra(PasswordCopingService.EXTRA_ENTRY_TITLE, title)
                     }
                 }
-                context.startService(intent)
+                requireContext().startService(intent)
             } else {
                 // username not copied, copy password immediately.
                 copyPassword(entry)
@@ -268,7 +266,7 @@ class EntryFragment : BaseEntryFragment() {
             }
         }
 
-        actionMode = activity.startActionMode(entryLongClickActionModeCallback)?.apply {
+        actionMode = requireActivity().startActionMode(entryLongClickActionModeCallback)?.apply {
             tag = entryLongClickActionModeCallback
         } ?: return false
         return true

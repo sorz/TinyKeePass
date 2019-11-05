@@ -33,7 +33,7 @@ public class EntrySelectActivity extends BaseActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getFragmentManager().beginTransaction()
+        getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, EntrySelectFragment.newInstance())
                 .commit();
         if (getSupportActionBar() != null) {

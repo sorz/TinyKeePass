@@ -13,7 +13,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
@@ -93,22 +92,22 @@ public class DatabaseSyncingService extends Service {
     private static class FetchTask extends FetchDatabaseTask {
         private static int nextNotificationId = 1;
 
-        private final WeakReference<Context> context;
+        private final WeakReference<Service> service;
         private final Uri uri;
         private final NotificationManager notificationManager;
         private final int notificationId;
 
-        FetchTask(Context context, Uri uri, String masterPwd, String username, String password) {
-            super(context, uri, masterPwd, username, password);
-            this.context = new WeakReference<>(context);
+        FetchTask(Service service, Uri uri, String masterPwd, String username, String password) {
+            super(service, uri, masterPwd, username, password);
+            this.service = new WeakReference<>(service);
             this.uri = uri;
-            notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+            notificationManager = (NotificationManager) service.getSystemService(NOTIFICATION_SERVICE);
             notificationId = nextNotificationId++;
         }
 
         @Override
         protected void onPreExecute() {
-            Context context = this.context.get();
+            Context context = this.service.get();
             if (context == null)
                 return;
             running = true;
@@ -144,50 +143,50 @@ public class DatabaseSyncingService extends Service {
 
         @Override
         protected void onPostExecute(String error) {
-            Context context = this.context.get();
-            if (context == null) {
+            Service service = this.service.get();
+            if (service == null) {
                 notificationManager.cancel(notificationId);
                 Log.w(TAG, "task done after service exited");
                 return;
             }
 
-            Notification.Builder builder = new Notification.Builder(context);
+            Notification.Builder builder = new Notification.Builder(service);
             if (error == null) {
-                builder.setContentTitle(context.getString(R.string.fetch_ok));
-                KeePassFile db = KeePassStorage.get(context);
+                builder.setContentTitle(service.getString(R.string.fetch_ok));
+                KeePassFile db = KeePassStorage.get(service);
                 if (db != null && db.getMeta().getDatabaseName() != null)
                     builder.setSmallIcon(R.drawable.ic_cloud_done_white_24dp)
                             .setContentText(db.getMeta().getDatabaseName());
                 new Handler().postDelayed(() -> notificationManager.cancel(notificationId),
                         NOTIFICATION_OK_TIMEOUT_MILLS);
-                notifyFinish(context, null);
+                notifyFinish(service, null);
             } else {
                 builder.setSmallIcon(R.drawable.ic_report_problem_white_24dp)
-                        .setContentTitle(context.getString(R.string.fetch_fail))
+                        .setContentTitle(service.getString(R.string.fetch_fail))
                         .setContentText(error);
-                notifyFinish(context, error);
+                notifyFinish(service, error);
             }
             notificationManager.notify(notificationId, builder.build());
         }
 
         @Override
         protected void onCancelled(String error) {
-            Context context = this.context.get();
-            if (context == null) {
+            Service service = this.service.get();
+            if (service == null) {
                 notificationManager.cancel(notificationId);
                 Log.w(TAG, "task cancelled after service exited");
                 return;
             }
             notificationManager.cancel(notificationId);
-            notifyFinish(context, context.getString(R.string.fetch_cancel_by_user));
+            notifyFinish(service, service.getString(R.string.fetch_cancel_by_user));
         }
 
-        private void notifyFinish(Context context, String error) {
+        private void notifyFinish(Service service, String error) {
             running = false;
             Intent intent = new Intent(BROADCAST_SYNC_FINISHED);
             if (error != null)
                 intent.putExtra(EXTRA_SYNC_ERROR, error);
-            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+            service.sendBroadcast(intent);
         }
     }
 }

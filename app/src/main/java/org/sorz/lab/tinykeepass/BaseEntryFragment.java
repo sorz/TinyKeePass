@@ -1,8 +1,8 @@
 package org.sorz.lab.tinykeepass;
 
-import android.app.Fragment;
 import android.os.Bundle;
 import androidx.annotation.LayoutRes;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;

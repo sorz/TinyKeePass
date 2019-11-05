@@ -22,7 +22,7 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState == null) {
-            getFragmentManager().beginTransaction()
+            getSupportFragmentManager().beginTransaction()
                     .add(R.id.fragment_container, new DatabaseLockedFragment())
                     .commit();
 
@@ -42,6 +42,7 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
         if (KeePassStorage.get(this) != null)
             showEntryList();
     }
@@ -78,7 +79,7 @@ public class MainActivity extends BaseActivity {
 
     public void doLockDatabase() {
         KeePassStorage.set(this, null);
-        getFragmentManager().beginTransaction()
+        getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, new DatabaseLockedFragment())
                 .commit();
     }
@@ -115,7 +116,7 @@ public class MainActivity extends BaseActivity {
     }
 
     private void showEntryList() {
-        getFragmentManager().beginTransaction()
+        getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, EntryFragment.Companion.newInstance())
                 .commit();
     }
