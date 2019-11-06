@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.os.SystemClock
 import com.google.android.material.snackbar.Snackbar
 import android.view.ActionMode
@@ -31,10 +32,7 @@ import org.sorz.lab.tinykeepass.keepass.KeePassHelper.notEmpty
 
 private const val INACTIVE_AUTO_LOCK_MILLIS = (3 * 60 * 1000).toLong()
 
-/**
- * Mandatory empty constructor for the fragment manager to instantiate the
- * fragment (e.g. upon screen orientation changes).
- */
+
 class EntryFragment : BaseEntryFragment() {
     private val clipboardManager by lazy(LazyThreadSafetyMode.NONE) {
         requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -139,7 +137,7 @@ class EntryFragment : BaseEntryFragment() {
             // time outed, lock and exit to unlock dialog.
             (activity as MainActivity).run {
                 doLockDatabase()
-                doUnlockDatabase()
+                Handler().post { doUnlockDatabase() }
             }
         } else {
             requireActivity().registerReceiver(broadcastReceiver,
