@@ -8,7 +8,6 @@
     <string name="auth_key_description">Please use your screen lock to access master key of KeePass database.</string>
     <string-array name="authenticate_method">
         <item>No authentication</item>
-        <item>Authenticate with lock screen</item>
         <item>Authenticate with fingerprint</item>
     </string-array>
 

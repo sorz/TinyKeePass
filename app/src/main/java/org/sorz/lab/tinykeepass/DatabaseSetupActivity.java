@@ -1,6 +1,5 @@
 package org.sorz.lab.tinykeepass;
 
-import android.app.KeyguardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
@@ -38,7 +37,6 @@ public class DatabaseSetupActivity extends BaseActivity {
     public static final String PREF_DB_AUTH_REQUIRED = "db-auth-required";
     public static final String PREF_KEY_AUTH_METHOD = "key-auth-method";
 
-    private KeyguardManager keyguardManager;
     private FingerprintManager fingerprintManager;
 
     private boolean launchMainActivityAfterSave = false;
@@ -61,7 +59,6 @@ public class DatabaseSetupActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_database_setup);
 
-        keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
         fingerprintManager = (FingerprintManager) getSystemService(FINGERPRINT_SERVICE);
 
         checkBasicAuth = findViewById(R.id.checkBasicAuth);
@@ -149,14 +146,7 @@ public class DatabaseSetupActivity extends BaseActivity {
         switch (spinnerAuthMethod.getSelectedItemPosition()) {
             case 0: // no auth
                 break;
-            case 1: // lock screen
-                if (!keyguardManager.isDeviceSecure()) {
-                    Toast.makeText(this,
-                            R.string.no_screen_lock, Toast.LENGTH_LONG).show();
-                    return false;
-                }
-                break;
-            case 2: // fingerprint
+            case 1: // fingerprint
                 if (!fingerprintManager.isHardwareDetected()) {
                     Toast.makeText(this,
                             R.string.no_fingerprint_detected, Toast.LENGTH_LONG).show();
@@ -216,11 +206,14 @@ public class DatabaseSetupActivity extends BaseActivity {
     }
 
     private void saveDatabaseConfigs() {
+        int authMethod = spinnerAuthMethod.getSelectedItemPosition();
+        if (authMethod == AUTH_METHOD_SCREEN_LOCK)
+            authMethod = AUTH_METHOD_FINGERPRINT;
         getPreferences().edit()
                 .putString(PREF_DB_URL, editDatabaseUrl.getText().toString())
                 .putString(PREF_DB_AUTH_USERNAME, editAuthUsername.getText().toString())
                 .putBoolean(PREF_DB_AUTH_REQUIRED, checkBasicAuth.isChecked())
-                .putInt(PREF_KEY_AUTH_METHOD, spinnerAuthMethod.getSelectedItemPosition())
+                .putInt(PREF_KEY_AUTH_METHOD, authMethod)
                 .apply();
 
         List<String> keys = new ArrayList<>(2);
