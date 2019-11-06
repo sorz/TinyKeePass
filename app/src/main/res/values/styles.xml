@@ -21,7 +21,7 @@
     <style name="AppTheme.AppBar" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
     <style name="AppTheme.AppBarPopup" parent="ThemeOverlay.AppCompat.DayNight.ActionBar" />
 
-    <style name="AppTheme.Dialog" parent="Theme.MaterialComponents.DayNight.Dialog">
+    <style name="AppTheme.Transparent" parent="Theme.MaterialComponents.DayNight.Dialog">
         <item name="android:windowFrame">@null</item>
         <item name="android:windowIsFloating">true</item>
         <item name="android:windowIsTranslucent">true</item>

@@ -1,8 +1,9 @@
 package org.sorz.lab.tinykeepass.keepass;
 
-import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
+
+import androidx.fragment.app.FragmentActivity;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -19,12 +20,12 @@ import static org.sorz.lab.tinykeepass.keepass.KeePassHelper.getDatabaseFile;
 public class OpenKeePassTask extends AsyncTask<Void, Void, KeePassFile> {
     static private final String TAG = OpenKeePassTask.class.getName();
 
-    private final WeakReference<Activity> activity;
+    private final WeakReference<FragmentActivity> activity;
     private final File path;
     private final String key;
     private String errorMessage;
 
-    public OpenKeePassTask(Activity activity, String masterKey) {
+    public OpenKeePassTask(FragmentActivity activity, String masterKey) {
         this.activity = new WeakReference<>(activity);
         path = getDatabaseFile(activity);
         key = masterKey;
@@ -49,21 +50,21 @@ public class OpenKeePassTask extends AsyncTask<Void, Void, KeePassFile> {
 
     @Override
     protected void onPreExecute(){
-        Activity activity = this.activity.get();
+        FragmentActivity activity = this.activity.get();
         if (activity == null)
             return;
-        activity.getFragmentManager().beginTransaction()
-                .add(OpenKeePassDialogFragment.newInstance(), "dialog")
+        activity.getSupportFragmentManager().beginTransaction()
+                .add(OpenKeePassDialogFragment.Companion.newInstance(), "dialog")
                 .commit();
     }
 
     @Override
     protected void onPostExecute(KeePassFile result){
-        Activity activity = this.activity.get();
+        FragmentActivity activity = this.activity.get();
         if (activity == null)
             return;
         OpenKeePassDialogFragment dialogFragment = (OpenKeePassDialogFragment)
-                activity.getFragmentManager().findFragmentByTag("dialog");
+                activity.getSupportFragmentManager().findFragmentByTag("dialog");
         if (dialogFragment != null) {
             if (result == null)
                 dialogFragment.onOpenError(errorMessage);

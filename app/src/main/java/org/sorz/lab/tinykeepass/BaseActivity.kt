@@ -34,6 +34,7 @@ import org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_UNDEFINED
 import org.sorz.lab.tinykeepass.DatabaseSetupActivity.PREF_KEY_AUTH_METHOD
 import java.util.concurrent.Executor
 import android.os.Looper
+import androidx.fragment.app.FragmentActivity
 
 
 private val TAG = MainActivity::class.java.name
@@ -233,7 +234,7 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     private class OpenTask internal constructor(
-            activity: Activity,  // TODO: memory leaks?
+            activity: FragmentActivity,  // TODO: memory leaks?
             masterKey: String,
             private val onSuccess: Consumer<KeePassFile>
     ) : OpenKeePassTask(activity, masterKey) {
