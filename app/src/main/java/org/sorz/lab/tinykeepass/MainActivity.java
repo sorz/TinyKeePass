@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -55,15 +57,13 @@ public class MainActivity extends BaseActivity {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_SETUP_DATABASE:
-                if (resultCode == RESULT_OK)
-                    doUnlockDatabase();
-                break;
-            default:
-                super.onActivityResult(requestCode, resultCode, data);
-                break;
+    protected void onResume() {
+        super.onResume();
+        if (KeePassStorage.get(this) != null) {
+            Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+            if (!(fragment instanceof EntryFragment)) {
+                showEntryList();
+            }
         }
     }
 

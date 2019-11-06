@@ -5,12 +5,16 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.hardware.biometrics.BiometricPrompt.BIOMETRIC_ERROR_HW_NOT_PRESENT
+import android.hardware.biometrics.BiometricPrompt.BIOMETRIC_ERROR_NO_DEVICE_CREDENTIAL
+import android.os.Build
+import android.os.Handler
 import android.security.keystore.UserNotAuthenticatedException
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
+import androidx.biometric.BiometricPrompt
 import androidx.preference.PreferenceManager
 
-import org.sorz.lab.tinykeepass.auth.FingerprintDialogFragment
 import org.sorz.lab.tinykeepass.auth.SecureStringStorage
 import org.sorz.lab.tinykeepass.keepass.OpenKeePassTask
 
@@ -28,6 +32,8 @@ import org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_NONE
 import org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_SCREEN_LOCK
 import org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_UNDEFINED
 import org.sorz.lab.tinykeepass.DatabaseSetupActivity.PREF_KEY_AUTH_METHOD
+import java.util.concurrent.Executor
+import android.os.Looper
 
 
 private val TAG = MainActivity::class.java.name
@@ -35,12 +41,15 @@ private const val REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_READ_KEY = 100
 private const val REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_SAVE_KEY = 101
 private const val REQUEST_SETUP_DATABASE = 102
 
-abstract class BaseActivity : AppCompatActivity(), FingerprintDialogFragment.OnFragmentInteractionListener {
+abstract class BaseActivity : AppCompatActivity() {
     protected val preferences: SharedPreferences by lazy(LazyThreadSafetyMode.NONE) {
         PreferenceManager.getDefaultSharedPreferences(this)
     }
     private val keyguardManager by lazy(LazyThreadSafetyMode.NONE) {
         getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+    }
+    private val biometricPrompt by lazy(LazyThreadSafetyMode.NONE) {
+        BiometricPrompt(this, mainExecutor(), authenticationCallback)
     }
     protected val secureStringStorage by lazy(LazyThreadSafetyMode.NONE) {
         try {
@@ -54,6 +63,28 @@ abstract class BaseActivity : AppCompatActivity(), FingerprintDialogFragment.OnF
     private var onKeySaved: Runnable? = null
     private var keysToEncrypt: List<String>? = null
 
+    private val authenticationCallback = object : BiometricPrompt.AuthenticationCallback() {
+        override fun onAuthenticationFailed() {
+            authFail(getString(R.string.fail_to_auth))
+        }
+
+        override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+            val cipher = result.cryptoObject!!.cipher!!
+            if (onKeyRetrieved != null)
+                decryptKey(cipher)
+            else if (onKeySaved != null)
+                encryptKeys(cipher)
+        }
+
+        override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+            authFail(errString.toString())
+            if (errorCode == BIOMETRIC_ERROR_NO_DEVICE_CREDENTIAL || errorCode == BIOMETRIC_ERROR_HW_NOT_PRESENT) {
+                // Reconfigure passwords
+                val intent = Intent(this@BaseActivity, DatabaseSetupActivity::class.java)
+                startActivityForResult(intent, REQUEST_SETUP_DATABASE)
+            }
+        }
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
@@ -83,16 +114,6 @@ abstract class BaseActivity : AppCompatActivity(), FingerprintDialogFragment.OnF
         keysToEncrypt = null
     }
 
-    override fun onFingerprintCancel() {
-        authFail(getString(R.string.fail_to_auth))
-    }
-
-    override fun onFingerprintSuccess(cipher: Cipher) {
-        if (onKeyRetrieved != null)
-            decryptKey(cipher)
-        else if (onKeySaved != null)
-            encryptKeys(cipher)
-    }
 
     protected fun getDatabaseKeys(onKeyRetrieved: Consumer<List<String>>,
                                   onKeyAuthFailed: Consumer<String>) {
@@ -108,59 +129,46 @@ abstract class BaseActivity : AppCompatActivity(), FingerprintDialogFragment.OnF
         saveKey(keys)
     }
 
-    override fun onKeyException(e: KeyException) {
-        // Key is invalided, have to reconfigure passwords.
-        val intent = Intent(this, DatabaseSetupActivity::class.java)
-        startActivityForResult(intent, REQUEST_SETUP_DATABASE)
-    }
-
     /**
      * Authenticate user, then call [.encryptKeys] to save keys.
      * Finally, either [.onKeySaved] or [.onKeyAuthFailed] will be called.
      */
     private fun saveKey(keys: List<String>) {
         keysToEncrypt = keys
-        val authMethod = preferences.getInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED)
-        try {
-            when (authMethod) {
-                AUTH_METHOD_NONE -> {
-                    secureStringStorage.generateNewKey(false, -1)
-                    encryptKeys(null)
-                }
-                AUTH_METHOD_SCREEN_LOCK -> {
-                    secureStringStorage.generateNewKey(true, 60)
-                    val intent = keyguardManager.createConfirmDeviceCredentialIntent(
-                            getString(R.string.auth_key_title),
-                            getString(R.string.auth_key_description))
-                    startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_SAVE_KEY)
-                }
-                AUTH_METHOD_FINGERPRINT -> {
-                    secureStringStorage.generateNewKey(true, -1)
-                    supportFragmentManager.beginTransaction()
-                            .add(FingerprintDialogFragment.newInstance(Cipher.ENCRYPT_MODE),
-                                    "fingerprint")
-                            .commit()
-                }
+        when (preferences.getInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED)) {
+            AUTH_METHOD_NONE -> {
+                secureStringStorage.generateNewKey(false, -1)
+                encryptKeys(null)
             }
-        } catch (e: SecureStringStorage.SystemException) {
-            throw RuntimeException("cannot generate new key", e)
+            AUTH_METHOD_SCREEN_LOCK -> {
+                secureStringStorage.generateNewKey(true, 60)
+                val intent = keyguardManager.createConfirmDeviceCredentialIntent(
+                        getString(R.string.auth_key_title),
+                        getString(R.string.auth_key_description))
+                startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_SAVE_KEY)
+            }
+            AUTH_METHOD_FINGERPRINT -> {
+                secureStringStorage.generateNewKey(true, -1)
+                val prompt = BiometricPrompt.PromptInfo.Builder()
+                        .setTitle(getString(R.string.auth_key_title))
+                        .setDescription(getString(R.string.auth_key_description))
+                        .setNegativeButtonText(getText(android.R.string.cancel))
+                        .build()
+                val crypto = BiometricPrompt.CryptoObject(secureStringStorage.encryptCipher)
+                biometricPrompt.authenticate(prompt, crypto)
+            }
         }
-
     }
 
     private fun encryptKeys(cipher: Cipher?) {
         try {
-            cipher ?: secureStringStorage.encryptCipher.apply {
+            (cipher ?: secureStringStorage.encryptCipher).apply {
                 secureStringStorage.put(this, keysToEncrypt)
             }
         } catch (e: UserNotAuthenticatedException) {
             Log.e(TAG, "cannot get cipher from system", e)
             onKeyAuthFailed?.accept("cannot get cipher from system")
             return
-        } catch (e: SecureStringStorage.SystemException) {
-            throw RuntimeException("cannot get save keys", e)
-        } catch (e: KeyException) {
-            throw RuntimeException("cannot get save keys", e)
         }
 
         onKeySaved?.run()
@@ -170,30 +178,38 @@ abstract class BaseActivity : AppCompatActivity(), FingerprintDialogFragment.OnF
     }
 
     /**
-     * Authenticate user, then call [.decryptKey] to get keys.
-     * Finally, either [.onKeyRetrieved] or [.onKeyAuthFailed] will be called.
+     * Authenticate user, then call [decryptKey] to get keys.
+     * Finally, either [onKeyRetrieved] or [onKeyAuthFailed] will be called.
      */
     private fun getKey() {
         when (preferences.getInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED)) {
             AUTH_METHOD_UNDEFINED -> authFail(getString(R.string.broken_keys))
-            AUTH_METHOD_NONE, AUTH_METHOD_SCREEN_LOCK -> try {
-                decryptKey(secureStringStorage.decryptCipher)
-            } catch (e: UserNotAuthenticatedException) {
-                // should do authentication
-                val intent = keyguardManager.createConfirmDeviceCredentialIntent(
-                        getString(R.string.auth_key_title),
-                        getString(R.string.auth_key_description))
-                startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_READ_KEY)
-            } catch (e: KeyException) {
-                onKeyException(e)
-            } catch (e: SecureStringStorage.SystemException) {
-                throw RuntimeException(e)
-            }
+            AUTH_METHOD_NONE, AUTH_METHOD_SCREEN_LOCK ->
+                try {
+                    decryptKey(secureStringStorage.decryptCipher)
+                } catch (e: UserNotAuthenticatedException) {
+                    // should do authentication
+                    val intent = keyguardManager.createConfirmDeviceCredentialIntent(
+                            getString(R.string.auth_key_title),
+                            getString(R.string.auth_key_description))
+                    startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_READ_KEY)
+                } catch (e: KeyException) {
+                    // Reconfigure passwords
+                    val intent = Intent(this, DatabaseSetupActivity::class.java)
+                    startActivityForResult(intent, REQUEST_SETUP_DATABASE)
+                } catch (e: SecureStringStorage.SystemException) {
+                    throw RuntimeException(e)
+                }
 
-            AUTH_METHOD_FINGERPRINT -> supportFragmentManager.beginTransaction()
-                    .add(FingerprintDialogFragment.newInstance(Cipher.DECRYPT_MODE),
-                            "fingerprint")
-                    .commit()
+            AUTH_METHOD_FINGERPRINT -> {
+                val prompt = BiometricPrompt.PromptInfo.Builder()
+                        .setTitle(getString(R.string.auth_key_title))
+                        .setDescription(getString(R.string.auth_key_description))
+                        .setNegativeButtonText(getText(android.R.string.cancel))
+                        .build()
+                val crypto = BiometricPrompt.CryptoObject(secureStringStorage.decryptCipher)
+                biometricPrompt.authenticate(prompt, crypto)
+            }
         }
     }
 
@@ -235,5 +251,21 @@ abstract class BaseActivity : AppCompatActivity(), FingerprintDialogFragment.OnF
             if (db != null)
                 onSuccess.accept(db)
         }
+    }
+}
+
+fun Context.mainExecutor(): Executor {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        mainExecutor
+    } else {
+        HandlerExecutor(mainLooper)
+    }
+}
+
+class HandlerExecutor(looper: Looper) : Executor {
+    private val handler = Handler(looper)
+
+    override fun execute(r: Runnable) {
+        handler.post(r)
     }
 }
