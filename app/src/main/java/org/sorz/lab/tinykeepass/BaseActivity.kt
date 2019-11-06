@@ -88,20 +88,12 @@ abstract class BaseActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
-            REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_READ_KEY -> {
-                if (resultCode == Activity.RESULT_OK) {
-                    getKey()
-                    encryptKeys(null)
-                } else {
-                    authFail(getString(R.string.fail_to_auth))
-                }
-            }
-            REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_SAVE_KEY ->
-                if (resultCode == Activity.RESULT_OK) encryptKeys(null)
+            REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_READ_KEY, REQUEST_SETUP_DATABASE ->
+                if (resultCode == RESULT_OK) getKey()
                 else authFail(getString(R.string.fail_to_auth))
-            REQUEST_SETUP_DATABASE ->
-                if (resultCode == Activity.RESULT_OK) getKey()
-                else authFail(getString(R.string.fail_to_decrypt))
+            REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_SAVE_KEY ->
+                if (resultCode == RESULT_OK) encryptKeys(null)
+                else authFail(getString(R.string.fail_to_auth))
             else -> super.onActivityResult(requestCode, resultCode, data)
         }
     }
