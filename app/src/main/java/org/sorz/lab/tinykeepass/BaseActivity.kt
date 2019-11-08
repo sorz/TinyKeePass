@@ -1,6 +1,5 @@
 package org.sorz.lab.tinykeepass
 
-import android.app.Activity
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
@@ -59,8 +58,8 @@ abstract class BaseActivity : AppCompatActivity() {
             throw RuntimeException(e)
         }
     }
-    private var onKeyRetrieved: Consumer<List<String>>? = null
-    private var onKeyAuthFailed: Consumer<String>? = null
+    private var onKeyRetrieved: ((List<String>) -> Unit)? = null
+    private var onKeyAuthFailed: ((String) -> Unit)? = null
     private var onKeySaved: Runnable? = null
     private var keysToEncrypt: List<String>? = null
 
@@ -100,7 +99,7 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     private fun authFail(message: String) {
-        onKeyAuthFailed?.accept(message)
+        onKeyAuthFailed?.invoke(message)
         onKeyAuthFailed = null
         onKeySaved = null
         onKeyRetrieved = null
@@ -108,15 +107,15 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
 
-    protected fun getDatabaseKeys(onKeyRetrieved: Consumer<List<String>>,
-                                  onKeyAuthFailed: Consumer<String>) {
+    protected fun getDatabaseKeys(onKeyRetrieved: ((List<String>) -> Unit),
+                                  onKeyAuthFailed: ((String) -> Unit)) {
         this.onKeyRetrieved = onKeyRetrieved
         this.onKeyAuthFailed = onKeyAuthFailed
         getKey()
     }
 
     protected fun saveDatabaseKeys(keys: List<String>, onKeySaved: Runnable,
-                                   onKeyAuthFailed: Consumer<String>) {
+                                   onKeyAuthFailed: ((String) -> Unit)) {
         this.onKeySaved = onKeySaved
         this.onKeyAuthFailed = onKeyAuthFailed
         saveKey(keys)
@@ -160,7 +159,7 @@ abstract class BaseActivity : AppCompatActivity() {
             }
         } catch (e: UserNotAuthenticatedException) {
             Log.e(TAG, "cannot get cipher from system", e)
-            onKeyAuthFailed?.accept("cannot get cipher from system")
+            onKeyAuthFailed?.invoke("cannot get cipher from system")
             return
         }
 
@@ -224,25 +223,25 @@ abstract class BaseActivity : AppCompatActivity() {
             authFail(getString(R.string.broken_keys))
             return
         }
-        onKeyRetrieved?.accept(keys)
+        onKeyRetrieved?.invoke(keys)
         onKeyAuthFailed = null
         onKeyRetrieved = null
     }
 
-    protected fun openDatabase(masterKey: String, onSuccess: Consumer<KeePassFile>) {
+    protected fun openDatabase(masterKey: String, onSuccess: ((KeePassFile) -> Unit)) {
         OpenTask(this, masterKey, onSuccess).execute()
     }
 
     private class OpenTask internal constructor(
             activity: FragmentActivity,  // TODO: memory leaks?
             masterKey: String,
-            private val onSuccess: Consumer<KeePassFile>
+            private val onSuccess: ((KeePassFile) -> Unit)
     ) : OpenKeePassTask(activity, masterKey) {
 
         override fun onPostExecute(db: KeePassFile?) {
             super.onPostExecute(db)
             if (db != null)
-                onSuccess.accept(db)
+                onSuccess.invoke(db)
         }
     }
 }

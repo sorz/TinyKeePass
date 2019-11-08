@@ -22,9 +22,9 @@ public class EntryQueryRelevance implements Comparable<EntryQueryRelevance> {
     private double rank;
     private int unrelatedKeywords;
 
-    public EntryQueryRelevance(Entry entry, String[] keywords) {
+    public EntryQueryRelevance(Entry entry, List<String> keywords) {
         this.entry = entry;
-        double[] ranks = Arrays.stream(keywords).mapToDouble(w ->
+        double[] ranks = keywords.stream().mapToDouble(w ->
                 fieldScore(entry.getTitle(), w) * WEIGHT_KW_IN_TITLE +
                         fieldScore(entry.getUsername(), w) * WEIGHT_KW_IN_USERNAME +
                         fieldScore(entry.getNotes(), w) * WEIGHT_KW_IN_NOTES +
@@ -43,7 +43,7 @@ public class EntryQueryRelevance implements Comparable<EntryQueryRelevance> {
     }
 
     private static double logScore(int queryLength, int totalLength) {
-        return Math.log(Math.E - 1 + queryLength / totalLength);
+        return Math.log(Math.E - 1 + queryLength * 1.0 / totalLength);
     }
 
     private static double fieldScore(String field, String query) {

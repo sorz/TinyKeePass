@@ -1,6 +1,6 @@
 package org.sorz.lab.tinykeepass.search;
 
-import org.sorz.lab.tinykeepass.keepass.KeePassHelper;
+import org.sorz.lab.tinykeepass.keepass.KeePassHelperKt;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -32,7 +32,7 @@ public class SearchIndex {
     public SearchIndex(KeePassFile keePass) {
         tokenIndex = new HashMap<>();
         totalEntry = new AtomicInteger();
-        KeePassHelper.allEntriesNotInRecycleBin(keePass)
+        KeePassHelperKt.getAllEntriesNotInRecycleBinStream(keePass)
                 .parallel()
                 .forEach(this::addEntry);
     }

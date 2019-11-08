@@ -8,6 +8,8 @@ import android.os.Build;
 import android.service.autofill.Dataset;
 import android.service.autofill.FillResponse;
 import androidx.annotation.RequiresApi;
+
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import org.sorz.lab.tinykeepass.R;
@@ -38,12 +40,12 @@ public class AuthActivity extends BaseActivity {
         FillResponse.Builder responseBuilder = new FillResponse.Builder();
         // add matched entities
         entryStream
-                .map(entry -> AutofillUtils.buildDataset(this, entry, result))
+                .map(entry -> AutofillUtils.INSTANCE.buildDataset(this, entry, result))
                 .filter(Objects::nonNull)
                 .limit(MAX_NUM_CANDIDATE_ENTRIES)
                 .forEach(responseBuilder::addDataset);
         // add "show all" item
-        RemoteViews presentation = AutofillUtils.getRemoteViews(this,
+        RemoteViews presentation = AutofillUtils.INSTANCE.getRemoteViews(this,
                 getString(R.string.autofill_item_show_all),
                 R.drawable.ic_more_horiz_gray_24dp);
         presentation.setTextColor(R.id.textView, getColor(R.color.hint));

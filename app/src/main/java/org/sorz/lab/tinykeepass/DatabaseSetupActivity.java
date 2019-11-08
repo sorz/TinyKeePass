@@ -21,6 +21,8 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
+import kotlin.Unit;
+
 /**
  *  Provide UI for configure a new db.
  *
@@ -231,6 +233,7 @@ public class DatabaseSetupActivity extends BaseActivity {
                     .apply();
             KeePassStorage.set(this, null);
             cancelSubmit();
+            return Unit.INSTANCE;
         });
     }
 

@@ -27,8 +27,6 @@ import org.sorz.lab.tinykeepass.keepass.KeePassStorage
 import de.slackspace.openkeepass.domain.Entry
 import kotlinx.android.synthetic.main.fragment_entry_list.*
 
-import org.sorz.lab.tinykeepass.keepass.KeePassHelper.notEmpty
-
 
 private const val INACTIVE_AUTO_LOCK_MILLIS = (3 * 60 * 1000).toLong()
 
@@ -57,7 +55,7 @@ class EntryFragment : BaseEntryFragment() {
         }
 
         override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
-            val entry = entryAdapter.selectedItem ?: return false
+            val entry = entryAdapter.selectedEntry ?: return false
             menu.run {
                 findItem(R.id.action_copy_username).isVisible = !entry.username.isNullOrBlank()
                 findItem(R.id.action_copy_password).isVisible = !entry.password.isNullOrBlank()
@@ -68,7 +66,7 @@ class EntryFragment : BaseEntryFragment() {
         }
 
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
-            val entry = entryAdapter.selectedItem ?: return false
+            val entry = entryAdapter.selectedEntry ?: return false
             when (item.itemId) {
                 R.id.action_copy_username -> copyEntry(entry, true, false)
                 R.id.action_copy_password -> copyEntry(entry, false, true)
@@ -76,7 +74,7 @@ class EntryFragment : BaseEntryFragment() {
                     mode.finish()
                     showPassword(entry)
                 }
-                R.id.action_copy_url -> if (notEmpty(entry.url)) {
+                R.id.action_copy_url -> if (!entry.url.isNullOrBlank()) {
                     clipboardManager.setPrimaryClip(ClipData.newPlainText("URL", entry.url))
                     if (view != null)
                         Snackbar.make(view!!, R.string.url_copied,
@@ -100,7 +98,7 @@ class EntryFragment : BaseEntryFragment() {
             if (DatabaseSyncingService.BROADCAST_SYNC_FINISHED == intent.action) {
                 fab?.show()
                 val error = intent.getStringExtra(DatabaseSyncingService.EXTRA_SYNC_ERROR)
-                if (error == null) entryAdapter.reloadEntries(context)
+                if (error == null) entryAdapter.reloadEntries()
                 view?.also { view ->
                     if (error == null)
                         Snackbar.make(view, R.string.sync_done, Snackbar.LENGTH_SHORT).show()

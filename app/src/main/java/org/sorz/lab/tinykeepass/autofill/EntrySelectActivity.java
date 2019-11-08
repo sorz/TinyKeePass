@@ -21,7 +21,7 @@ public class EntrySelectActivity extends BaseActivity {
     void onEntrySelected(Entry entry) {
         StructureParser.Result result = parseStructure();
         FillResponse response = new FillResponse.Builder()
-                .addDataset(AutofillUtils.buildDataset(this, entry, result))
+                .addDataset(AutofillUtils.INSTANCE.buildDataset(this, entry, result))
                 .build();
         setFillResponse(response);
         finish();

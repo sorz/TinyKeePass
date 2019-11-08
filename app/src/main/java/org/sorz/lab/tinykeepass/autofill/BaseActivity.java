@@ -12,11 +12,11 @@ import android.widget.Toast;
 
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 
+import kotlin.Unit;
+
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 abstract class BaseActivity extends org.sorz.lab.tinykeepass.BaseActivity {
-    private final static String TAG = BaseActivity.class.getName();
-
     private Intent replyIntent;
 
     @Override
@@ -26,9 +26,16 @@ abstract class BaseActivity extends org.sorz.lab.tinykeepass.BaseActivity {
         if (KeePassStorage.get(this) != null) {
             onDatabaseOpened();
         } else {
-            getDatabaseKeys(keys ->
-                    openDatabase(keys.get(0), db -> onDatabaseOpened())
-            , this::onError);
+            getDatabaseKeys(keys -> {
+                openDatabase(keys.get(0), db -> {
+                    onDatabaseOpened();
+                    return Unit.INSTANCE;
+                });
+                return Unit.INSTANCE;
+            }, error -> {
+                onError(error);
+                return Unit.INSTANCE;
+            });
         }
     }
 
