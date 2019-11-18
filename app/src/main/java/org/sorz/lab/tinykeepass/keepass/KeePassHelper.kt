@@ -3,6 +3,8 @@ package org.sorz.lab.tinykeepass.keepass
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 
 import org.sorz.lab.tinykeepass.FetchDatabaseTask
 
@@ -38,3 +40,11 @@ val Context.hasDatabaseConfigured: Boolean get() =
 
 val Entry.icon: Bitmap get() =
     BitmapFactory.decodeByteArray(iconData, 0, iconData.size)
+
+fun Entry.getIconDrawable(context: Context): Drawable = BitmapDrawable(context.resources, icon)
+
+private val Entry.cleanUrl get() = url?.replace("^https?://(www\\.)?".toRegex(), "")
+
+val Entry.urlHostname get() = cleanUrl?.split("/".toRegex(), 2)?.first()
+val Entry.urlPath get() = cleanUrl?.split("/".toRegex(), 2)?.getOrNull(1)
+        ?.takeIf { it.isNotBlank() }?.let { "/$it" }

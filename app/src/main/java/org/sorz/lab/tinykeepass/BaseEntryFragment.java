@@ -45,9 +45,10 @@ public abstract class BaseEntryFragment extends Fragment implements SearchView.O
                 : new GridLayoutManager(getContext(), spanCount);
         recyclerView.setLayoutManager(layoutManager);
 
-        entryAdapter = new EntryRecyclerViewAdapter(getContext(),
+        entryAdapter = new EntryRecyclerViewAdapter(requireContext(),
                 this::onEntryClick, this::onEntryLongClick);
         recyclerView.setAdapter(entryAdapter);
+        recyclerView.setHasFixedSize(false);
 
         return view;
     }

@@ -1,94 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@drawable/selectable_background"
-    android:clickable="true"
-    android:focusable="true"
-    android:paddingBottom="16dp"
-    android:paddingEnd="16dp"
-    android:paddingStart="8dp"
-    android:paddingTop="16dp">
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="entry"
+            type="de.slackspace.openkeepass.domain.Entry" />
+        <variable name="password" type="String" />
+        <import type="org.sorz.lab.tinykeepass.keepass.KeePassHelperKt" alias="Helper"/>
+    </data>
 
-    <TextView
-        android:id="@+id/textUrlPath"
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="0dp"
-        android:layout_marginEnd="0dp"
-        android:ellipsize="end"
-        android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:textColor="@android:color/darker_gray"
-        app:layout_constraintBottom_toBottomOf="@+id/textUrlHostname"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/textUrlHostname"
-        tools:text="/path/very/long/long/long/end" />
+        android:background="@drawable/selectable_background"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingStart="8dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp">
 
-    <ImageView
-        android:id="@+id/imageIcon"
-        android:layout_width="16dp"
-        android:layout_height="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="0dp"
-        app:layout_constraintBottom_toBottomOf="@+id/textTitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/textTitle" />
+        <TextView
+            android:id="@+id/textUrlPath"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:alpha="0.6"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textColor="@android:color/darker_gray"
+            app:layout_constraintBottom_toBottomOf="@+id/textUrlHostname"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/textUrlHostname"
+            app:nullableText="@{Helper.getUrlPath(entry)}"
+            tools:text="/path/very/long/long/long/end" />
 
-    <TextView
-        android:id="@+id/textTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="0dp"
-        android:ellipsize="end"
-        android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.AppCompat"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imageIcon"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="Entry title Entry title (very long long long end)" />
+        <ImageView
+            android:id="@+id/imageIcon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="0dp"
+            android:src="@{Helper.getIconDrawable(entry, context)}"
+            app:layout_constraintBottom_toBottomOf="@+id/textTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/textTitle" />
 
-    <TextView
-        android:id="@+id/textUsername"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:paddingRight="8dp"
-        android:singleLine="true"
-        app:layout_constraintStart_toStartOf="@+id/textTitle"
-        app:layout_constraintTop_toBottomOf="@+id/textTitle"
-        tools:text="username" />
+        <TextView
+            android:id="@+id/textTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.AppCompat"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/imageIcon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:nullableText="@{entry.title}"
+            tools:text="Entry title Entry title (very long long long end)" />
 
-    <TextView
-        android:id="@+id/textUrlHostname"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:textColor="@android:color/darker_gray"
-        android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/textUsername"
-        app:layout_constraintTop_toBottomOf="@+id/textTitle"
-        tools:text="domain.name" />
+        <TextView
+            android:id="@+id/textUsername"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:paddingRight="8dp"
+            android:singleLine="true"
+            app:layout_constraintStart_toStartOf="@+id/textTitle"
+            app:layout_constraintTop_toBottomOf="@+id/textTitle"
+            app:nullableText="@{entry.username}"
+            tools:text="username" />
 
-    <TextView
-        android:id="@+id/textPassword"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:fontFamily="@font/dejavu_sans_mono"
-        android:textAlignment="center"
-        android:textAppearance="@android:style/TextAppearance.Material.Large"
-        android:textColor="@color/colorPrimary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textUsername"
-        tools:text="yOur+PasSWorD0_A#very$looO0ongPassword" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/textUrlHostname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textColor="@android:color/darker_gray"
+            app:layout_constraintStart_toEndOf="@+id/textUsername"
+            app:layout_constraintTop_toBottomOf="@+id/textTitle"
+            app:nullableText="@{Helper.getUrlHostname(entry)}"
+            tools:text="domain.name" />
+
+        <TextView
+            android:id="@+id/textPassword"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
+            android:fontFamily="@font/dejavu_sans_mono"
+            android:textAlignment="center"
+            android:textAppearance="@android:style/TextAppearance.Material.Large"
+            android:textColor="@color/colorPrimary"
+            app:coloredPassword="@{password}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textUsername"
+            tools:text="yOur+PasSWorD0_A#very$looO0ongPassword" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
