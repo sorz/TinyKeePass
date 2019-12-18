@@ -32,6 +32,8 @@ private const val INACTIVE_AUTO_LOCK_MILLIS = (3 * 60 * 1000).toLong()
 
 
 class EntryFragment : BaseEntryFragment() {
+    override val fragmentLayout: Int = R.layout.fragment_entry_list
+
     private val clipboardManager by lazy(LazyThreadSafetyMode.NONE) {
         requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     }
@@ -108,10 +110,6 @@ class EntryFragment : BaseEntryFragment() {
                 }
             }
         }
-    }
-
-    override fun getFragmentLayout(): Int {
-        return R.layout.fragment_entry_list
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
