@@ -2,6 +2,8 @@ package org.sorz.lab.tinykeepass.autofill
 
 import android.content.Context
 import android.os.Build
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.View
 import androidx.annotation.RequiresApi
 import de.slackspace.openkeepass.domain.Entry
@@ -18,6 +20,11 @@ class EntrySelectFragment : BaseEntryFragment() {
 
     override fun onEntryLongClick(view: View, entry: Entry): Boolean {
         return false
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        menu.findItem(R.id.action_search).expandActionView()
     }
 
     companion object {
