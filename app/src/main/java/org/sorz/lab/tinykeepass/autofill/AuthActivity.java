@@ -19,8 +19,9 @@ import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import de.slackspace.openkeepass.domain.Entry;
-import de.slackspace.openkeepass.domain.KeePassFile;
+import com.kunzisoft.keepass.database.element.Database;
+import com.kunzisoft.keepass.database.element.Entry;
+import com.kunzisoft.keepass.database.element.node.NodeIdUUID;
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)
@@ -30,12 +31,12 @@ public class AuthActivity extends BaseActivity {
     @Override
     protected void onDatabaseOpened() {
         StructureParser.Result result = parseStructure();
-        KeePassFile keePass = KeePassStorage.get(this);
+        Database keePass = KeePassStorage.get(this);
         SearchIndex index = new SearchIndex(keePass);
         StringBuilder queryBuilder = new StringBuilder();
         result.title.forEach(title -> queryBuilder.append(title).append(' '));
         Stream<Entry> entryStream = index.search(queryBuilder.toString())
-                .map(keePass::getEntryByUUID);
+                .map(entry -> keePass.getEntryById(new NodeIdUUID(entry)));
 
         FillResponse.Builder responseBuilder = new FillResponse.Builder();
         // add matched entities

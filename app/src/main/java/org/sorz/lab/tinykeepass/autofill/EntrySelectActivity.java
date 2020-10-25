@@ -12,7 +12,7 @@ import android.view.MenuItem;
 
 import org.sorz.lab.tinykeepass.R;
 
-import de.slackspace.openkeepass.domain.Entry;
+import com.kunzisoft.keepass.database.element.Entry;
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)

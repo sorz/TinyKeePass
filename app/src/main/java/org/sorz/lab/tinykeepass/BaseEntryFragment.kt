@@ -8,9 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import de.slackspace.openkeepass.domain.Entry
-import java.util.function.BiConsumer
-import java.util.function.BiPredicate
+import com.kunzisoft.keepass.database.element.Entry
 
 abstract class BaseEntryFragment : Fragment(), SearchView.OnQueryTextListener {
     protected lateinit var entryAdapter: EntryRecyclerViewAdapter
@@ -33,8 +31,8 @@ abstract class BaseEntryFragment : Fragment(), SearchView.OnQueryTextListener {
         recyclerView.layoutManager = layoutManager
         entryAdapter = EntryRecyclerViewAdapter(
                 requireContext(),
-                BiConsumer { v, entry -> onEntryClick(v, entry) },
-                BiPredicate { v, entry -> onEntryLongClick(v, entry) }
+                { v, entry -> onEntryClick(v, entry) },
+                { v, entry -> onEntryLongClick(v, entry) }
         )
         recyclerView.adapter = entryAdapter
         recyclerView.setHasFixedSize(false)

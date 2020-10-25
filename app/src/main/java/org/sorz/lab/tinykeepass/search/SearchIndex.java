@@ -12,8 +12,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import de.slackspace.openkeepass.domain.Entry;
-import de.slackspace.openkeepass.domain.KeePassFile;
+import com.kunzisoft.keepass.database.element.Entry;
+import com.kunzisoft.keepass.database.element.Database;
+import com.kunzisoft.keepass.database.element.node.NodeId;
 
 /**
  * Build search index from KeePass file and perform search on it.
@@ -29,7 +30,7 @@ public class SearchIndex {
      * KeePass file.
      * @param keePass to be included in the index.
      */
-    public SearchIndex(KeePassFile keePass) {
+    public SearchIndex(Database keePass) {
         tokenIndex = new HashMap<>();
         totalEntry = new AtomicInteger();
         KeePassHelperKt.getAllEntriesNotInRecycleBinStream(keePass)
@@ -107,7 +108,7 @@ public class SearchIndex {
         int frequency;
 
         EntryFreq(Entry entry, int frequency) {
-            this.entry = entry.getUuid();
+            this.entry = entry.getNodeId().getId();
             this.frequency = frequency;
         }
     }

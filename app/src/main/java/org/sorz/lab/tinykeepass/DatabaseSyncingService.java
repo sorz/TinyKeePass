@@ -19,7 +19,7 @@ import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 
 import java.lang.ref.WeakReference;
 
-import de.slackspace.openkeepass.domain.KeePassFile;
+import com.kunzisoft.keepass.database.element.Database;
 
 public class DatabaseSyncingService extends Service {
     private static final String TAG = DatabaseSyncingService.class.getName();
@@ -155,10 +155,10 @@ public class DatabaseSyncingService extends Service {
                 builder.setChannelId(CHANNEL_ID_SYNCING);
             if (error == null) {
                 builder.setContentTitle(service.getString(R.string.fetch_ok));
-                KeePassFile db = KeePassStorage.get(service);
-                if (db != null && db.getMeta().getDatabaseName() != null)
+                Database db = KeePassStorage.get(service);
+                if (db != null && db.getName() != null)
                     builder.setSmallIcon(R.drawable.ic_cloud_done_white_24dp)
-                            .setContentText(db.getMeta().getDatabaseName());
+                            .setContentText(db.getName());
                 new Handler().postDelayed(() -> notificationManager.cancel(notificationId),
                         NOTIFICATION_OK_TIMEOUT_MILLS);
                 notifyFinish(service, null);

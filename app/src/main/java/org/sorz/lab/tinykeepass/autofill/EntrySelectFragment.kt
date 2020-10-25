@@ -6,7 +6,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.View
 import androidx.annotation.RequiresApi
-import de.slackspace.openkeepass.domain.Entry
+import com.kunzisoft.keepass.database.element.Entry
 import org.sorz.lab.tinykeepass.BaseEntryFragment
 import org.sorz.lab.tinykeepass.R
 

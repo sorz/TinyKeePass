@@ -22,10 +22,9 @@ import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 
-import de.slackspace.openkeepass.KeePassDatabase;
-import de.slackspace.openkeepass.domain.KeePassFile;
-import de.slackspace.openkeepass.domain.Meta;
-import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
+import com.kunzisoft.keepass.database.element.Database;
+import com.kunzisoft.keepass.database.exception.LoadDatabaseException;
+
 
 import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
 
@@ -106,10 +105,24 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
             Log.w(TAG, "fail to open database file.", e);
             return e.getClass().getSimpleName() + ": " + e.getLocalizedMessage();
         }
-        KeePassFile db;
+
+        Database db;
         try {
-            db = KeePassDatabase.getInstance(tmpDbFile).openDatabase(masterPassword);
-        } catch (KeePassDatabaseUnreadableException | UnsupportedOperationException e) {
+            // singeleton db, can only clear and reload
+            db = Database.Companion.getInstance();
+            if (db.getLoaded()) {
+                db.closeAndClear(null);
+            }
+            Context context = this.context.get();
+            if (context == null) {
+                String msg = "failed get context when reloading db";
+                Log.e(TAG, msg);
+                return msg;
+            }
+
+            db.loadData(android.net.Uri.fromFile(tmpDbFile), masterPassword, null, false,
+                    context.getContentResolver(), context.getCacheDir(), true, null);
+        } catch (UnsupportedOperationException | LoadDatabaseException e) {
             Log.w(TAG, "cannot open database.", e);
             return e.getLocalizedMessage();
         } catch (NullPointerException e) {
@@ -117,8 +130,7 @@ public class FetchDatabaseTask extends AsyncTask<Void, Void, String> {
             Log.e(TAG, "Underlying library throw null pointer exception", e);
             return "Database broken or not support";
         }
-        Meta meta = db.getMeta();
-        Log.d(TAG, "Database opened, name: " + meta.getDatabaseName());
+        Log.d(TAG, "Database opened, name: " + db.getName());
 
         if (!tmpDbFile.renameTo(dbFile)) {
             try {

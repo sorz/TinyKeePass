@@ -24,7 +24,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage
 
-import de.slackspace.openkeepass.domain.Entry
+import com.kunzisoft.keepass.database.element.Entry
 import kotlinx.android.synthetic.main.fragment_entry_list.*
 
 
@@ -59,10 +59,10 @@ class EntryFragment : BaseEntryFragment() {
         override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
             val entry = entryAdapter.selectedEntry ?: return false
             menu.run {
-                findItem(R.id.action_copy_username).isVisible = !entry.username.isNullOrBlank()
-                findItem(R.id.action_copy_password).isVisible = !entry.password.isNullOrBlank()
-                findItem(R.id.action_copy_url).isVisible = !entry.url.isNullOrBlank()
-                findItem(R.id.action_open).isVisible = !entry.url.isNullOrBlank()
+                findItem(R.id.action_copy_username).isVisible = !entry.username.isBlank()
+                findItem(R.id.action_copy_password).isVisible = !entry.password.isBlank()
+                findItem(R.id.action_copy_url).isVisible = !entry.url.isBlank()
+                findItem(R.id.action_open).isVisible = !entry.url.isBlank()
             }
             return true
         }
@@ -76,7 +76,7 @@ class EntryFragment : BaseEntryFragment() {
                     mode.finish()
                     showPassword(entry)
                 }
-                R.id.action_copy_url -> if (!entry.url.isNullOrBlank()) {
+                R.id.action_copy_url -> if (!entry.url.isBlank()) {
                     clipboardManager.setPrimaryClip(ClipData.newPlainText("URL", entry.url))
                     if (view != null)
                         Snackbar.make(view!!, R.string.url_copied,
@@ -208,7 +208,7 @@ class EntryFragment : BaseEntryFragment() {
     }
 
     private fun copyEntry(entry: Entry, copyUsername: Boolean, copyPassword: Boolean) {
-        if (copyUsername && !entry.username.isNullOrEmpty()) {
+        if (copyUsername && entry.username.isNotEmpty()) {
             ClipData.newPlainText(getString(R.string.username), entry.username).apply {
                 clipboardManager.setPrimaryClip(this)
             }
@@ -220,16 +220,16 @@ class EntryFragment : BaseEntryFragment() {
                 }
             }
         }
-        if (copyPassword && !entry.password.isNullOrEmpty()) {
-            if (copyUsername && !entry.username.isNullOrEmpty()) {
+        if (copyPassword && entry.password.isNotEmpty()) {
+            if (copyUsername && entry.username.isNotEmpty()) {
                 // username already copied, waiting for user's action before copy password.
                 val intent = Intent(context, PasswordCopingService::class.java).apply {
                     action = PasswordCopingService.ACTION_NEW_NOTIFICATION
                     putExtra(PasswordCopingService.EXTRA_PASSWORD, entry.password)
-                    entry.username?.also { username ->
+                    entry.username.also { username ->
                         putExtra(PasswordCopingService.EXTRA_USERNAME, username)
                     }
-                    entry.title?.also { title ->
+                    entry.title.also { title ->
                         putExtra(PasswordCopingService.EXTRA_ENTRY_TITLE, title)
                     }
                 }
@@ -242,7 +242,7 @@ class EntryFragment : BaseEntryFragment() {
     }
 
     private fun openEntryUrl(entry: Entry) {
-        if (entry.url.isNullOrEmpty())
+        if (entry.url.isEmpty())
             return
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(entry.url))
         startActivity(intent)
