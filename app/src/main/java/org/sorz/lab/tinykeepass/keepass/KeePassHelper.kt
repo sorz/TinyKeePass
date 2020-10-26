@@ -2,10 +2,8 @@ package org.sorz.lab.tinykeepass.keepass
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.util.Log
 
 
 import org.sorz.lab.tinykeepass.FetchDatabaseTask
@@ -14,22 +12,24 @@ import java.io.File
 
 import com.kunzisoft.keepass.database.element.Database
 import com.kunzisoft.keepass.database.element.Entry
-import java.util.logging.Logger
 import java.util.stream.Stream
-import kotlin.streams.asSequence
 import kotlin.streams.asStream
 
 /**
  * Stream of all entries without ones in recycle bin.
  */
 val Database.allEntriesNotInRecycleBin: Sequence<Entry>
-    get() {
+    get() = sequence {
+        val root = rootGroup ?: return@sequence
         val recycleBinUuid = if (isRecycleBinEnabled) recycleBin?.nodeId else null
-        val orphanEntries = rootGroup?.getChildEntries()?.asSequence() ?: emptySequence()
-        val entries = rootGroup?.getChildGroups()?.asSequence()?.filter {
-            it.nodeId == null || it.nodeId != recycleBinUuid
-        }?.flatMap { it.getChildEntries() } ?: emptySequence()
-        return orphanEntries + entries
+        val groups = mutableListOf(root)
+        while (groups.isNotEmpty()) {
+            val group = groups.removeLast()
+            if (group.nodeId != null && group.nodeId == recycleBinUuid)
+                continue
+            groups.addAll(group.getChildGroups())
+            yieldAll(group.getChildEntries())
+        }
     }
 
 val Database.allEntriesNotInRecycleBinStream: Stream<Entry>
