@@ -43,11 +43,6 @@ val Context.databaseFile: File get() =
 val Context.hasDatabaseConfigured: Boolean get() =
     KeePassStorage.get(this) != null || databaseFile.canRead()
 
-// related files: AutofillUtils.kt
-// FIXME: keepassdx implements its own icon data type, data can be null and cause npe..
-val tmpImage: Bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888)
-fun Entry.getIconDrawable(context: Context): Drawable = BitmapDrawable(context.resources, tmpImage)
-
 private val Entry.cleanUrl get() = url.replace("^https?://(www\\.)?".toRegex(), "")
 
 val Entry.urlHostname get() = cleanUrl.split("/".toRegex(), 2).first()

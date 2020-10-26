@@ -6,6 +6,9 @@
         <variable
             name="entry"
             type="com.kunzisoft.keepass.database.element.Entry" />
+        <variable
+            name="icon"
+            type="android.graphics.drawable.Drawable" />
         <variable name="password" type="String" />
         <import type="org.sorz.lab.tinykeepass.keepass.KeePassHelperKt" alias="Helper"/>
     </data>
@@ -42,11 +45,11 @@
             android:layout_height="16dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="0dp"
-            android:src="@{Helper.getIconDrawable(entry, context)}"
+            android:src="@{icon}"
             app:layout_constraintBottom_toBottomOf="@+id/textTitle"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/textTitle"
-            android:contentDescription="TODO" />
+            android:contentDescription="@string/image_alt_icon" />
 
         <TextView
             android:id="@+id/textTitle"

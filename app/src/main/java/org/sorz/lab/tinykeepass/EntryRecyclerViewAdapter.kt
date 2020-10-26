@@ -18,6 +18,8 @@ import java.util.function.BiConsumer
 import java.util.function.BiPredicate
 
 import com.kunzisoft.keepass.database.element.Entry
+import com.kunzisoft.keepass.icons.IconDrawableFactory
+import com.kunzisoft.keepass.icons.IconPackChooser
 import org.jetbrains.anko.AnkoLogger
 import org.sorz.lab.tinykeepass.databinding.FragmentEntryBinding
 import org.sorz.lab.tinykeepass.keepass.*
@@ -38,6 +40,7 @@ class EntryRecyclerViewAdapter (
     private var filter: String? = null
     private var selectedPosition by entryPositionObservable()
     private var passwordShownPosition by entryPositionObservable()
+    private var iconDrawableFactory: IconDrawableFactory? = null
 
     private fun entryPositionObservable() = Delegates.observable(-1) {
         _, old, new ->
@@ -54,6 +57,7 @@ class EntryRecyclerViewAdapter (
 
     private fun loadEntries(): Sequence<Entry> {
         return KeePassStorage.get(context)?.let { db ->
+            iconDrawableFactory = db.drawFactory
             db.allEntriesNotInRecycleBin
                 .sortedBy { it.creationTime.date }
                 .sortedBy { it.url }
@@ -69,6 +73,7 @@ class EntryRecyclerViewAdapter (
     override fun onBindViewHolder(holder: EntryViewHolder, position: Int) {
         val entry = entries[position]
         holder.binding.entry = entry
+        holder.binding.icon = iconDrawableFactory?.getIconSuperDrawable(context, entry.icon, 24)?.drawable
         holder.binding.password = entry.password.takeIf { position == passwordShownPosition }
         holder.binding.root.apply {
             isSelected = selectedPosition == position || passwordShownPosition == position

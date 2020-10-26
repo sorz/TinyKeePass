@@ -5,23 +5,28 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Build;
+import android.service.autofill.Dataset;
 import android.service.autofill.FillResponse;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.Toolbar;
 import android.view.MenuItem;
 
 import org.sorz.lab.tinykeepass.R;
+import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
 
 import com.kunzisoft.keepass.database.element.Entry;
+import com.kunzisoft.keepass.icons.IconDrawableFactory;
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class EntrySelectActivity extends BaseActivity {
 
     void onEntrySelected(Entry entry) {
+        IconDrawableFactory iconFactory = KeePassStorage.get(this).getDrawFactory();
         StructureParser.Result result = parseStructure();
+        Dataset dataset = AutofillUtils.INSTANCE.buildDataset(this, entry, iconFactory, result);
         FillResponse response = new FillResponse.Builder()
-                .addDataset(AutofillUtils.INSTANCE.buildDataset(this, entry, result))
+                .addDataset(dataset)
                 .build();
         setFillResponse(response);
         finish();

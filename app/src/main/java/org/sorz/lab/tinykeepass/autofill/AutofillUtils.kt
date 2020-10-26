@@ -13,6 +13,7 @@ import org.sorz.lab.tinykeepass.R
 import java.util.stream.Stream
 
 import com.kunzisoft.keepass.database.element.Entry
+import com.kunzisoft.keepass.icons.IconDrawableFactory
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)
@@ -21,16 +22,17 @@ internal object AutofillUtils {
     fun getRemoteViews(context: Context, text: String, @DrawableRes icon: Int): RemoteViews {
         return RemoteViews(context.packageName, R.layout.autofill_service_list_item).apply {
             setTextViewText(R.id.textView, text)
-//            setImageViewResource(R.id.imageIcon, icon)
+            setImageViewResource(R.id.imageIcon, icon)
         }
     }
 
     fun buildDataset(context: Context, entry: Entry,
+                     iconFactory: IconDrawableFactory,
                      struct: StructureParser.Result): Dataset? {
         val title = makeEntryTitle(context, entry)
-        val views = getRemoteViews(context, title, R.drawable.ic_person_blue_24dp).apply {
-//            setImageViewBitmap(R.id.imageIcon, entry.icon)
-        }
+        val views = getRemoteViews(context, title, R.drawable.ic_person_blue_24dp)
+        val icon = iconFactory.getIconSuperDrawable(context, entry.icon, 24)
+        iconFactory.assignDrawableToRemoteViews(icon, views, R.id.imageIcon)
         val builder = Dataset.Builder(views).apply {
             setId(entry.nodeId.toString())
         }

@@ -9,7 +9,6 @@ import android.service.autofill.Dataset;
 import android.service.autofill.FillResponse;
 import androidx.annotation.RequiresApi;
 
-import android.util.Log;
 import android.widget.RemoteViews;
 
 import org.sorz.lab.tinykeepass.R;
@@ -22,6 +21,7 @@ import java.util.stream.Stream;
 import com.kunzisoft.keepass.database.element.Database;
 import com.kunzisoft.keepass.database.element.Entry;
 import com.kunzisoft.keepass.database.element.node.NodeIdUUID;
+import com.kunzisoft.keepass.icons.IconDrawableFactory;
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)
@@ -32,6 +32,7 @@ public class AuthActivity extends BaseActivity {
     protected void onDatabaseOpened() {
         StructureParser.Result result = parseStructure();
         Database keePass = KeePassStorage.get(this);
+        IconDrawableFactory iconFactory = keePass.getDrawFactory();
         SearchIndex index = new SearchIndex(keePass);
         StringBuilder queryBuilder = new StringBuilder();
         result.title.forEach(title -> queryBuilder.append(title).append(' '));
@@ -41,7 +42,7 @@ public class AuthActivity extends BaseActivity {
         FillResponse.Builder responseBuilder = new FillResponse.Builder();
         // add matched entities
         entryStream
-                .map(entry -> AutofillUtils.INSTANCE.buildDataset(this, entry, result))
+                .map(entry -> AutofillUtils.INSTANCE.buildDataset(this, entry, iconFactory, result))
                 .filter(Objects::nonNull)
                 .limit(MAX_NUM_CANDIDATE_ENTRIES)
                 .forEach(responseBuilder::addDataset);
