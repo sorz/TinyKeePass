@@ -17,7 +17,7 @@ import org.sorz.lab.tinykeepass.search.EntryQueryRelevance
 import java.util.function.BiConsumer
 import java.util.function.BiPredicate
 
-import de.slackspace.openkeepass.domain.Entry
+import com.kunzisoft.keepass.database.element.Entry
 import org.jetbrains.anko.AnkoLogger
 import org.sorz.lab.tinykeepass.databinding.FragmentEntryBinding
 import org.sorz.lab.tinykeepass.keepass.*
@@ -55,7 +55,7 @@ class EntryRecyclerViewAdapter (
     private fun loadEntries(): Sequence<Entry> {
         return KeePassStorage.get(context)?.let { db ->
             db.allEntriesNotInRecycleBin
-                .sortedBy { it.times.creationTime }
+                .sortedBy { it.creationTime.date }
                 .sortedBy { it.url }
                 .sortedBy { it.username }
                 .sortedBy { it.title }

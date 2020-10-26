@@ -5,7 +5,7 @@ import androidx.annotation.NonNull;
 import java.util.Arrays;
 import java.util.List;
 
-import de.slackspace.openkeepass.domain.Entry;
+import com.kunzisoft.keepass.database.element.Entry;
 
 /**
  * Given a list of keywords, return an score of relevance between
@@ -16,11 +16,10 @@ public class EntryQueryRelevance implements Comparable<EntryQueryRelevance> {
     private static final double WEIGHT_KW_IN_USERNAME = 0.8;
     private static final double WEIGHT_KW_IN_NOTES = 0.5;
     private static final double WEIGHT_KW_IN_URL = 0.5;
-    private static final double WEIGHT_KW_IN_TAGS = 0.6;
 
-    private Entry entry;
-    private double rank;
-    private int unrelatedKeywords;
+    private final Entry entry;
+    private final double rank;
+    private final int unrelatedKeywords;
 
     public EntryQueryRelevance(Entry entry, List<String> keywords) {
         this.entry = entry;
@@ -28,7 +27,6 @@ public class EntryQueryRelevance implements Comparable<EntryQueryRelevance> {
                 fieldScore(entry.getTitle(), w) * WEIGHT_KW_IN_TITLE +
                         fieldScore(entry.getUsername(), w) * WEIGHT_KW_IN_USERNAME +
                         fieldScore(entry.getNotes(), w) * WEIGHT_KW_IN_NOTES +
-                        fieldScore(entry.getTags(), w) * WEIGHT_KW_IN_TAGS +
                         fieldScore(entry.getUrl(), w) * WEIGHT_KW_IN_URL).toArray();
         rank = Arrays.stream(ranks).sum();
         unrelatedKeywords = (int) Arrays.stream(ranks).filter(r -> r == 0).count();

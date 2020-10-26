@@ -18,13 +18,13 @@ import org.sorz.lab.tinykeepass.auth.SecureStringStorage
 import org.sorz.lab.tinykeepass.keepass.OpenKeePassTask
 
 import java.security.KeyException
-import java.util.function.Consumer
 
 import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
 import javax.crypto.IllegalBlockSizeException
 
-import de.slackspace.openkeepass.domain.KeePassFile
+import com.kunzisoft.keepass.database.element.Database
+
 
 import org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_FINGERPRINT
 import org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_NONE
@@ -228,17 +228,17 @@ abstract class BaseActivity : AppCompatActivity() {
         onKeyRetrieved = null
     }
 
-    protected fun openDatabase(masterKey: String, onSuccess: ((KeePassFile) -> Unit)) {
+    protected fun openDatabase(masterKey: String, onSuccess: ((Database) -> Unit)) {
         OpenTask(this, masterKey, onSuccess).execute()
     }
 
     private class OpenTask internal constructor(
             activity: FragmentActivity,  // TODO: memory leaks?
             masterKey: String,
-            private val onSuccess: ((KeePassFile) -> Unit)
+            private val onSuccess: ((Database) -> Unit)
     ) : OpenKeePassTask(activity, masterKey) {
 
-        override fun onPostExecute(db: KeePassFile?) {
+        override fun onPostExecute(db: Database?) {
             super.onPostExecute(db)
             if (db != null)
                 onSuccess.invoke(db)

@@ -8,7 +8,7 @@ import android.os.SystemClock;
 import androidx.annotation.Nullable;
 import android.util.Log;
 
-import de.slackspace.openkeepass.domain.KeePassFile;
+import com.kunzisoft.keepass.database.element.Database;
 
 /**
  * Keep unlocked KeePass file here statically & globally.
@@ -20,17 +20,17 @@ import de.slackspace.openkeepass.domain.KeePassFile;
 public class KeePassStorage {
     private static final String TAG = KeePassStorage.class.getName();
     private static final long AUTH_TIMEOUT_MILLS = 5 * 60 * 1000;  // 5 minutes
-    private static KeePassFile keePassFile;
+    private static Database keePassFile;
     private static long lastAuthTime;
 
-    public static @Nullable KeePassFile get(Context context) {
+    public static @Nullable Database get(Context context) {
         if (keePassFile != null &&
                 SystemClock.elapsedRealtime() - lastAuthTime > AUTH_TIMEOUT_MILLS)
             set(context, null);
         return keePassFile;
     }
 
-    public static void set(Context context, @Nullable KeePassFile file) {
+    public static void set(Context context, @Nullable Database file) {
         if (keePassFile == null && file != null) {
             // first set file, register screen-off receiver.
             registerBroadcastReceiver(context);

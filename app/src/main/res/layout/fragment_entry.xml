@@ -5,7 +5,7 @@
     <data>
         <variable
             name="entry"
-            type="de.slackspace.openkeepass.domain.Entry" />
+            type="com.kunzisoft.keepass.database.element.Entry" />
         <variable name="password" type="String" />
         <import type="org.sorz.lab.tinykeepass.keepass.KeePassHelperKt" alias="Helper"/>
     </data>
@@ -45,7 +45,8 @@
             android:src="@{Helper.getIconDrawable(entry, context)}"
             app:layout_constraintBottom_toBottomOf="@+id/textTitle"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/textTitle" />
+            app:layout_constraintTop_toTopOf="@+id/textTitle"
+            android:contentDescription="TODO" />
 
         <TextView
             android:id="@+id/textTitle"

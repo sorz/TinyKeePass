@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import de.slackspace.openkeepass.domain.Entry;
+import com.kunzisoft.keepass.database.element.Entry;
 import kotlin.text.StringsKt;
 
 /**
@@ -37,17 +37,9 @@ class Tokenizer {
                 entry.getNotes(),
                 entry.getUrl(),
         };
-        Stream<String> tokens = Arrays.stream(str)
+
+        return Arrays.stream(str)
                 .filter(t -> !StringsKt.isBlank(t))
                 .flatMap(Tokenizer::parse);
-
-        if (entry.getTags() != null) {
-            tokens = Stream.concat(tokens,
-                    entry.getTags().stream()
-                            .distinct()
-                            .map(Tokenizer::canonicalize)
-            );
-        }
-        return tokens;
     }
 }

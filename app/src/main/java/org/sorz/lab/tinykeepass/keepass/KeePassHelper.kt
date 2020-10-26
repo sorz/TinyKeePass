@@ -2,33 +2,38 @@ package org.sorz.lab.tinykeepass.keepass
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+
 
 import org.sorz.lab.tinykeepass.FetchDatabaseTask
 
 import java.io.File
 
-import de.slackspace.openkeepass.domain.Entry
-import de.slackspace.openkeepass.domain.KeePassFile
+import com.kunzisoft.keepass.database.element.Database
+import com.kunzisoft.keepass.database.element.Entry
 import java.util.stream.Stream
 import kotlin.streams.asStream
 
 /**
  * Stream of all entries without ones in recycle bin.
  */
-val KeePassFile.allEntriesNotInRecycleBin: Sequence<Entry> get() =
-    if (meta.recycleBinEnabled) {
-        val recycleBinUuid = meta.recycleBinUuid
-        groups.asSequence()
-                .filter { group -> group.uuid != recycleBinUuid }
-                .flatMap { group -> group.entries.asSequence() }
-    } else {
-        entries.asSequence()
+val Database.allEntriesNotInRecycleBin: Sequence<Entry>
+    get() = sequence {
+        val root = rootGroup ?: return@sequence
+        val recycleBinUuid = if (isRecycleBinEnabled) recycleBin?.nodeId else null
+        val groups = mutableListOf(root)
+        while (groups.isNotEmpty()) {
+            val group = groups.removeLast()
+            if (group.nodeId != null && group.nodeId == recycleBinUuid)
+                continue
+            groups.addAll(group.getChildGroups())
+            yieldAll(group.getChildEntries())
+        }
     }
 
-val KeePassFile.allEntriesNotInRecycleBinStream: Stream<Entry> get() =
+val Database.allEntriesNotInRecycleBinStream: Stream<Entry>
+    get() =
     allEntriesNotInRecycleBin.asStream()
 
 
@@ -38,13 +43,13 @@ val Context.databaseFile: File get() =
 val Context.hasDatabaseConfigured: Boolean get() =
     KeePassStorage.get(this) != null || databaseFile.canRead()
 
-val Entry.icon: Bitmap get() =
-    BitmapFactory.decodeByteArray(iconData, 0, iconData.size)
+// related files: AutofillUtils.kt
+// FIXME: keepassdx implements its own icon data type, data can be null and cause npe..
+val tmpImage: Bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888)
+fun Entry.getIconDrawable(context: Context): Drawable = BitmapDrawable(context.resources, tmpImage)
 
-fun Entry.getIconDrawable(context: Context): Drawable = BitmapDrawable(context.resources, icon)
+private val Entry.cleanUrl get() = url.replace("^https?://(www\\.)?".toRegex(), "")
 
-private val Entry.cleanUrl get() = url?.replace("^https?://(www\\.)?".toRegex(), "")
-
-val Entry.urlHostname get() = cleanUrl?.split("/".toRegex(), 2)?.first()
-val Entry.urlPath get() = cleanUrl?.split("/".toRegex(), 2)?.getOrNull(1)
+val Entry.urlHostname get() = cleanUrl.split("/".toRegex(), 2).first()
+val Entry.urlPath get() = cleanUrl.split("/".toRegex(), 2).getOrNull(1)
         ?.takeIf { it.isNotBlank() }?.let { "/$it" }

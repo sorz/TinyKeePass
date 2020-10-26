@@ -12,8 +12,7 @@ import org.sorz.lab.tinykeepass.R
 
 import java.util.stream.Stream
 
-import de.slackspace.openkeepass.domain.Entry
-import org.sorz.lab.tinykeepass.keepass.icon
+import com.kunzisoft.keepass.database.element.Entry
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)
@@ -22,7 +21,7 @@ internal object AutofillUtils {
     fun getRemoteViews(context: Context, text: String, @DrawableRes icon: Int): RemoteViews {
         return RemoteViews(context.packageName, R.layout.autofill_service_list_item).apply {
             setTextViewText(R.id.textView, text)
-            setImageViewResource(R.id.imageIcon, icon)
+//            setImageViewResource(R.id.imageIcon, icon)
         }
     }
 
@@ -30,10 +29,10 @@ internal object AutofillUtils {
                      struct: StructureParser.Result): Dataset? {
         val title = makeEntryTitle(context, entry)
         val views = getRemoteViews(context, title, R.drawable.ic_person_blue_24dp).apply {
-            setImageViewBitmap(R.id.imageIcon, entry.icon)
+//            setImageViewBitmap(R.id.imageIcon, entry.icon)
         }
         val builder = Dataset.Builder(views).apply {
-            setId(entry.uuid.toString())
+            setId(entry.nodeId.toString())
         }
 
         if (entry.password.isNotBlank()) {
