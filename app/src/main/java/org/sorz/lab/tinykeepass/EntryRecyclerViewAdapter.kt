@@ -55,10 +55,10 @@ class EntryRecyclerViewAdapter (
     private fun loadEntries(): Sequence<Entry> {
         return KeePassStorage.get(context)?.let { db ->
             db.allEntriesNotInRecycleBin
-                ?.sortedBy { it.creationTime.date }
-                ?.sortedBy { it.url }
-                ?.sortedBy { it.username }
-                ?.sortedBy { it.title }
+                .sortedBy { it.creationTime.date }
+                .sortedBy { it.url }
+                .sortedBy { it.username }
+                .sortedBy { it.title }
         } ?: emptySequence()
     }
 

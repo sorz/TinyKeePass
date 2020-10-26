@@ -22,22 +22,19 @@ import kotlin.streams.asStream
 /**
  * Stream of all entries without ones in recycle bin.
  */
-val Database.allEntriesNotInRecycleBin: Sequence<Entry>?
+val Database.allEntriesNotInRecycleBin: Sequence<Entry>
+    get() {
+        val recycleBinUuid = if (isRecycleBinEnabled) recycleBin?.nodeId else null
+        val orphanEntries = rootGroup?.getChildEntries()?.asSequence() ?: emptySequence()
+        val entries = rootGroup?.getChildGroups()?.asSequence()?.filter {
+            it.nodeId == null || it.nodeId != recycleBinUuid
+        }?.flatMap { it.getChildEntries() } ?: emptySequence()
+        return orphanEntries + entries
+    }
+
+val Database.allEntriesNotInRecycleBinStream: Stream<Entry>
     get() =
-    if (isRecycleBinEnabled) {
-            val recycleBinUuid = recycleBin?.nodeId
-            rootGroup?.getChildEntries()?.stream()?.filter {
-                it.parent?.nodeId != recycleBinUuid
-            }?.asSequence()
-
-        } else {
-            rootGroup?.getChildEntries()?.stream()?.asSequence()
-        }
-
-
-val Database.allEntriesNotInRecycleBinStream: Stream<Entry>?
-    get() =
-    allEntriesNotInRecycleBin?.asStream()
+    allEntriesNotInRecycleBin.asStream()
 
 
 val Context.databaseFile: File get() =
