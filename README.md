@@ -4,6 +4,8 @@ Another simple read-only KeePass Android app.
 
 Only what I personally need are implemented, lacks lots of common functions, and possibly buggy.
 
+Use [KeePassDX](https://github.com/Kunzisoft/KeePassDX) for a full-feature experiences.
+
 [Google Play](https://play.google.com/store/apps/details?id=org.sorz.lab.tinykeepass)
 [F-Droid](https://f-droid.org/packages/org.sorz.lab.tinykeepass/)
 
@@ -27,11 +29,10 @@ Only what I personally need are implemented, lacks lots of common functions, and
 
 * Android >= 7.0 (N)
 
-
 ## Credits
 
- * [KeePass](http://keepass.info/):
- the free, open source, light-weight and easy-to-use password manager.
- 
- * [openkeepass](https://github.com/cternes/openkeepass/):
- a java library for reading and writing KeePass databases
+* [KeePass](http://keepass.info/):
+  the free, open source, light-weight and easy-to-use password manager.
+
+* [KeePassDX](https://github.com/Kunzisoft/KeePassDX):
+  KeePass implementation for android with material design and deluxe features.
