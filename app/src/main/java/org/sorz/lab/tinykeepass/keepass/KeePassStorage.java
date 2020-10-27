@@ -37,6 +37,7 @@ public class KeePassStorage {
         } else if (keePassFile != null && file == null) {
             // clear file, unregister it.
             context.getApplicationContext().unregisterReceiver(broadcastReceiver);
+            keePassFile.closeAndClear(null);
         }
         keePassFile = file;
         lastAuthTime = SystemClock.elapsedRealtime();
