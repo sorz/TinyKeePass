@@ -15,6 +15,7 @@ android {
         targetSdkVersion 29
         versionCode 13
         versionName "0.3.8"
+        resConfigs "en", "pt", 'zh-rCN'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
