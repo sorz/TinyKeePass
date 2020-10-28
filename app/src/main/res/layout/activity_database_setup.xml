@@ -15,7 +15,7 @@
         android:ems="10"
         android:hint="@string/database_url"
         android:inputType="textUri"
-        app:layout_constraintEnd_toStartOf="@+id/buttonOpenFIle"
+        app:layout_constraintEnd_toStartOf="@+id/buttonOpenFile"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginStart="8dp" />
@@ -116,7 +116,7 @@
 
     <com.google.android.material.button.MaterialButton
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:id="@+id/buttonOpenFIle"
+        android:id="@+id/buttonOpenFile"
         android:layout_width="wrap_content"
         android:layout_height="46dp"
         android:layout_marginEnd="8dp"

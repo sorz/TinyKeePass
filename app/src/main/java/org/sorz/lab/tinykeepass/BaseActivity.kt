@@ -26,11 +26,6 @@ import javax.crypto.IllegalBlockSizeException
 import com.kunzisoft.keepass.database.element.Database
 
 
-import org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_FINGERPRINT
-import org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_NONE
-import org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_SCREEN_LOCK
-import org.sorz.lab.tinykeepass.DatabaseSetupActivity.AUTH_METHOD_UNDEFINED
-import org.sorz.lab.tinykeepass.DatabaseSetupActivity.PREF_KEY_AUTH_METHOD
 import java.util.concurrent.Executor
 import android.os.Looper
 import androidx.fragment.app.FragmentActivity

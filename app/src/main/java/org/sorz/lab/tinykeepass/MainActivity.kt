@@ -108,7 +108,7 @@ class MainActivity : BaseActivity(), AnkoLogger {
         if (!databaseFile.delete())
             warn("fail to delete database file")
         secureStringStorage.clear()
-        DatabaseSetupActivity.clearDatabaseConfigs(preferences)
+        clearDatabaseConfigs(preferences)
         showMessage(getString(R.string.clean_config_ok), Snackbar.LENGTH_SHORT)
     }
 
