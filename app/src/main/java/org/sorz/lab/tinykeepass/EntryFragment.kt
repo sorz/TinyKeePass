@@ -25,7 +25,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage
 
 import com.kunzisoft.keepass.database.element.Entry
-import kotlinx.android.synthetic.main.fragment_entry_list.*
 
 
 private const val INACTIVE_AUTO_LOCK_MILLIS = (3 * 60 * 1000).toLong()
@@ -33,6 +32,7 @@ private const val INACTIVE_AUTO_LOCK_MILLIS = (3 * 60 * 1000).toLong()
 
 class EntryFragment : BaseEntryFragment() {
     override val fragmentLayout: Int = R.layout.fragment_entry_list
+    private lateinit var fab: FloatingActionButton
 
     private val clipboardManager by lazy(LazyThreadSafetyMode.NONE) {
         requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -98,7 +98,7 @@ class EntryFragment : BaseEntryFragment() {
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (DatabaseSyncingService.BROADCAST_SYNC_FINISHED == intent.action) {
-                fab?.show()
+                fab.show()
                 val error = intent.getStringExtra(DatabaseSyncingService.EXTRA_SYNC_ERROR)
                 if (error == null) entryAdapter.reloadEntries()
                 view?.also { view ->
@@ -115,8 +115,9 @@ class EntryFragment : BaseEntryFragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val view = super.onCreateView(inflater, container, savedInstanceState)!!
+        fab = view.findViewById<FloatingActionButton>(R.id.fab)
 
-        view.findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
+        fab.setOnClickListener {
             fab.hide()
             activity.run {
                 if (this is MainActivity) doSyncDatabase()
@@ -140,7 +141,7 @@ class EntryFragment : BaseEntryFragment() {
                     IntentFilter(DatabaseSyncingService.BROADCAST_SYNC_FINISHED))
             // sync done event may have lost, check its state now
             if (!DatabaseSyncingService.isRunning())
-                fab!!.show()
+                fab.show()
         }
     }
 
