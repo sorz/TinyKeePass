@@ -6,15 +6,14 @@ apply plugin: 'kotlin-kapt'
 
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     buildToolsVersion '29.0.3'
     defaultConfig {
         applicationId "org.sorz.lab.tinykeepass"
         minSdkVersion 24
-        //noinspection OldTargetApi
-        targetSdkVersion 29
-        versionCode 13
-        versionName "0.3.8"
+        targetSdkVersion 30
+        versionCode 14
+        versionName "0.4.0"
         resConfigs "en", "pt", 'zh-rCN'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
