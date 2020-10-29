@@ -11,7 +11,7 @@
         <item>No authentication</item>
         <item>Authenticate with fingerprint</item>
     </string-array>
-
+    <string name="waiting">Waiting</string>
     <string name="fingerprint_description">Confirm fingerprint to continue</string>
     <string name="fingerprint_hint">Touch sensor</string>
     <string name="fingerprint_dialog_title">User Authentication</string>

@@ -1,5 +1,6 @@
 package org.sorz.lab.tinykeepass.ui
 
+import android.net.Uri
 import androidx.compose.foundation.Text
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,7 +25,8 @@ import org.sorz.lab.tinykeepass.R
 @Preview
 @Composable
 private fun PreviewSetup() {
-    Setup("https://example", {}, {},  BasicAuthCfg(), {}, false, {}, {})
+    Setup("https://example", {}, {},  BasicAuthCfg(), {}, false, {},
+            "", {}, {})
 }
 
 
@@ -45,10 +47,11 @@ fun Setup (
     onBasicAuthCfgChange: (cfg: BasicAuthCfg) -> Unit,
     enableAuth: Boolean,
     onEnabledAuthChange: ((enabled: Boolean) -> Unit)?,
-    onSubmit: (masterPassword: String) -> Unit,
+    masterPassword: String,
+    onMasterPasswordChange: (password: String) -> Unit,
+    onSubmit: () -> Unit,
+    isInProgress: Boolean = false,
 ) {
-    var masterPassword by remember { mutableStateOf("") }
-
     val res = ContextAmbient.current.resources
     val isHttpOrHttps =
         path.startsWith("http://") || path.startsWith("https://")
@@ -58,23 +61,59 @@ fun Setup (
         masterPassword != ""
 
     TinyTheme {
-        Column(modifier = Modifier.padding(16.dp)) {
-            FileSelection(path, onPathChange, onOpenFile)
-            Spacer(Modifier.height(16.dp))
-            BasicAuth(isHttpOrHttps, basicAuthCfg, onBasicAuthCfgChange)
-            Spacer(Modifier.height(24.dp))
-            MasterPasswordInput(masterPassword) { masterPassword = it }
-            Spacer(Modifier.height(16.dp))
-            AuthenticationSwitch(enableAuth, onEnabledAuthChange)
-            Spacer(Modifier.height(24.dp))
-            Button(
-                onClick = { onSubmit(masterPassword) },
-                modifier = Modifier.align(Alignment.End),
-                enabled = isValid,
-            ) {
-                Text(res.getString(R.string.button_confirm))
+        if (isInProgress) {
+            val filename = Uri.parse(path).lastPathSegment ?: path
+            InProgress(filename)
+        } else {
+            Column(modifier = Modifier.padding(16.dp)) {
+                FileSelection(path, onPathChange, onOpenFile)
+                Spacer(Modifier.height(16.dp))
+                BasicAuth(isHttpOrHttps, basicAuthCfg, onBasicAuthCfgChange)
+                Spacer(Modifier.height(24.dp))
+                MasterPasswordInput(masterPassword, onMasterPasswordChange)
+                Spacer(Modifier.height(16.dp))
+                AuthenticationSwitch(enableAuth, onEnabledAuthChange)
+                Spacer(Modifier.height(24.dp))
+                Button(
+                    onClick = onSubmit,
+                    modifier = Modifier.align(Alignment.End),
+                    enabled = isValid,
+                ) {
+                    Text(
+                        text = res.getString(R.string.button_confirm),
+                        style = MaterialTheme.typography.button,
+                    )
+                }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun InProgress(
+    filename: String = "database.kdbx"
+) {
+    val res = ContextAmbient.current.resources
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+    ) {
+        Text(
+            text = filename,
+            style = MaterialTheme.typography.subtitle1
+        )
+        Spacer(Modifier.height(24.dp))
+
+        CircularProgressIndicator()
+        Spacer(Modifier.height(8.dp))
+
+        Text(
+            text = res.getString(R.string.waiting),
+            style = MaterialTheme.typography.body1,
+        )
     }
 }
 
@@ -94,7 +133,10 @@ private fun FileSelection(
         trailingIcon = {
             if (onOpenFile != null) {
                 OutlinedButton(onClick = onOpenFile) {
-                    Text(res.getString(R.string.open_file))
+                    Text(
+                        text = res.getString(R.string.open_file),
+                        style = MaterialTheme.typography.button,
+                    )
                 }
             }
         },
@@ -116,7 +158,10 @@ private fun BasicAuth(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(res.getString(R.string.require_http_auth))
+            Text(
+                text = res.getString(R.string.require_http_auth),
+                style = MaterialTheme.typography.body1,
+            )
             Switch(
                 enabled = enabled,
                 checked = enabled && cfg.enabled,
@@ -186,10 +231,13 @@ private fun AuthenticationSwitch(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(res.getString(R.string.enable_authentication))
+        Text(
+            text = res.getString(R.string.enable_authentication),
+            style = MaterialTheme.typography.body1,
+        )
         Switch(
             checked = enabled,
-            onCheckedChange = {onEnableChange?.invoke(true)},
+            onCheckedChange = { onEnableChange?.invoke(it) },
             enabled = onEnableChange != null,
         )
     }

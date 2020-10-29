@@ -6,19 +6,17 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.biometric.BiometricManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.setContent
 import androidx.core.content.getSystemService
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.preference.PreferenceManager
+import org.sorz.lab.tinykeepass.keepass.KeePassStorage
 import org.sorz.lab.tinykeepass.ui.BasicAuthCfg
 import org.sorz.lab.tinykeepass.ui.Setup
 import java.lang.ref.WeakReference
@@ -58,10 +56,13 @@ class DatabaseSetupActivity : BaseActivity() {
         }
         val forViewAction = viewActionUri != null
 
+        // Setup UI
         setContent {
             val path by viewModel.path.observeAsState("")
             val basicAuth by viewModel.basicAuth.observeAsState(BasicAuthCfg())
             val enableAuth by viewModel.enableAuth.observeAsState(false)
+            val masterPassword by viewModel.masterPassword.observeAsState("")
+            val state by viewModel.state.observeAsState(SetupState.EDITING)
 
             Setup(
                 path = path,
@@ -71,43 +72,84 @@ class DatabaseSetupActivity : BaseActivity() {
                 onBasicAuthCfgChange = viewModel.basicAuth::setValue,
                 enableAuth = enableAuth,
                 onEnabledAuthChange = if (authSupported) viewModel.enableAuth::setValue else null,
-                onSubmit = { masterPassword ->
-                    // TODO
+                masterPassword = masterPassword,
+                onMasterPasswordChange = viewModel.masterPassword::setValue,
+                onSubmit = {
+                    viewModel.state.value = SetupState.VALIDATING
+                    FetchTask(viewModel).execute()
                 },
+                isInProgress = state != SetupState.EDITING,
             )
         }
 
-    }
+        // Saving config
+        viewModel.state.observe(this) { state ->
+            if (state != SetupState.DONG_WITHOUT_ERROR) return@observe
+            val authMethod = if (viewModel.enableAuth.value!!) AUTH_METHOD_FINGERPRINT else 0
+            val basicAuth = viewModel.basicAuth.value!!
+            preferences.edit()
+                    .putString(PREF_DB_URL, viewModel.path.value!!)
+                    .putString(PREF_DB_AUTH_USERNAME, basicAuth.username)
+                    .putBoolean(PREF_DB_AUTH_REQUIRED, basicAuth.enabled)
+                    .putInt(PREF_KEY_AUTH_METHOD, authMethod)
+                    .apply()
 
-    private class FetchTask internal constructor(
-            activity: DatabaseSetupActivity,
-            uri: Uri?,
-            masterPwd: String?,
-            username: String?,
-            password: String?) : FetchDatabaseTask(activity, uri, masterPwd, username, password) {
-        private val activity: WeakReference<DatabaseSetupActivity> = WeakReference(activity)
-
-        override fun onPostExecute(error: String) {
-            val activity = activity.get() ?: return
-            if (error != null) {
-                Toast.makeText(activity, error, Toast.LENGTH_SHORT).show()
-                //activity.cancelSubmit()
-            } else {
-                //activity.saveDatabaseConfigs()
+            val keys: MutableList<String> = ArrayList(2)
+            keys.add(viewModel.masterPassword.value!!)
+            keys.add(basicAuth.password)
+            saveDatabaseKeys(keys, {
+                setResult(RESULT_OK)
+                if (forViewAction) startActivity(Intent(this, MainActivity::class.java))
+                finish()
+            }) { error: String? ->
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
+                preferences.edit()
+                        .putInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED)
+                        .apply()
+                KeePassStorage.set(this, null)
+                viewModel.state.value = SetupState.EDITING
             }
         }
-
     }
+
 }
 
-class SetupViewModel(app: Application) : AndroidViewModel(app) {
+enum class SetupState {
+    EDITING,
+    VALIDATING,
+    DONG_WITHOUT_ERROR,
+}
+
+class SetupViewModel(val app: Application) : AndroidViewModel(app) {
     private val prefs = PreferenceManager.getDefaultSharedPreferences(app)
     val path = MutableLiveData(prefs.getString(PREF_DB_URL, "") ?: "")
     val basicAuth = MutableLiveData(BasicAuthCfg(
         enabled = prefs.getBoolean(PREF_DB_AUTH_REQUIRED, false),
         username = prefs.getString(PREF_DB_AUTH_USERNAME, "") ?: "",
     ))
+    val masterPassword = MutableLiveData("")
     val enableAuth = MutableLiveData(prefs.getBoolean(PREF_DB_AUTH_REQUIRED, false))
+    val state = MutableLiveData(SetupState.EDITING)
+}
+
+private class FetchTask(model: SetupViewModel) : FetchDatabaseTask(
+        model.app,
+        Uri.parse(model.path.value!!),
+        model.masterPassword.value!!,
+        model.basicAuth.value!!.username,
+        model.basicAuth.value!!.password,
+) {
+    private val model = WeakReference(model)
+
+    override fun onPostExecute(error: String?) {
+        val model = model.get() ?: return
+        if (error != null) {
+            Toast.makeText(model.app, error, Toast.LENGTH_SHORT).show()
+            model.state.value = SetupState.EDITING
+        } else {
+            model.state.value = SetupState.DONG_WITHOUT_ERROR
+        }
+    }
 }
 
 fun clearDatabaseConfigs(preferences: SharedPreferences) {
