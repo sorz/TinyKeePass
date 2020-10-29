@@ -1,6 +1,7 @@
 package org.sorz.lab.tinykeepass.ui
 
 import android.net.Uri
+import androidx.compose.foundation.ScrollableColumn
 import androidx.compose.foundation.Text
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -65,7 +66,9 @@ fun Setup (
             val filename = Uri.parse(path).lastPathSegment ?: path
             InProgress(filename)
         } else {
-            Column(modifier = Modifier.padding(16.dp)) {
+            ScrollableColumn(
+                modifier = Modifier.padding(16.dp).fillMaxSize()
+            ) {
                 FileSelection(path, onPathChange, onOpenFile)
                 Spacer(Modifier.height(16.dp))
                 BasicAuth(isHttpOrHttps, basicAuthCfg, onBasicAuthCfgChange)
@@ -161,6 +164,7 @@ private fun BasicAuth(
             Text(
                 text = res.getString(R.string.require_http_auth),
                 style = MaterialTheme.typography.body1,
+                color = MaterialTheme.colors.onBackground,
             )
             Switch(
                 enabled = enabled,
@@ -234,6 +238,7 @@ private fun AuthenticationSwitch(
         Text(
             text = res.getString(R.string.enable_authentication),
             style = MaterialTheme.typography.body1,
+            color = MaterialTheme.colors.onBackground,
         )
         Switch(
             checked = enabled,
