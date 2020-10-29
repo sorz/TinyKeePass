@@ -2,18 +2,23 @@ package org.sorz.lab.tinykeepass.ui
 
 import androidx.compose.foundation.AmbientTextStyle
 import androidx.compose.foundation.Text
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Switch
-import androidx.compose.material.TextField
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.savedinstancestate.savedInstanceState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ContextAmbient
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.ui.tooling.preview.Preview
 import org.sorz.lab.tinykeepass.R
@@ -81,6 +86,8 @@ private fun BasicAuth(
     onCfgChange: (cfg: BasicAuthCfg) -> Unit,
 ) {
     val res = ContextAmbient.current.resources
+    var showPassword by savedInstanceState { true }
+
     Column {
         // Switch
         Row(
@@ -106,12 +113,32 @@ private fun BasicAuth(
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = cfg.password,
-                onValueChange = { onCfgChange(cfg.copy(password = it))},
+                onValueChange = { onCfgChange(cfg.copy(password = it)) },
                 placeholder = { Text(res.getString(R.string.password)) },
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation =
+                    if (showPassword) VisualTransformation.None
+                    else PasswordVisualTransformation(),
                 keyboardType = KeyboardType.Password,
                 modifier = Modifier.align(Alignment.End),
+                trailingIcon = {
+                    ShowPasswordIcon(showPassword) { showPassword = it }
+                }
             )
         }
     }
+}
+
+@Composable
+private fun ShowPasswordIcon(
+    show: Boolean,
+    onShowChange: (show: Boolean) -> Unit
+) {
+    Icon(
+        asset =
+            if (show) Icons.Filled.Visibility
+            else Icons.Filled.VisibilityOff,
+        modifier = Modifier.clickable {
+            onShowChange(!show)
+        }
+    )
 }
