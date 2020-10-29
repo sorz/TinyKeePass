@@ -1,12 +1,20 @@
 package org.sorz.lab.tinykeepass
 
+import android.content.Intent
 import android.content.SharedPreferences
 import android.hardware.fingerprint.FingerprintManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.setContent
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import org.jetbrains.anko.startActivityForResult
 import org.sorz.lab.tinykeepass.ui.Setup
 import java.lang.ref.WeakReference
 import java.util.*
@@ -27,14 +35,27 @@ const val PREF_KEY_AUTH_METHOD = "key-auth-method"
  *
  */
 class DatabaseSetupActivity : BaseActivity() {
+    private val viewModel by viewModels<SetupViewModel>()
+    private val openDocument = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
+        viewModel.path.value = it.toString()
+    }
+
     private var fingerprintManager: FingerprintManager? = null
     private var launchMainActivityAfterSave = false
 
     private val disabledViews: MutableList<View?> = ArrayList(8)
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Setup()
+            val path by viewModel.path.observeAsState("")
+
+            Setup(
+                path = path,
+                onPathChange = viewModel.path::setValue,
+                onOpenFile = { openDocument.launch(arrayOf("*/*")) }
+            )
         }
     }
 
@@ -57,6 +78,10 @@ class DatabaseSetupActivity : BaseActivity() {
         }
 
     }
+}
+
+class SetupViewModel : ViewModel() {
+    val path = MutableLiveData("")
 }
 
 fun clearDatabaseConfigs(preferences: SharedPreferences) {
