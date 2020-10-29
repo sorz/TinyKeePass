@@ -1,5 +1,6 @@
 package org.sorz.lab.tinykeepass
 
+import android.app.Application
 import android.content.Intent
 import android.content.SharedPreferences
 import android.hardware.fingerprint.FingerprintManager
@@ -12,16 +13,16 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.setContent
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import org.jetbrains.anko.startActivityForResult
+import androidx.preference.PreferenceManager
 import org.sorz.lab.tinykeepass.ui.BasicAuthCfg
 import org.sorz.lab.tinykeepass.ui.Setup
 import java.lang.ref.WeakReference
 import java.util.*
 
 
-private const val REQUEST_OPEN_FILE = 1
 const val AUTH_METHOD_UNDEFINED = -1
 const val AUTH_METHOD_NONE = 0
 const val AUTH_METHOD_SCREEN_LOCK = 1
@@ -40,33 +41,38 @@ class DatabaseSetupActivity : BaseActivity() {
     private val openDocument = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
         if (it != null) viewModel.path.value = it.toString()
     }
-
-    private var fingerprintManager: FingerprintManager? = null
-    private var launchMainActivityAfterSave = false
-
     private val disabledViews: MutableList<View?> = ArrayList(8)
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Handle VIEW action
+        val viewActionUri = intent?.data?.also {
+            viewModel.path.value = it.toString()
+            viewModel.basicAuth.value = BasicAuthCfg(enabled = false)
+        }
+        val forViewAction = viewActionUri != null
+
         setContent {
             val path by viewModel.path.observeAsState("")
             val basicAuth by viewModel.basicAuth.observeAsState(BasicAuthCfg())
-            val masterPassword by viewModel.masterPassword.observeAsState("")
             val enableAuthentication by viewModel.enableAuthentication.observeAsState(false)
 
             Setup(
                 path = path,
-                onPathChange = viewModel.path::setValue,
-                onOpenFile = { openDocument.launch(arrayOf("*/*")) },
+                onPathChange = if (forViewAction) null else viewModel.path::setValue,
+                onOpenFile = if (forViewAction) null else {{ openDocument.launch(arrayOf("*/*")) }},
                 basicAuthCfg = basicAuth,
                 onBasicAuthCfgChange = viewModel.basicAuth::setValue,
-                masterPassword = masterPassword,
-                onMasterPasswordChange = viewModel.masterPassword::setValue,
                 enableAuthentication = enableAuthentication,
                 onEnabledAuthenticationChange = viewModel.enableAuthentication::setValue,
+                onSubmit = { masterPassword ->
+                    // TODO
+                },
             )
         }
+
     }
 
     private class FetchTask internal constructor(
@@ -90,10 +96,13 @@ class DatabaseSetupActivity : BaseActivity() {
     }
 }
 
-class SetupViewModel : ViewModel() {
-    val path = MutableLiveData("")
-    val basicAuth = MutableLiveData(BasicAuthCfg())
-    val masterPassword = MutableLiveData("")
+class SetupViewModel(app: Application) : AndroidViewModel(app) {
+    private val prefs = PreferenceManager.getDefaultSharedPreferences(app)
+    val path = MutableLiveData(prefs.getString(PREF_DB_URL, "") ?: "")
+    val basicAuth = MutableLiveData(BasicAuthCfg(
+        enabled = prefs.getBoolean(PREF_DB_AUTH_REQUIRED, false),
+        username = prefs.getString(PREF_DB_AUTH_USERNAME, "") ?: "",
+    ))
     val enableAuthentication = MutableLiveData(false)
 }
 

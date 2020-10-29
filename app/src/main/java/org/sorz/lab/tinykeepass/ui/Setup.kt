@@ -1,18 +1,14 @@
 package org.sorz.lab.tinykeepass.ui
 
-import androidx.compose.foundation.AmbientTextStyle
 import androidx.compose.foundation.Text
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.savedinstancestate.savedInstanceState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ContextAmbient
@@ -28,8 +24,7 @@ import org.sorz.lab.tinykeepass.R
 @Preview
 @Composable
 private fun PreviewSetup() {
-    Setup("https://example", {}, {}, BasicAuthCfg(true), {}, "", {},
-        false, {})
+    Setup("https://example", {}, {},  BasicAuthCfg(), {}, false, {}, {})
 }
 
 
@@ -37,33 +32,48 @@ data class BasicAuthCfg(
     val enabled: Boolean = false,
     val username: String = "",
     val password: String = "",
-)
+) {
+    val isValid get() = !enabled || (username != "" && password != "")
+}
 
 @Composable
 fun Setup (
     path: String,
-    onPathChange: (path: String) -> Unit,
-    onOpenFile: () -> Unit,
+    onPathChange: ((path: String) -> Unit)?,
+    onOpenFile: (() -> Unit)?,
     basicAuthCfg: BasicAuthCfg,
     onBasicAuthCfgChange: (cfg: BasicAuthCfg) -> Unit,
-    masterPassword: String,
-    onMasterPasswordChange: (password: String) -> Unit,
     enableAuthentication: Boolean,
     onEnabledAuthenticationChange: (enabled: Boolean) -> Unit,
+    onSubmit: (masterPassword: String) -> Unit,
 ) {
-    val ctx = ContextAmbient.current
-    val res = ctx.resources
+    var masterPassword by remember { mutableStateOf("") }
+
+    val res = ContextAmbient.current.resources
     val isHttpOrHttps =
-            path.startsWith("http://") || path.startsWith("https://")
+        path.startsWith("http://") || path.startsWith("https://")
+    val isValid =
+        path.isValidPath() &&
+        basicAuthCfg.isValid &&
+        masterPassword != ""
+
     TinyTheme {
         Column(modifier = Modifier.padding(16.dp)) {
             FileSelection(path, onPathChange, onOpenFile)
             Spacer(Modifier.height(16.dp))
             BasicAuth(isHttpOrHttps, basicAuthCfg, onBasicAuthCfgChange)
             Spacer(Modifier.height(24.dp))
-            MasterPasswordInput(masterPassword, onMasterPasswordChange)
+            MasterPasswordInput(masterPassword) { masterPassword = it }
             Spacer(Modifier.height(16.dp))
             AuthenticationSwitch(enableAuthentication, onEnabledAuthenticationChange)
+            Spacer(Modifier.height(24.dp))
+            Button(
+                onClick = { onSubmit(masterPassword) },
+                modifier = Modifier.align(Alignment.End),
+                enabled = isValid,
+            ) {
+                Text(res.getString(R.string.button_confirm))
+            }
         }
     }
 }
@@ -71,20 +81,23 @@ fun Setup (
 @Composable
 private fun FileSelection(
     path: String,
-    onPathChange: (path: String) -> Unit,
-    onOpenFile: () -> Unit,
+    onPathChange: ((path: String) -> Unit)?,
+    onOpenFile: (() -> Unit)?,
 ) {
     val res = ContextAmbient.current.resources
     TextField(
-        path, { if (!it.contains('\n')) onPathChange(it) },
+        path, { if (!it.contains('\n')) onPathChange?.invoke(it) },
+        isErrorValue = !path.isValidPath(),
         placeholder = { Text(res.getString(R.string.database_url)) },
         keyboardType = KeyboardType.Uri,
         modifier = Modifier.fillMaxWidth(),
         trailingIcon = {
-            OutlinedButton(onClick = onOpenFile) {
-                Text(res.getString(R.string.open_file))
+            if (onOpenFile != null) {
+                OutlinedButton(onClick = onOpenFile) {
+                    Text(res.getString(R.string.open_file))
+                }
             }
-        }
+        },
     )
 }
 
@@ -115,6 +128,7 @@ private fun BasicAuth(
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = cfg.username,
+                isErrorValue = cfg.username == "",
                 onValueChange = { onCfgChange(cfg.copy(username = it))},
                 placeholder = { Text(res.getString(R.string.username)) },
                 modifier = Modifier.align(Alignment.End),
@@ -122,6 +136,7 @@ private fun BasicAuth(
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = cfg.password,
+                isErrorValue = cfg.password == "",
                 onValueChange = { onCfgChange(cfg.copy(password = it)) },
                 placeholder = { Text(res.getString(R.string.password)) },
                 visualTransformation =
@@ -131,7 +146,7 @@ private fun BasicAuth(
                 modifier = Modifier.align(Alignment.End),
                 trailingIcon = {
                     ShowPasswordIcon(showPassword) { showPassword = it }
-                }
+                },
             )
         }
     }
@@ -145,8 +160,9 @@ private fun MasterPasswordInput(
     val res = ContextAmbient.current.resources
     var showPassword by savedInstanceState { true }
 
-    OutlinedTextField(
+    TextField(
         value = password,
+        isErrorValue = password == "",
         onValueChange = onPasswordChange,
         placeholder = { Text(res.getString(R.string.master_password)) },
         visualTransformation =
@@ -192,3 +208,6 @@ private fun ShowPasswordIcon(
         }
     )
 }
+
+private fun String.isValidPath(): Boolean =
+    matches("^(http|https|content)://.+".toRegex())
