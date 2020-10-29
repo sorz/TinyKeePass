@@ -28,7 +28,8 @@ import org.sorz.lab.tinykeepass.R
 @Preview
 @Composable
 private fun PreviewSetup() {
-    Setup("https://example", {}, {}, BasicAuthCfg(true), {})
+    Setup("https://example", {}, {}, BasicAuthCfg(true), {}, "", {},
+        false, {})
 }
 
 
@@ -45,6 +46,10 @@ fun Setup (
     onOpenFile: () -> Unit,
     basicAuthCfg: BasicAuthCfg,
     onBasicAuthCfgChange: (cfg: BasicAuthCfg) -> Unit,
+    masterPassword: String,
+    onMasterPasswordChange: (password: String) -> Unit,
+    enableAuthentication: Boolean,
+    onEnabledAuthenticationChange: (enabled: Boolean) -> Unit,
 ) {
     val ctx = ContextAmbient.current
     val res = ctx.resources
@@ -55,6 +60,10 @@ fun Setup (
             FileSelection(path, onPathChange, onOpenFile)
             Spacer(Modifier.height(16.dp))
             BasicAuth(isHttpOrHttps, basicAuthCfg, onBasicAuthCfgChange)
+            Spacer(Modifier.height(24.dp))
+            MasterPasswordInput(masterPassword, onMasterPasswordChange)
+            Spacer(Modifier.height(16.dp))
+            AuthenticationSwitch(enableAuthentication, onEnabledAuthenticationChange)
         }
     }
 }
@@ -125,6 +134,47 @@ private fun BasicAuth(
                 }
             )
         }
+    }
+}
+
+@Composable
+private fun MasterPasswordInput(
+    password: String,
+    onPasswordChange: (password: String) -> Unit,
+) {
+    val res = ContextAmbient.current.resources
+    var showPassword by savedInstanceState { true }
+
+    OutlinedTextField(
+        value = password,
+        onValueChange = onPasswordChange,
+        placeholder = { Text(res.getString(R.string.master_password)) },
+        visualTransformation =
+            if (showPassword) VisualTransformation.None
+            else PasswordVisualTransformation(),
+        keyboardType = KeyboardType.Password,
+        trailingIcon = {
+            ShowPasswordIcon(showPassword) { showPassword = it }
+        },
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+@Composable
+private fun AuthenticationSwitch(
+    enabled: Boolean,
+    onEnableChange: (enabled: Boolean) -> Unit,
+) {
+    val res = ContextAmbient.current.resources
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(res.getString(R.string.enable_authentication))
+        Switch(
+            checked = enabled,
+            onCheckedChange = onEnableChange,
+        )
     }
 }
 

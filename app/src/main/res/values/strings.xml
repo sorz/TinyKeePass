@@ -6,6 +6,7 @@
     <string name="no_fingerprint_enrolled">No enrolled fingerprint found</string>
     <string name="auth_key_title">User Authentication</string>
     <string name="auth_key_description">Please use your screen lock to access master key of KeePass database.</string>
+    <string name="enable_authentication">Authenticate with lockscreen or biometric</string>
     <string-array name="authenticate_method">
         <item>No authentication</item>
         <item>Authenticate with fingerprint</item>

@@ -52,6 +52,8 @@ class DatabaseSetupActivity : BaseActivity() {
         setContent {
             val path by viewModel.path.observeAsState("")
             val basicAuth by viewModel.basicAuth.observeAsState(BasicAuthCfg())
+            val masterPassword by viewModel.masterPassword.observeAsState("")
+            val enableAuthentication by viewModel.enableAuthentication.observeAsState(false)
 
             Setup(
                 path = path,
@@ -59,6 +61,10 @@ class DatabaseSetupActivity : BaseActivity() {
                 onOpenFile = { openDocument.launch(arrayOf("*/*")) },
                 basicAuthCfg = basicAuth,
                 onBasicAuthCfgChange = viewModel.basicAuth::setValue,
+                masterPassword = masterPassword,
+                onMasterPasswordChange = viewModel.masterPassword::setValue,
+                enableAuthentication = enableAuthentication,
+                onEnabledAuthenticationChange = viewModel.enableAuthentication::setValue,
             )
         }
     }
@@ -87,6 +93,8 @@ class DatabaseSetupActivity : BaseActivity() {
 class SetupViewModel : ViewModel() {
     val path = MutableLiveData("")
     val basicAuth = MutableLiveData(BasicAuthCfg())
+    val masterPassword = MutableLiveData("")
+    val enableAuthentication = MutableLiveData(false)
 }
 
 fun clearDatabaseConfigs(preferences: SharedPreferences) {

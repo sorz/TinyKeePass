@@ -59,4 +59,5 @@
     <string name="open_db_dialog_title">解密中…</string>
     <string name="open_db_dialog_note">需要几秒钟的时间</string>
     <string name="open_db_dialog_fail">读取数据库失败</string>
+    <string name="enable_authentication">启用锁屏或生物认证</string>
 </resources>
