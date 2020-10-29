@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.ui.tooling.preview.Preview
+import org.sorz.lab.tinykeepass.BasicAuthCfg
 import org.sorz.lab.tinykeepass.R
 
 
@@ -28,15 +29,6 @@ import org.sorz.lab.tinykeepass.R
 private fun PreviewSetup() {
     Setup("https://example", {}, {},  BasicAuthCfg(), {}, false, {},
             "", {}, {})
-}
-
-
-data class BasicAuthCfg(
-    val enabled: Boolean = false,
-    val username: String = "",
-    val password: String = "",
-) {
-    val isValid get() = !enabled || (username != "" && password != "")
 }
 
 @Composable
@@ -54,8 +46,7 @@ fun Setup (
     isInProgress: Boolean = false,
 ) {
     val res = ContextAmbient.current.resources
-    val isHttpOrHttps =
-        path.startsWith("http://") || path.startsWith("https://")
+    val isHttpOrHttps = path.matches("^https?://.*".toRegex(RegexOption.IGNORE_CASE))
     val isValid =
         path.isValidPath() &&
         basicAuthCfg.isValid &&

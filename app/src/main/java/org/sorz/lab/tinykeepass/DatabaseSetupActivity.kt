@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -15,10 +16,11 @@ import androidx.compose.ui.platform.setContent
 import androidx.core.content.getSystemService
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage
-import org.sorz.lab.tinykeepass.ui.BasicAuthCfg
 import org.sorz.lab.tinykeepass.ui.Setup
+import java.io.IOException
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -31,6 +33,8 @@ const val PREF_DB_URL = "db-url"
 const val PREF_DB_AUTH_USERNAME = "db-auth-username"
 const val PREF_DB_AUTH_REQUIRED = "db-auth-required"
 const val PREF_KEY_AUTH_METHOD = "key-auth-method"
+
+private const val TAG = "DatabaseSetupActivity"
 
 /**
  * Provide UI for configure a new db.
@@ -76,7 +80,7 @@ class DatabaseSetupActivity : BaseActivity() {
                 onMasterPasswordChange = viewModel.masterPassword::setValue,
                 onSubmit = {
                     viewModel.state.value = SetupState.VALIDATING
-                    FetchTask(viewModel).execute()
+                    doFetchDatabase()
                 },
                 isInProgress = state != SetupState.EDITING,
             )
@@ -112,6 +116,22 @@ class DatabaseSetupActivity : BaseActivity() {
         }
     }
 
+    private fun doFetchDatabase() = lifecycleScope.launchWhenCreated {
+        val path = Uri.parse(viewModel.path.value!!)
+        val masterPwd = viewModel.masterPassword.value!!
+        val basicAuth = viewModel.basicAuth.value!!
+        try {
+            fetchDatabase(baseContext, path, masterPwd, basicAuth)
+        } catch (err: IOException) {
+            Log.w(TAG, "error on fetch db", err)
+            val msg = getString(R.string.fail_to_sync, err.localizedMessage ?: "I/O error")
+            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            viewModel.state.value = SetupState.EDITING
+            return@launchWhenCreated
+        }
+        viewModel.state.value = SetupState.DONG_WITHOUT_ERROR
+    }
+
 }
 
 enum class SetupState {
@@ -130,26 +150,6 @@ class SetupViewModel(val app: Application) : AndroidViewModel(app) {
     val masterPassword = MutableLiveData("")
     val enableAuth = MutableLiveData(prefs.getBoolean(PREF_DB_AUTH_REQUIRED, false))
     val state = MutableLiveData(SetupState.EDITING)
-}
-
-private class FetchTask(model: SetupViewModel) : FetchDatabaseTask(
-        model.app,
-        Uri.parse(model.path.value!!),
-        model.masterPassword.value!!,
-        model.basicAuth.value!!.username,
-        model.basicAuth.value!!.password,
-) {
-    private val model = WeakReference(model)
-
-    override fun onPostExecute(error: String?) {
-        val model = model.get() ?: return
-        if (error != null) {
-            Toast.makeText(model.app, error, Toast.LENGTH_SHORT).show()
-            model.state.value = SetupState.EDITING
-        } else {
-            model.state.value = SetupState.DONG_WITHOUT_ERROR
-        }
-    }
 }
 
 fun clearDatabaseConfigs(preferences: SharedPreferences) {

@@ -1,17 +1,13 @@
 package org.sorz.lab.tinykeepass.keepass
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 
-
-import org.sorz.lab.tinykeepass.FetchDatabaseTask
 
 import java.io.File
 
 import com.kunzisoft.keepass.database.element.Database
 import com.kunzisoft.keepass.database.element.Entry
+import org.sorz.lab.tinykeepass.DB_FILENAME
 import java.util.stream.Stream
 import kotlin.streams.asStream
 
@@ -38,7 +34,7 @@ val Database.allEntriesNotInRecycleBinStream: Stream<Entry>
 
 
 val Context.databaseFile: File get() =
-    File(noBackupFilesDir, FetchDatabaseTask.DB_FILENAME)
+    File(noBackupFilesDir, DB_FILENAME)
 
 val Context.hasDatabaseConfigured: Boolean get() =
     KeePassStorage.get(this) != null || databaseFile.canRead()
