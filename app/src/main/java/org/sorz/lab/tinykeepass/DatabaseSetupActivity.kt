@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.setContent
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.jetbrains.anko.startActivityForResult
+import org.sorz.lab.tinykeepass.ui.BasicAuthCfg
 import org.sorz.lab.tinykeepass.ui.Setup
 import java.lang.ref.WeakReference
 import java.util.*
@@ -37,7 +38,7 @@ const val PREF_KEY_AUTH_METHOD = "key-auth-method"
 class DatabaseSetupActivity : BaseActivity() {
     private val viewModel by viewModels<SetupViewModel>()
     private val openDocument = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
-        viewModel.path.value = it.toString()
+        if (it != null) viewModel.path.value = it.toString()
     }
 
     private var fingerprintManager: FingerprintManager? = null
@@ -50,11 +51,14 @@ class DatabaseSetupActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val path by viewModel.path.observeAsState("")
+            val basicAuth by viewModel.basicAuth.observeAsState(BasicAuthCfg())
 
             Setup(
                 path = path,
                 onPathChange = viewModel.path::setValue,
-                onOpenFile = { openDocument.launch(arrayOf("*/*")) }
+                onOpenFile = { openDocument.launch(arrayOf("*/*")) },
+                basicAuthCfg = basicAuth,
+                onBasicAuthCfgChange = viewModel.basicAuth::setValue,
             )
         }
     }
@@ -82,6 +86,7 @@ class DatabaseSetupActivity : BaseActivity() {
 
 class SetupViewModel : ViewModel() {
     val path = MutableLiveData("")
+    val basicAuth = MutableLiveData(BasicAuthCfg())
 }
 
 fun clearDatabaseConfigs(preferences: SharedPreferences) {
