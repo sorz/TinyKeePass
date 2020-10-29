@@ -43,8 +43,8 @@ fun Setup (
     onOpenFile: (() -> Unit)?,
     basicAuthCfg: BasicAuthCfg,
     onBasicAuthCfgChange: (cfg: BasicAuthCfg) -> Unit,
-    enableAuthentication: Boolean,
-    onEnabledAuthenticationChange: (enabled: Boolean) -> Unit,
+    enableAuth: Boolean,
+    onEnabledAuthChange: ((enabled: Boolean) -> Unit)?,
     onSubmit: (masterPassword: String) -> Unit,
 ) {
     var masterPassword by remember { mutableStateOf("") }
@@ -65,7 +65,7 @@ fun Setup (
             Spacer(Modifier.height(24.dp))
             MasterPasswordInput(masterPassword) { masterPassword = it }
             Spacer(Modifier.height(16.dp))
-            AuthenticationSwitch(enableAuthentication, onEnabledAuthenticationChange)
+            AuthenticationSwitch(enableAuth, onEnabledAuthChange)
             Spacer(Modifier.height(24.dp))
             Button(
                 onClick = { onSubmit(masterPassword) },
@@ -179,7 +179,7 @@ private fun MasterPasswordInput(
 @Composable
 private fun AuthenticationSwitch(
     enabled: Boolean,
-    onEnableChange: (enabled: Boolean) -> Unit,
+    onEnableChange: ((enabled: Boolean) -> Unit)?,
 ) {
     val res = ContextAmbient.current.resources
     Row(
@@ -189,7 +189,8 @@ private fun AuthenticationSwitch(
         Text(res.getString(R.string.enable_authentication))
         Switch(
             checked = enabled,
-            onCheckedChange = onEnableChange,
+            onCheckedChange = {onEnableChange?.invoke(true)},
+            enabled = onEnableChange != null,
         )
     }
 }

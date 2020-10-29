@@ -1,18 +1,20 @@
 package org.sorz.lab.tinykeepass
 
 import android.app.Application
+import android.app.KeyguardManager
 import android.content.Intent
 import android.content.SharedPreferences
-import android.hardware.fingerprint.FingerprintManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.biometric.BiometricManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.setContent
+import androidx.core.content.getSystemService
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -37,15 +39,17 @@ const val PREF_KEY_AUTH_METHOD = "key-auth-method"
  *
  */
 class DatabaseSetupActivity : BaseActivity() {
+    private val keyguardManager by lazy { getSystemService() as KeyguardManager? }
     private val viewModel by viewModels<SetupViewModel>()
     private val openDocument = registerForActivityResult(ActivityResultContracts.OpenDocument()) {
         if (it != null) viewModel.path.value = it.toString()
     }
-    private val disabledViews: MutableList<View?> = ArrayList(8)
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val authSupported = keyguardManager?.isDeviceSecure ?: false
+        if (!authSupported) viewModel.enableAuth.value = false
 
         // Handle VIEW action
         val viewActionUri = intent?.data?.also {
@@ -57,7 +61,7 @@ class DatabaseSetupActivity : BaseActivity() {
         setContent {
             val path by viewModel.path.observeAsState("")
             val basicAuth by viewModel.basicAuth.observeAsState(BasicAuthCfg())
-            val enableAuthentication by viewModel.enableAuthentication.observeAsState(false)
+            val enableAuth by viewModel.enableAuth.observeAsState(false)
 
             Setup(
                 path = path,
@@ -65,8 +69,8 @@ class DatabaseSetupActivity : BaseActivity() {
                 onOpenFile = if (forViewAction) null else {{ openDocument.launch(arrayOf("*/*")) }},
                 basicAuthCfg = basicAuth,
                 onBasicAuthCfgChange = viewModel.basicAuth::setValue,
-                enableAuthentication = enableAuthentication,
-                onEnabledAuthenticationChange = viewModel.enableAuthentication::setValue,
+                enableAuth = enableAuth,
+                onEnabledAuthChange = if (authSupported) viewModel.enableAuth::setValue else null,
                 onSubmit = { masterPassword ->
                     // TODO
                 },
@@ -103,7 +107,7 @@ class SetupViewModel(app: Application) : AndroidViewModel(app) {
         enabled = prefs.getBoolean(PREF_DB_AUTH_REQUIRED, false),
         username = prefs.getString(PREF_DB_AUTH_USERNAME, "") ?: "",
     ))
-    val enableAuthentication = MutableLiveData(false)
+    val enableAuth = MutableLiveData(prefs.getBoolean(PREF_DB_AUTH_REQUIRED, false))
 }
 
 fun clearDatabaseConfigs(preferences: SharedPreferences) {
