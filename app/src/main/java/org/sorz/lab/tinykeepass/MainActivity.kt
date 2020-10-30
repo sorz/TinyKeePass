@@ -2,7 +2,6 @@ package org.sorz.lab.tinykeepass
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.PersistableBundle
 import com.google.android.material.snackbar.Snackbar
 
 import android.view.View
@@ -73,7 +72,7 @@ class MainActivity : BaseActivity(), AnkoLogger {
                 try {
                     val keys = getDatabaseKeys()
                     openDatabase(keys[0]) { showEntryList() }
-                } catch (err: GetKeyError) {
+                } catch (err: AuthKeyError) {
                     showError(err.message!!)
                 }
             }
@@ -117,7 +116,7 @@ class MainActivity : BaseActivity(), AnkoLogger {
                         ExistingWorkPolicy.REPLACE,
                         request,
                 )
-            } catch (err: GetKeyError) {
+            } catch (err: AuthKeyError) {
                 showError(err.message!!)
             }
         }

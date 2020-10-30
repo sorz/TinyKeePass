@@ -33,7 +33,6 @@ import kotlin.coroutines.resumeWithException
 
 
 private val TAG = MainActivity::class.java.name
-private const val REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_SAVE_KEY = 101
 
 abstract class BaseActivity : AppCompatActivity() {
     protected val preferences: SharedPreferences by lazy(LazyThreadSafetyMode.NONE) {
@@ -54,10 +53,6 @@ abstract class BaseActivity : AppCompatActivity() {
         // if (it.resultCode == RESULT_OK) getKey()
         // TODO
     }
-    private var onKeyAuthFailed: ((String) -> Unit)? = null
-    private var onKeySaved: Runnable? = null
-    private var keysToEncrypt: List<String>? = null
-
     private var biometricAuthResult: Continuation<Cipher>? = null
 
 
@@ -68,7 +63,6 @@ abstract class BaseActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        println("!!!! BiometricPrompt inited")
         biometricPrompt = BiometricPrompt(this, object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 biometricAuthResult?.resume(result.cryptoObject!!.cipher!!)
@@ -83,41 +77,24 @@ abstract class BaseActivity : AppCompatActivity() {
         })
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        when (requestCode) {
-            REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_SAVE_KEY ->
-                if (resultCode == RESULT_OK) encryptKeys(null)
-                else authFail(getString(R.string.fail_to_auth))
-            else -> super.onActivityResult(requestCode, resultCode, data)
-        }
-    }
-
-    private fun authFail(message: String) {
-        onKeyAuthFailed?.invoke(message)
-        onKeyAuthFailed = null
-        onKeySaved = null
-        keysToEncrypt = null
-    }
-
     protected suspend fun getDatabaseKeys(): List<String> {
+        val decryptCipher = secureStringStorage.decryptCipher
         val cipher = when (preferences.getInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED)) {
             AUTH_METHOD_NONE, AUTH_METHOD_SCREEN_LOCK ->
                 try {
-                    return decryptKey(secureStringStorage.decryptCipher)
+                    return decryptKey(decryptCipher)
                 } catch (e: UserNotAuthenticatedException) {
                     // should do authentication
-                    authenticateCipher(secureStringStorage.decryptCipher, true)
+                    authenticateCipher(decryptCipher, true)
                 } catch (e: KeyException) {
                     // Reconfigure passwords
                     launchSetupDatabase()
-                    throw GetKeyError(getString(R.string.broken_keys))
+                    throw AuthKeyError(getString(R.string.broken_keys))
                 } catch (e: SecureStringStorage.SystemException) {
                     throw RuntimeException(e)
                 }
-            AUTH_METHOD_FINGERPRINT -> {
-                authenticateCipher(secureStringStorage.decryptCipher, false)
-            }
-            else -> throw GetKeyError(getString(R.string.broken_keys))
+            AUTH_METHOD_FINGERPRINT -> authenticateCipher(decryptCipher, false)
+            else -> throw AuthKeyError(getString(R.string.broken_keys))
         }
         return decryptKey(cipher)
     }
@@ -140,70 +117,44 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
-    protected fun saveDatabaseKeys(keys: List<String>, onKeySaved: Runnable,
-                                   onKeyAuthFailed: ((String) -> Unit)) {
-        this.onKeySaved = onKeySaved
-        this.onKeyAuthFailed = onKeyAuthFailed
-        saveKey(keys)
-    }
-
-    /**
-     * Authenticate user, then call [.encryptKeys] to save keys.
-     * Finally, either [.onKeySaved] or [.onKeyAuthFailed] will be called.
-     */
-    private fun saveKey(keys: List<String>) {
-        keysToEncrypt = keys
-        when (preferences.getInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED)) {
+    suspend fun saveDatabaseKeys(keys: List<String>) {
+        val encryptCipher = secureStringStorage.encryptCipher
+        val cipher = when (preferences.getInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED)) {
             AUTH_METHOD_NONE -> {
                 secureStringStorage.generateNewKey(false, -1)
-                encryptKeys(null)
+                return encryptKeys(encryptCipher, keys)
             }
             AUTH_METHOD_SCREEN_LOCK -> {
                 secureStringStorage.generateNewKey(true, 60)
-                val intent = keyguardManager.createConfirmDeviceCredentialIntent(
-                        getString(R.string.auth_key_title),
-                        getString(R.string.auth_key_description))
-                startActivityForResult(intent, REQUEST_CONFIRM_DEVICE_CREDENTIAL_FOR_SAVE_KEY)
+                authenticateCipher(encryptCipher, true)
             }
             AUTH_METHOD_FINGERPRINT -> {
                 secureStringStorage.generateNewKey(true, -1)
-                val prompt = BiometricPrompt.PromptInfo.Builder()
-                        .setTitle(getString(R.string.auth_key_title))
-                        .setDescription(getString(R.string.auth_key_description))
-                        .setNegativeButtonText(getText(android.R.string.cancel))
-                        .build()
-                val crypto = BiometricPrompt.CryptoObject(secureStringStorage.encryptCipher)
-                biometricPrompt.authenticate(prompt, crypto)
+                authenticateCipher(encryptCipher, false)
             }
+            else -> throw AuthKeyError(getString(R.string.broken_keys))
         }
+        encryptKeys(cipher, keys)
     }
 
-    private fun encryptKeys(cipher: Cipher?) {
+    private fun encryptKeys(cipher: Cipher, keys: List<String>) {
         try {
-            (cipher ?: secureStringStorage.encryptCipher).apply {
-                secureStringStorage.put(this, keysToEncrypt)
-            }
+            secureStringStorage.put(cipher, keys)
         } catch (e: UserNotAuthenticatedException) {
             Log.e(TAG, "cannot get cipher from system", e)
-            onKeyAuthFailed?.invoke("cannot get cipher from system")
-            return
+            throw AuthKeyError("cannot get cipher from system")
         }
-
-        onKeySaved?.run()
-        onKeySaved = null
-        onKeyAuthFailed = null
-        keysToEncrypt = null
     }
 
-    private fun decryptKey(cipher: Cipher?): List<String> {
+    private fun decryptKey(cipher: Cipher): List<String> {
         val keys = try {
             secureStringStorage.get(cipher)
         } catch (e: Exception) {
             Log.w(TAG, "fail to decrypt keys", e)
-            throw GetKeyError(getString(R.string.fail_to_decrypt))
+            throw AuthKeyError(getString(R.string.fail_to_decrypt))
         }
         if (keys == null || keys.size < 2)
-            throw GetKeyError(getString(R.string.broken_keys))
+            throw AuthKeyError(getString(R.string.broken_keys))
         return keys
     }
 
@@ -225,5 +176,5 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 }
 
-class BiometricAuthError(val code: Int, message: String) : GetKeyError(message)
-open class GetKeyError(message: String) : Exception(message)
+class BiometricAuthError(val code: Int, message: String) : AuthKeyError(message)
+open class AuthKeyError(message: String) : Exception(message)

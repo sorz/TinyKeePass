@@ -97,23 +97,29 @@ class DatabaseSetupActivity : BaseActivity() {
                     .putBoolean(PREF_DB_AUTH_REQUIRED, basicAuth.enabled)
                     .putInt(PREF_KEY_AUTH_METHOD, authMethod)
                     .apply()
-
-            val keys: MutableList<String> = ArrayList(2)
-            keys.add(viewModel.masterPassword.value!!)
-            keys.add(basicAuth.password)
-            saveDatabaseKeys(keys, {
-                setResult(RESULT_OK)
-                if (forViewAction) startActivity(Intent(this, MainActivity::class.java))
-                finish()
-            }) { error: String? ->
-                Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
-                preferences.edit()
-                        .putInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED)
-                        .apply()
-                KeePassStorage.set(this, null)
-                viewModel.state.value = SetupState.EDITING
+            val keys = arrayListOf(viewModel.masterPassword.value!!, basicAuth.password)
+            lifecycleScope.launchWhenStarted {
+                doSaveDatabaseKeys(keys, forViewAction)
             }
         }
+    }
+
+    private suspend fun doSaveDatabaseKeys(keys: List<String>, launchMainActivity: Boolean) {
+        try {
+            saveDatabaseKeys(keys)
+        } catch (err: AuthKeyError) {
+            Toast.makeText(this, err.message!!, Toast.LENGTH_SHORT).show()
+            preferences.edit()
+                    .putInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED)
+                    .apply()
+            KeePassStorage.set(applicationContext, null)
+            viewModel.state.value = SetupState.EDITING
+            return
+        }
+        setResult(RESULT_OK)
+        if (launchMainActivity)
+            startActivity(Intent(applicationContext, MainActivity::class.java))
+        finish()
     }
 
     private fun doFetchDatabase() = lifecycleScope.launchWhenCreated {

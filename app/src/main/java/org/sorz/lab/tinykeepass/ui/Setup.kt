@@ -97,7 +97,8 @@ private fun InProgress(
     ) {
         Text(
             text = filename,
-            style = MaterialTheme.typography.subtitle1
+            style = MaterialTheme.typography.subtitle1,
+            color = MaterialTheme.colors.onBackground,
         )
         Spacer(Modifier.height(24.dp))
 
@@ -107,6 +108,7 @@ private fun InProgress(
         Text(
             text = res.getString(R.string.waiting),
             style = MaterialTheme.typography.body1,
+            color = MaterialTheme.colors.onBackground,
         )
     }
 }
