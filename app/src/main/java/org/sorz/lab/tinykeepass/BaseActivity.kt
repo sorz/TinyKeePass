@@ -110,19 +110,18 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     suspend fun saveDatabaseKeys(keys: List<String>) {
-        val encryptCipher = secureStringStorage.encryptCipher
         val cipher = when (preferences.getInt(PREF_KEY_AUTH_METHOD, AUTH_METHOD_UNDEFINED)) {
             AUTH_METHOD_NONE -> {
                 secureStringStorage.generateNewKey(false, -1)
-                return encryptKeys(encryptCipher, keys)
+                return encryptKeys(secureStringStorage.encryptCipher, keys)
             }
             AUTH_METHOD_SCREEN_LOCK -> {
                 secureStringStorage.generateNewKey(true, 60)
-                authenticateCipher(encryptCipher, true)
+                authenticateCipher(secureStringStorage.encryptCipher, true)
             }
             AUTH_METHOD_FINGERPRINT -> {
                 secureStringStorage.generateNewKey(true, -1)
-                authenticateCipher(encryptCipher, false)
+                authenticateCipher(secureStringStorage.encryptCipher, false)
             }
             else -> throw AuthKeyError(getString(R.string.broken_keys))
         }

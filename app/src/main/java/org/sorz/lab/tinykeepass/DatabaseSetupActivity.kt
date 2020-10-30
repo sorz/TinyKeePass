@@ -85,7 +85,7 @@ class DatabaseSetupActivity : BaseActivity() {
             )
         }
 
-        // Saving config
+        // Saving config after database fetched
         viewModel.state.observe(this) { state ->
             if (state != SetupState.DONG_WITHOUT_ERROR) return@observe
             val authMethod = if (viewModel.enableAuth.value!!) AUTH_METHOD_FINGERPRINT else 0
