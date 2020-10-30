@@ -1,11 +1,9 @@
 package org.sorz.lab.tinykeepass
 
-import android.content.BroadcastReceiver
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -20,6 +18,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import android.widget.Toast
+import androidx.work.WorkInfo.State
+import androidx.work.WorkManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage
@@ -95,34 +95,37 @@ class EntryFragment : BaseEntryFragment() {
         }
     }
 
-    private val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (DatabaseSyncingService.BROADCAST_SYNC_FINISHED == intent.action) {
-                fab.show()
-                val error = intent.getStringExtra(DatabaseSyncingService.EXTRA_SYNC_ERROR)
-                if (error == null) entryAdapter.reloadEntries()
-                view?.also { view ->
-                    if (error == null)
-                        Snackbar.make(view, R.string.sync_done, Snackbar.LENGTH_SHORT).show()
-                    else
-                        Snackbar.make(view, getString(R.string.fail_to_sync, error),
-                                Snackbar.LENGTH_LONG).show()
-                }
-            }
-        }
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val view = super.onCreateView(inflater, container, savedInstanceState)!!
-        fab = view.findViewById<FloatingActionButton>(R.id.fab)
-
+        fab = view.findViewById(R.id.fab)
         fab.setOnClickListener {
-            fab.hide()
             activity.run {
                 if (this is MainActivity) doSyncDatabase()
             }
         }
+
+        WorkManager.getInstance(requireContext())
+            .getWorkInfosForUniqueWorkLiveData(DATABASE_SYNCING_WORK_NAME)
+            .observe(viewLifecycleOwner) { works ->
+                val work = works.lastOrNull()
+                val msg = when (work?.state) {
+                    null -> return@observe fab.show()
+                    State.SUCCEEDED -> getString(R.string.sync_done)
+                    State.CANCELLED -> getString(R.string.sync_cancelled)
+                    State.FAILED -> getString(
+                        R.string.fail_to_sync,
+                        work.outputData.getString(RESULT_ERROR) ?: "I/O error"
+                    )
+                    State.RUNNING, State.BLOCKED, State.ENQUEUED -> return@observe fab.hide()
+                }
+                fab.show()
+                val time = work.outputData.getLong(RESULT_TIMESTAMP, 0)
+                if (System.currentTimeMillis() - time > 10 * 1000) return@observe
+                val length = if (work.state == State.FAILED) Snackbar.LENGTH_LONG
+                    else Snackbar.LENGTH_SHORT
+                Snackbar.make(view, msg, length).show()
+            }
 
         return view
     }
@@ -136,22 +139,11 @@ class EntryFragment : BaseEntryFragment() {
                 doLockDatabase()
                 Handler().post { doUnlockDatabase() }
             }
-        } else {
-            requireActivity().registerReceiver(broadcastReceiver,
-                    IntentFilter(DatabaseSyncingService.BROADCAST_SYNC_FINISHED))
-            // sync done event may have lost, check its state now
-            if (!DatabaseSyncingService.isRunning())
-                fab.show()
         }
     }
 
     override fun onPause() {
         super.onPause()
-        try {
-            requireActivity().unregisterReceiver(broadcastReceiver)
-        } catch (_: IllegalArgumentException) {
-            // not register, ignored
-        }
         lastPauseTimeMillis = SystemClock.elapsedRealtime()
         if (actionMode?.tag == entryShowPasswordActionModeCallback)
             actionMode?.finish()

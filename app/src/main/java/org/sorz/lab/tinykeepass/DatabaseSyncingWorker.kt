@@ -3,15 +3,11 @@ package org.sorz.lab.tinykeepass
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
-import androidx.work.CoroutineWorker
-import androidx.work.ForegroundInfo
-import androidx.work.WorkManager
-import androidx.work.WorkerParameters
+import androidx.work.*
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage
 import java.io.IOException
 
@@ -19,6 +15,8 @@ const val PARAM_URL = "param-url"
 const val PARAM_USERNAME = "param-username"
 const val PARAM_PASSWORD = "param-password"
 const val PARAM_MASTER_KEY = "param-master-key"
+const val RESULT_ERROR = "result-error"
+const val RESULT_TIMESTAMP = "result-timestamp"
 const val DATABASE_SYNCING_WORK_NAME = "work-database-syncing"
 
 private const val CHANNEL_ID_SYNCING = "channel-syncing"
@@ -51,10 +49,13 @@ class DatabaseSyncingWorker(val context: Context, params: WorkerParameters) :
             fetchDatabase(context, uri, masterKey, basicAuth)
         } catch (err: IOException) {
             notifyResult(err)
-            return Result.failure()
+            return Result.failure(workDataOf(
+                    RESULT_TIMESTAMP to System.currentTimeMillis(),
+                    RESULT_ERROR to err.localizedMessage,
+            ))
         }
         notifyResult()
-        return Result.success()
+        return Result.success(workDataOf(RESULT_TIMESTAMP to System.currentTimeMillis()))
     }
 
     private fun createForegroundInfo(url: String): ForegroundInfo {
@@ -96,6 +97,7 @@ class DatabaseSyncingWorker(val context: Context, params: WorkerParameters) :
                 builder.setContentText(dbName)
             }
         }
+        // FIXME: notification not showing
         notificationManager.notify(notificationId, builder.build())
     }
 

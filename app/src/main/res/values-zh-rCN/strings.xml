@@ -61,4 +61,5 @@
     <string name="open_db_dialog_fail">读取数据库失败</string>
     <string name="enable_authentication">启用锁屏或生物认证</string>
     <string name="waiting">请稍等</string>
+    <string name="sync_cancelled">同步已取消</string>
 </resources>

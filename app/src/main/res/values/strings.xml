@@ -65,4 +65,5 @@
     <string name="open_db_dialog_title">Decrypting…</string>
     <string name="open_db_dialog_note">It may take several seconds</string>
     <string name="open_db_dialog_fail">Fail to open database</string>
+    <string name="sync_cancelled">Sync cancelled</string>
 </resources>
