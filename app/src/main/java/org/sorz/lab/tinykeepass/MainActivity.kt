@@ -2,10 +2,12 @@ package org.sorz.lab.tinykeepass
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.PersistableBundle
 import com.google.android.material.snackbar.Snackbar
 
 import android.view.View
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import androidx.work.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.warn
@@ -67,11 +69,14 @@ class MainActivity : BaseActivity(), AnkoLogger {
         if (KeePassStorage.get(this) != null) {
             showEntryList()
         } else {
-            getDatabaseKeys({ keys ->
-                openDatabase(keys[0]) { showEntryList() }
-            }, { err ->
-                showError(err)
-            })
+            lifecycleScope.launchWhenCreated {
+                try {
+                    val keys = getDatabaseKeys()
+                    openDatabase(keys[0]) { showEntryList() }
+                } catch (err: GetKeyError) {
+                    showError(err.message!!)
+                }
+            }
         }
     }
 
@@ -89,28 +94,33 @@ class MainActivity : BaseActivity(), AnkoLogger {
     }
 
     fun doSyncDatabase() {
-        getDatabaseKeys({ keys ->
-            val params = Data.Builder()
-                    .putString(PARAM_URL, preferences.getString("db-url", ""))
-                    .putString(PARAM_MASTER_KEY, keys[0])
-            if (preferences.getBoolean("db-auth-required", false)) {
-                val username = preferences.getString("db-auth-username", "")
-                params.putString(PARAM_USERNAME, username)
-                        .putString(PARAM_PASSWORD, keys[1])
+        lifecycleScope.launchWhenResumed {
+            try {
+                val keys = getDatabaseKeys()
+                val params = Data.Builder()
+                        .putString(PARAM_URL, preferences.getString("db-url", ""))
+                        .putString(PARAM_MASTER_KEY, keys[0])
+                if (preferences.getBoolean("db-auth-required", false)) {
+                    val username = preferences.getString("db-auth-username", "")
+                    params.putString(PARAM_USERNAME, username)
+                            .putString(PARAM_PASSWORD, keys[1])
+                }
+                val constraints = Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build()
+                val request = OneTimeWorkRequestBuilder<DatabaseSyncingWorker>()
+                        .setConstraints(constraints)
+                        .setInputData(params.build())
+                        .build()
+                WorkManager.getInstance(this@MainActivity).enqueueUniqueWork(
+                        DATABASE_SYNCING_WORK_NAME,
+                        ExistingWorkPolicy.REPLACE,
+                        request,
+                )
+            } catch (err: GetKeyError) {
+                showError(err.message!!)
             }
-            val constraints = Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            val request = OneTimeWorkRequestBuilder<DatabaseSyncingWorker>()
-                    .setConstraints(constraints)
-                    .setInputData(params.build())
-                    .build()
-            WorkManager.getInstance(this).enqueueUniqueWork(
-                DATABASE_SYNCING_WORK_NAME,
-                ExistingWorkPolicy.REPLACE,
-                request,
-            )
-        }) { showError(it) }
+        }
     }
 
     fun doCleanDatabase() {
