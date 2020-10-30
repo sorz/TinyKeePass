@@ -19,8 +19,6 @@ import java.util.function.BiPredicate
 
 import com.kunzisoft.keepass.database.element.Entry
 import com.kunzisoft.keepass.icons.IconDrawableFactory
-import com.kunzisoft.keepass.icons.IconPackChooser
-import org.jetbrains.anko.AnkoLogger
 import org.sorz.lab.tinykeepass.databinding.FragmentEntryBinding
 import org.sorz.lab.tinykeepass.keepass.*
 import java.util.*
@@ -34,7 +32,7 @@ class EntryRecyclerViewAdapter (
     private val context: Context,
     private val onClickHandler: BiConsumer<View, Entry>,
     private val onLongClickHandler: BiPredicate<View, Entry>
-) : RecyclerView.Adapter<EntryViewHolder>(), AnkoLogger {
+) : RecyclerView.Adapter<EntryViewHolder>() {
     private val allEntries: MutableList<Entry> = loadEntries().toMutableList()
     private var entries: List<Entry> = allEntries
     private var filter: String? = null

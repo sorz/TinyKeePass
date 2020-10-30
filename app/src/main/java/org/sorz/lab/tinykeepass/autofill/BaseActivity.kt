@@ -10,8 +10,8 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
 import org.sorz.lab.tinykeepass.BaseActivity
-import org.sorz.lab.tinykeepass.AuthKeyError
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage
+import java.lang.Exception
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 internal abstract class BaseActivity : BaseActivity() {
@@ -23,9 +23,9 @@ internal abstract class BaseActivity : BaseActivity() {
         } else {
             lifecycleScope.launchWhenResumed {
                 try {
-                    val keys = getDatabaseKeys()
-                    openDatabase(keys[0]) { onDatabaseOpened() }
-                } catch (err: AuthKeyError) {
+                    openDatabase()
+                    onDatabaseOpened()
+                } catch (err: Exception) {
                     Toast.makeText(this@BaseActivity, err.message!!, Toast.LENGTH_SHORT).show()
                     finish()
                 }

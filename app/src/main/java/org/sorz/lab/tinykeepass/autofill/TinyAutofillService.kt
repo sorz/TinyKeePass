@@ -8,21 +8,22 @@ import android.service.autofill.FillRequest
 import android.service.autofill.FillResponse
 import android.service.autofill.SaveCallback
 import android.service.autofill.SaveRequest
+import android.util.Log
 import androidx.annotation.RequiresApi
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.debug
 
 import org.sorz.lab.tinykeepass.R
 import org.sorz.lab.tinykeepass.keepass.hasDatabaseConfigured
 import kotlin.streams.toList
 
 
+private const val TAG = "TinyAutofillService"
+
 @RequiresApi(api = Build.VERSION_CODES.O)
-class TinyAutofillService : AutofillService(), AnkoLogger {
+class TinyAutofillService : AutofillService() {
     override fun onFillRequest(request: FillRequest,
                                cancellationSignal: CancellationSignal,
                                callback: FillCallback) {
-        cancellationSignal.setOnCancelListener { debug("autofill canceled.") }
+        cancellationSignal.setOnCancelListener { Log.d(TAG, "autofill canceled.") }
         if (!hasDatabaseConfigured) {
             callback.onSuccess(null)
             return
@@ -31,7 +32,7 @@ class TinyAutofillService : AutofillService(), AnkoLogger {
         val structure = request.fillContexts[request.fillContexts.size - 1].structure
         val parseResult = StructureParser(structure).parse()
         if (parseResult.password.isEmpty()) {
-            debug("no password field found")
+            Log.d(TAG, "no password field found")
             callback.onSuccess(null)
             return
         }
@@ -51,7 +52,6 @@ class TinyAutofillService : AutofillService(), AnkoLogger {
     override fun onSaveRequest(request: SaveRequest, callback: SaveCallback) {
         callback.onFailure(getString(R.string.autofill_not_support_save))
     }
-    override fun onConnected() = debug ("onConnected")
-    override fun onDisconnected() = debug("onDisconnected")
-
+    override fun onConnected() { Log.d(TAG, "onConnected") }
+    override fun onDisconnected() { Log.d(TAG, "onDisconnected") }
 }

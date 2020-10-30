@@ -1,60 +1,45 @@
 package org.sorz.lab.tinykeepass.keepass
 
-import android.os.AsyncTask
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import com.kunzisoft.keepass.database.element.Database
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.debug
-import org.jetbrains.anko.warn
-import java.io.File
-import java.lang.ref.WeakReference
-
+import com.kunzisoft.keepass.database.exception.LoadDatabaseException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.lang.Exception
 
 /**
- * The AsyncTask to open KeePass file.
+ * Open the KeePass file with a progress dialog.
  */
-open class OpenKeePassTask(
-        fragActivity: FragmentActivity,
-        private val key: String
-) : AsyncTask<Void, Void, Database>(), AnkoLogger {
+suspend fun openKeePassTask(activity: FragmentActivity, key: String) {
 
-    private val activity: WeakReference<FragmentActivity> = WeakReference(fragActivity)
-    private val path: File = fragActivity.databaseFile
-    private var errorMessage: String? = null
+    activity.supportFragmentManager.beginTransaction()
+            .add(OpenKeePassDialogFragment.newInstance(), "dialog")
+            .commit()
 
-    override fun doInBackground(vararg voids: Void): Database? {
-        errorMessage = try {
-            val t = System.currentTimeMillis()
-            val keePassFile = Database.getInstance()
-            if (!keePassFile.loaded) {
-                val act = activity.get()
-                keePassFile.loadData(path.toUri(), key, null, false,
-                act!!.contentResolver, act.cacheDir, true, null)
+    val keePassFile = Database.getInstance()
+    var error: String? = null
+    if (!keePassFile.loaded) {
+        try {
+            withContext(Dispatchers.Default) {
+                keePassFile.loadData(activity.databaseFile.toUri(), key, null, false,
+                        activity.contentResolver, activity.cacheDir, true, null)
             }
-            debug { "open db in ${System.currentTimeMillis() - t} ms" }
-            return keePassFile
-        } catch (e: UnsupportedOperationException) {
-            warn("cannot open database.", e)
-            e.localizedMessage
+        } catch (err: LoadDatabaseException) {
+            error = err.localizedMessage ?: err.toString()
         }
-        return null
     }
 
-    override fun onPreExecute() {
-        val activity = this.activity.get() ?: return
-        activity.supportFragmentManager.beginTransaction()
-                .add(OpenKeePassDialogFragment.newInstance(), "dialog")
-                .commit()
+    activity.supportFragmentManager.findFragmentByTag("dialog")?.let {
+        val dialogFragment = it as OpenKeePassDialogFragment
+        if (error != null) dialogFragment.onOpenError(error)
+        else dialogFragment.onOpenOk()
     }
 
-    override fun onPostExecute(result: Database?) {
-        this.activity.get()?.supportFragmentManager?.findFragmentByTag("dialog")?.let {
-            val dialogFragment = it as OpenKeePassDialogFragment
-            if (result == null) dialogFragment.onOpenError(errorMessage!!)
-            else dialogFragment.onOpenOk()
-        }
-        if (result != null)
-            activity.get()?.let { KeePassStorage.set(it, result) }
-    }
+    if (error != null)
+        throw OpenDatabaseError(error)
+     KeePassStorage.set(activity, keePassFile)
 }
+
+
+class OpenDatabaseError(message: String) : Exception(message)

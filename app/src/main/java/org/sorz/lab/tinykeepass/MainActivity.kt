@@ -2,24 +2,25 @@ package org.sorz.lab.tinykeepass
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import com.google.android.material.snackbar.Snackbar
 
 import android.view.View
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.work.*
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.warn
 
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage
+import org.sorz.lab.tinykeepass.keepass.OpenDatabaseError
 import org.sorz.lab.tinykeepass.keepass.databaseFile
 
 import org.sorz.lab.tinykeepass.keepass.hasDatabaseConfigured
 
 
 private const val REQUEST_SETUP_DATABASE = 1
+private const val TAG = "MainActivity"
 
-class MainActivity : BaseActivity(), AnkoLogger {
+class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,9 +71,11 @@ class MainActivity : BaseActivity(), AnkoLogger {
         } else {
             lifecycleScope.launchWhenCreated {
                 try {
-                    val keys = getDatabaseKeys()
-                    openDatabase(keys[0]) { showEntryList() }
+                    openDatabase()
+                    showEntryList()
                 } catch (err: AuthKeyError) {
+                    showError(err.message!!)
+                } catch (err: OpenDatabaseError) {
                     showError(err.message!!)
                 }
             }
@@ -125,7 +128,7 @@ class MainActivity : BaseActivity(), AnkoLogger {
     fun doCleanDatabase() {
         KeePassStorage.set(this, null)
         if (!databaseFile.delete())
-            warn("fail to delete database file")
+            Log.w(TAG, "fail to delete database file")
         secureStringStorage.clear()
         clearDatabaseConfigs(preferences)
         showMessage(getString(R.string.clean_config_ok), Snackbar.LENGTH_SHORT)

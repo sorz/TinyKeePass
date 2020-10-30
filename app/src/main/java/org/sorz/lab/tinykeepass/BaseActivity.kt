@@ -1,7 +1,5 @@
 package org.sorz.lab.tinykeepass
 
-import android.app.KeyguardManager
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.*
@@ -16,17 +14,14 @@ import androidx.biometric.BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL
 import androidx.preference.PreferenceManager
 
 import org.sorz.lab.tinykeepass.auth.SecureStringStorage
-import org.sorz.lab.tinykeepass.keepass.OpenKeePassTask
-
-import java.security.KeyException
 
 import javax.crypto.Cipher
-
-import com.kunzisoft.keepass.database.element.Database
-
-import androidx.fragment.app.FragmentActivity
-import kotlinx.coroutines.suspendCancellableCoroutine
+import java.security.KeyException
 import java.lang.Exception
+
+import kotlinx.coroutines.suspendCancellableCoroutine
+import org.sorz.lab.tinykeepass.keepass.OpenDatabaseError
+import org.sorz.lab.tinykeepass.keepass.openKeePassTask
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -37,9 +32,6 @@ private val TAG = MainActivity::class.java.name
 abstract class BaseActivity : AppCompatActivity() {
     protected val preferences: SharedPreferences by lazy(LazyThreadSafetyMode.NONE) {
         PreferenceManager.getDefaultSharedPreferences(this)
-    }
-    private val keyguardManager by lazy(LazyThreadSafetyMode.NONE) {
-        getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
     }
     private lateinit var biometricPrompt: BiometricPrompt
     protected val secureStringStorage by lazy(LazyThreadSafetyMode.NONE) {
@@ -68,7 +60,7 @@ abstract class BaseActivity : AppCompatActivity() {
                 biometricAuthResult?.resume(result.cryptoObject!!.cipher!!)
             }
             override fun onAuthenticationError(code: Int, msg: CharSequence) {
-                biometricAuthResult?.resumeWithException(BiometricAuthError(code, msg.toString()))
+                biometricAuthResult?.resumeWithException(AuthKeyError(msg.toString()))
                 if (code == ERROR_NO_DEVICE_CREDENTIAL || code == ERROR_HW_NOT_PRESENT) {
                     // Reconfigure passwords
                     launchSetupDatabase()
@@ -158,23 +150,11 @@ abstract class BaseActivity : AppCompatActivity() {
         return keys
     }
 
-    protected fun openDatabase(masterKey: String, onSuccess: ((Database) -> Unit)) {
-        OpenTask(this, masterKey, onSuccess).execute()
-    }
-
-    private class OpenTask internal constructor(
-            activity: FragmentActivity,  // TODO: memory leaks?
-            masterKey: String,
-            private val onSuccess: ((Database) -> Unit)
-    ) : OpenKeePassTask(activity, masterKey) {
-
-        override fun onPostExecute(db: Database?) {
-            super.onPostExecute(db)
-            if (db != null)
-                onSuccess.invoke(db)
-        }
+    @Throws(AuthKeyError::class, OpenDatabaseError::class)
+    protected suspend fun openDatabase() {
+        val keys = getDatabaseKeys()
+        openKeePassTask(this, keys[0])
     }
 }
 
-class BiometricAuthError(val code: Int, message: String) : AuthKeyError(message)
 open class AuthKeyError(message: String) : Exception(message)
