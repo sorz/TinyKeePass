@@ -47,11 +47,11 @@ class DatabaseSyncingWorker(val context: Context, params: WorkerParameters) :
         // Fetch then notify
         try {
             fetchDatabase(context, uri, masterKey, basicAuth)
-        } catch (err: IOException) {
+        } catch (err: Exception) {
             notifyResult(err)
             return Result.failure(workDataOf(
                     RESULT_TIMESTAMP to System.currentTimeMillis(),
-                    RESULT_ERROR to err.localizedMessage,
+                    RESULT_ERROR to (err.localizedMessage ?: err.toString()),
             ))
         }
         notifyResult()

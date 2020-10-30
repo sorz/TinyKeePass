@@ -18,11 +18,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.kunzisoft.keepass.database.exception.LoadDatabaseException
 import org.sorz.lab.tinykeepass.keepass.KeePassStorage
 import org.sorz.lab.tinykeepass.ui.Setup
 import java.io.IOException
-import java.lang.ref.WeakReference
-import java.util.*
 
 
 const val AUTH_METHOD_UNDEFINED = -1
@@ -131,6 +130,12 @@ class DatabaseSetupActivity : BaseActivity() {
         } catch (err: IOException) {
             Log.w(TAG, "error on fetch db", err)
             val msg = getString(R.string.fail_to_sync, err.localizedMessage ?: "I/O error")
+            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            viewModel.state.value = SetupState.EDITING
+            return@launchWhenCreated
+        }  catch (err: LoadDatabaseException) {
+            Log.w(TAG, "error on open db", err)
+            val msg = getString(R.string.open_db_dialog_fail)
             Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
             viewModel.state.value = SetupState.EDITING
             return@launchWhenCreated
