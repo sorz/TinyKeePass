@@ -64,6 +64,7 @@ dependencies {
     implementation 'androidx.biometric:biometric:1.1.0-beta01'
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+    implementation "androidx.work:work-runtime-ktx:2.5.0-beta01"
 
     implementation 'com.google.android.material:material:1.2.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"

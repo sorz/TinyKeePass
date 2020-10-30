@@ -6,6 +6,7 @@ import com.google.android.material.snackbar.Snackbar
 
 import android.view.View
 import android.widget.Toast
+import androidx.work.*
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.warn
 
@@ -89,17 +90,26 @@ class MainActivity : BaseActivity(), AnkoLogger {
 
     fun doSyncDatabase() {
         getDatabaseKeys({ keys ->
-            val url = preferences.getString("db-url", "")
-            val masterKey = keys.get(0)
-            var username: String? = null
-            var password: String? = null
+            val params = Data.Builder()
+                    .putString(PARAM_URL, preferences.getString("db-url", ""))
+                    .putString(PARAM_MASTER_KEY, keys[0])
             if (preferences.getBoolean("db-auth-required", false)) {
-                username = preferences.getString("db-auth-username", "")
-                password = keys.get(1)
+                val username = preferences.getString("db-auth-username", "")
+                params.putString(PARAM_USERNAME, username)
+                        .putString(PARAM_PASSWORD, keys[1])
             }
-            val intent = DatabaseSyncingService.getFetchIntent(
-                    this, url, masterKey, username, password)
-            startService(intent)
+            val constraints = Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+            val request = OneTimeWorkRequestBuilder<DatabaseSyncingWorker>()
+                    .setConstraints(constraints)
+                    .setInputData(params.build())
+                    .build()
+            WorkManager.getInstance(this).enqueueUniqueWork(
+                DATABASE_SYNCING_WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                request,
+            )
         }) { showError(it) }
     }
 
