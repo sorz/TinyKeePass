@@ -53,6 +53,7 @@
         android:ems="10"
         android:hint="@string/password"
         android:inputType="textPassword"
+        android:importantForAccessibility="no"
         android:visibility="gone"
         app:layout_constraintLeft_toLeftOf="@+id/editAuthUsername"
         app:layout_constraintTop_toBottomOf="@+id/editAuthUsername" />
@@ -67,6 +68,7 @@
         android:ems="10"
         android:hint="@string/master_password"
         android:inputType="textVisiblePassword"
+        android:importantForAccessibility="no"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/editDatabaseUrl"
         app:layout_constraintRight_toLeftOf="@+id/checkShowPassword"
