@@ -1,27 +1,27 @@
 package org.sorz.lab.tinykeepass
 
-import android.content.Intent
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
-
-import android.view.View
-import android.widget.Toast
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.warn
-
-import org.sorz.lab.tinykeepass.keepass.KeePassStorage
-import org.sorz.lab.tinykeepass.keepass.databaseFile
-
-import org.sorz.lab.tinykeepass.keepass.hasDatabaseConfigured
+import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
+import org.sorz.lab.tinykeepass.ui.App
 
 
-private const val REQUEST_SETUP_DATABASE = 1
-
-class MainActivity : BaseActivity(), AnkoLogger {
-
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContent {
+            App()
+        }
+    }
 
+    fun doUnlockDatabase() { TODO("remove me") }
+    fun doLockDatabase() { TODO("remove me") }
+    fun doSyncDatabase() { TODO("remove me") }
+    fun doCleanDatabase() { TODO("remove me") }
+    fun doConfigureDatabase() { TODO("remove me") }
+}
+
+/*
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                     .add(R.id.fragment_container, DatabaseLockedFragment())
@@ -133,3 +133,4 @@ class MainActivity : BaseActivity(), AnkoLogger {
     }
 
 }
+*/

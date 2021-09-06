@@ -12,7 +12,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".DatabaseSetupActivity">
+        <activity
+            android:name=".DatabaseSetupActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -40,7 +42,8 @@
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -57,7 +60,8 @@
             android:exported="false" />
         <service
             android:name=".autofill.TinyAutofillService"
-            android:permission="android.permission.BIND_AUTOFILL">
+            android:permission="android.permission.BIND_AUTOFILL"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.service.autofill.AutofillService" />
             </intent-filter>
