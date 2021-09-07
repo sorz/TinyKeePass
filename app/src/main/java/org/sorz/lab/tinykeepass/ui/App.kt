@@ -10,6 +10,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.android.material.composethemeadapter.MdcTheme
 import org.sorz.lab.tinykeepass.R
+import org.sorz.lab.tinykeepass.keepass.RealRepository
+import org.sorz.lab.tinykeepass.keepass.Repository
 
 
 private object Routes {
@@ -20,6 +22,8 @@ private object Routes {
 
 @Composable
 fun App() {
+    val repo = RealRepository()
+
     MdcTheme {
         val navController = rememberNavController()
         val scaffoldState = rememberScaffoldState()
@@ -34,7 +38,7 @@ fun App() {
                 )
              },
         ) {
-            NavGraph(navController, scaffoldState)
+            NavGraph(navController, scaffoldState, repo)
         }
     }
 }
@@ -43,12 +47,13 @@ fun App() {
 private fun NavGraph(
     navController: NavHostController,
     scaffoldState: ScaffoldState,
+    repo: Repository,
 ) {
 
     NavHost(navController, Routes.LOCKED) {
         // Locked screen
         composable(Routes.LOCKED) {
-            TODO()
+            LockScreen(repo, navController)
         }
         // List screen
         composable(Routes.LIST) {
