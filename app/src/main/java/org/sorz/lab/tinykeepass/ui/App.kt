@@ -17,7 +17,7 @@ import org.sorz.lab.tinykeepass.keepass.Repository
 private object Routes {
     const val LOCKED = "locked"
     const val LIST = "list"
-    const val CONFIG = "config"
+    const val Setup = "setup"
 }
 
 @Composable
@@ -59,9 +59,9 @@ private fun NavGraph(
         composable(Routes.LIST) {
             TODO()
         }
-        // Config screen
-        composable(Routes.CONFIG) {
-            TODO()
+        // Setup screen
+        composable(Routes.Setup) {
+            SetupScreen(repo, navController)
         }
     }
 }
@@ -73,7 +73,7 @@ class NavActions(navController: NavController) {
     val list: () -> Unit = {
         navController.navigate(Routes.LIST)
     }
-    val config: () -> Unit = {
-        navController.navigate(Routes.CONFIG)
+    val setup: () -> Unit = {
+        navController.navigate(Routes.Setup)
     }
 }

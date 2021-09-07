@@ -33,7 +33,7 @@ object DummyRepository : Repository {
 }
 
 class RealRepository : Repository {
-    private val state = MutableStateFlow(DatabaseState.LOCKED)
+    private val state = MutableStateFlow(DatabaseState.UNCONFIGURED)
 
     override val databaseState = state
 

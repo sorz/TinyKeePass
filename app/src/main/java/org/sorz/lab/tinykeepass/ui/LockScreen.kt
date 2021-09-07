@@ -62,7 +62,7 @@ fun LockScreen(
         }
         Spacer(Modifier.height(16.dp))
         OutlinedButton(
-            onClick = {},
+            onClick = { nav?.let { NavActions(it).setup() } },
             enabled = !configured,
             modifier = buttonModifier,
         ) {
