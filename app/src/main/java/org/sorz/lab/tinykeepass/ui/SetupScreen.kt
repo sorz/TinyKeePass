@@ -26,9 +26,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 import org.sorz.lab.tinykeepass.keepass.DummyRepository
 import org.sorz.lab.tinykeepass.keepass.Repository
 import org.sorz.lab.tinykeepass.R
+import java.util.*
 
 @Preview(showSystemUi = true)
 @Composable
@@ -48,11 +50,36 @@ fun SetupScreen(
     var masterPassword by rememberSaveable { mutableStateOf("") }
     var userAuthRequired by rememberSaveable { mutableStateOf(false) }
     var selectedFileUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var confirmClicked by rememberSaveable { mutableStateOf(false) }
+    var isSettingUp by rememberSaveable { mutableStateOf(false) }
 
     val openFileLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { selectedFileUri = it }
-    val isOverHttp = databaseUrl.startsWith("http", true)
+    val typedDatabaseUri = Uri.parse(databaseUrl)
+    val isOverHttp = typedDatabaseUri.scheme?.lowercase()?.matches(Regex("https?")) == true
+    val validatedDatabaseUri = selectedFileUri ?: typedDatabaseUri?.takeIf { isOverHttp }
+
+    fun submit() {
+        confirmClicked = true
+        // Validate input
+        if (validatedDatabaseUri == null) return
+        if (isOverHttp && httpAuthRequired)
+            if (httpAuthUsername.isEmpty() || httpAuthPassword.isEmpty()
+                    || !isValidHttpBasicAuthValue(httpAuthUsername)
+                    || !isValidHttpBasicAuthValue(httpAuthPassword)
+            ) return
+        if (masterPassword.isEmpty()) return
+        isSettingUp = true
+    }
+
+    LaunchedEffect(isSettingUp) {
+        if (!isSettingUp) return@LaunchedEffect
+
+        delay(2000)
+
+        isSettingUp =false
+    }
 
     Column(
         modifier = Modifier
@@ -73,8 +100,10 @@ fun SetupScreen(
                 }
                 databaseUrl = it
             },
+            enabled = !isSettingUp,
             placeholder = { Text(stringResource(R.string.database_url)) },
             label = { Text(stringResource(R.string.database)) },
+            isError = confirmClicked && selectedFileUri == null && !isOverHttp,
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             modifier = Modifier.fillMaxWidth(),
@@ -88,7 +117,7 @@ fun SetupScreen(
         // HTTP basic auth
         Spacer(modifier = Modifier.height(24.dp))
         CheckboxWithLabel(
-            enabled = isOverHttp,
+            enabled = !isSettingUp && isOverHttp,
             checked = isOverHttp && httpAuthRequired,
             onCheckedChange = { httpAuthRequired = it },
             label = R.string.require_http_auth,
@@ -99,16 +128,22 @@ fun SetupScreen(
                 OutlinedTextField(
                     value = httpAuthUsername,
                     onValueChange = { httpAuthUsername = it },
-                    isError = !isValidHttpBasicAuthValue(httpAuthUsername),
+                    isError =
+                        (!isValidHttpBasicAuthValue(httpAuthUsername)) ||
+                        (confirmClicked && httpAuthUsername.isEmpty()),
                     label = { Text(stringResource(R.string.username)) },
                     singleLine = true,
+                    enabled = !isSettingUp,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 PasswordTextField(
                     value = httpAuthPassword,
                     onValueChange = { httpAuthPassword = it },
-                    isError = !isValidHttpBasicAuthValue(httpAuthPassword),
+                    isError =
+                        (!isValidHttpBasicAuthValue(httpAuthPassword)) ||
+                        (confirmClicked && httpAuthPassword.isEmpty()),
                     label = R.string.password,
+                    enabled = !isSettingUp,
                 )
             }
         }
@@ -120,6 +155,8 @@ fun SetupScreen(
             onValueChange = { masterPassword = it },
             label = R.string.master_password,
             modifier = Modifier.fillMaxWidth(),
+            isError = confirmClicked && masterPassword.isEmpty(),
+            enabled = !isSettingUp,
         )
 
         // User auth option
@@ -128,7 +165,22 @@ fun SetupScreen(
             checked = userAuthRequired,
             onCheckedChange = { userAuthRequired = it },
             label = R.string.require_user_auth,
+            enabled = !isSettingUp,
         )
+
+        // Confirm
+        Spacer(modifier = Modifier.height(24.dp))
+        Row(
+            horizontalArrangement = Arrangement.End,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            if (isSettingUp)
+                CircularProgressIndicator()
+            Spacer(Modifier.width(16.dp))
+            Button(onClick = { submit() }, enabled = !isSettingUp) {
+                Text(stringResource(R.string.button_confirm))
+            }
+        }
     }
 }
 
@@ -162,6 +214,7 @@ private fun PasswordTextField(
     modifier: Modifier = Modifier,
     @StringRes label: Int,
     isError: Boolean = false,
+    enabled: Boolean = true,
 ) {
     var showPassword by remember { mutableStateOf(false) }
     OutlinedTextField(
@@ -183,6 +236,7 @@ private fun PasswordTextField(
             }
         },
         modifier = modifier,
+        enabled = enabled,
     )
 }
 
