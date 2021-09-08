@@ -32,6 +32,7 @@ import org.sorz.lab.tinykeepass.keepass.Repository
 import org.sorz.lab.tinykeepass.R
 import org.sorz.lab.tinykeepass.keepass.HttpAuth
 import org.sorz.lab.tinykeepass.keepass.RealRepository
+import org.sorz.lab.tinykeepass.settingsDataStore
 import java.io.IOException
 import java.util.*
 
@@ -50,6 +51,7 @@ fun SetupScreen(
     scaffoldState: ScaffoldState? = null,
 ) {
     val context = LocalContext.current
+    val savedSettings by context.settingsDataStore.data.collectAsState(null)
     var databaseUrl by rememberSaveable { mutableStateOf("") }
     var httpAuthRequired by rememberSaveable { mutableStateOf(false) }
     var httpAuthUsername by rememberSaveable { mutableStateOf("") }
@@ -67,6 +69,12 @@ fun SetupScreen(
     ) { selectedFileUri = it }
     val typedDatabaseUri = Uri.parse(databaseUrl)
     val isOverHttp = typedDatabaseUri.scheme?.lowercase()?.matches(Regex("https?")) == true
+
+    // Restore saved config
+    savedSettings?.let { cfg ->
+        if (databaseUrl.isEmpty()) databaseUrl = cfg.databaseUri
+        if (httpAuthUsername.isEmpty()) httpAuthUsername = cfg.httpAuthUsername
+    }
 
     // Validate input before trigger saving
     fun submit() {
@@ -101,6 +109,12 @@ fun SetupScreen(
             return@LaunchedEffect
         }
         // Save config
+        context.settingsDataStore.updateData { current ->
+            current.toBuilder()
+                .setDatabaseUri(databaseUri.toString())
+                .setHttpAuthUsername(httpAuth?.username ?: "")
+                .build()
+        }
         // TODO
 
         nav?.let { NavActions(it).list() }

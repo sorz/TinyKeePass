@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: "androidx.navigation.safeargs.kotlin"
 apply plugin: 'kotlin-kapt'
-
+apply plugin: 'com.google.protobuf'
 
 android {
     compileSdkVersion 31
@@ -67,6 +67,11 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.preference:preference-ktx:1.1.1'
     implementation 'androidx.biometric:biometric:1.1.0'
+    implementation 'androidx.security:security-crypto:1.1.0-alpha03'
+
+    // Jetpack Datastore
+    implementation "androidx.datastore:datastore:1.0.0"
+    implementation "com.google.protobuf:protobuf-javalite:3.10.0"
 
     // Jetpack Navigation
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
@@ -101,4 +106,18 @@ dependencies {
 }
 repositories {
     mavenCentral()
+}
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.10.0'
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {
+                    option 'lite'
+                }
+            }
+        }
+    }
 }

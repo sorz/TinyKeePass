@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+option java_package = "org.sorz.lab.tinykeepass";
+option java_multiple_files = true;
+
+message Settings {
+    string database_uri = 1;
+    string http_auth_username = 2;
+}
