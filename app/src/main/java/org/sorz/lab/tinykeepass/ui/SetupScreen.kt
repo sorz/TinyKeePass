@@ -1,6 +1,7 @@
 package org.sorz.lab.tinykeepass.ui
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
@@ -20,29 +21,35 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import kotlinx.coroutines.delay
-import org.sorz.lab.tinykeepass.keepass.DummyRepository
 import org.sorz.lab.tinykeepass.keepass.Repository
 import org.sorz.lab.tinykeepass.R
+import org.sorz.lab.tinykeepass.keepass.HttpAuth
+import org.sorz.lab.tinykeepass.keepass.RealRepository
+import java.io.IOException
 import java.util.*
+
+private const val TAG = "SetupScreen"
 
 @Preview(showSystemUi = true)
 @Composable
 private fun SetupScreenPreview() {
-    SetupScreen(DummyRepository)
+    SetupScreen(RealRepository(LocalContext.current))
 }
 
 @Composable
 fun SetupScreen(
     repo: Repository,
     nav: NavController? = null,
+    scaffoldState: ScaffoldState? = null,
 ) {
+    val context = LocalContext.current
     var databaseUrl by rememberSaveable { mutableStateOf("") }
     var httpAuthRequired by rememberSaveable { mutableStateOf(false) }
     var httpAuthUsername by rememberSaveable { mutableStateOf("") }
@@ -51,41 +58,69 @@ fun SetupScreen(
     var userAuthRequired by rememberSaveable { mutableStateOf(false) }
     var selectedFileUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var confirmClicked by rememberSaveable { mutableStateOf(false) }
-    var isSettingUp by rememberSaveable { mutableStateOf(false) }
+    var uriWhichIsSettingUp by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    val isSettingUp = uriWhichIsSettingUp != null
     val openFileLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { selectedFileUri = it }
     val typedDatabaseUri = Uri.parse(databaseUrl)
     val isOverHttp = typedDatabaseUri.scheme?.lowercase()?.matches(Regex("https?")) == true
-    val validatedDatabaseUri = selectedFileUri ?: typedDatabaseUri?.takeIf { isOverHttp }
 
+    // Validate input before trigger saving
     fun submit() {
         confirmClicked = true
-        // Validate input
-        if (validatedDatabaseUri == null) return
+        val validatedUri = selectedFileUri ?: typedDatabaseUri?.takeIf { isOverHttp } ?: return
         if (isOverHttp && httpAuthRequired)
             if (httpAuthUsername.isEmpty() || httpAuthPassword.isEmpty()
                     || !isValidHttpBasicAuthValue(httpAuthUsername)
                     || !isValidHttpBasicAuthValue(httpAuthPassword)
             ) return
         if (masterPassword.isEmpty()) return
-        isSettingUp = true
+        uriWhichIsSettingUp = validatedUri
     }
 
-    LaunchedEffect(isSettingUp) {
-        if (!isSettingUp) return@LaunchedEffect
+    // Download database & save config
+    LaunchedEffect(uriWhichIsSettingUp) {
+        val databaseUri = uriWhichIsSettingUp ?: return@LaunchedEffect
+        val httpAuth = HttpAuth(httpAuthUsername, httpAuthPassword).takeIf {
+            isOverHttp && httpAuthRequired
+        }
+        // Try downlaod & open the database
+        try {
+            repo.syncDatabase(databaseUri, masterPassword, httpAuth)
+        } catch (err: IOException) {
+            Log.w(TAG, "fail to setup database", err)
+            val msg = err.cause?.localizedMessage // FIXME: proper error message
+                ?: err.cause?.toString()
+                ?: err.localizedMessage
+                ?: err.toString()
+            errorMessage = context.getString(R.string.fail_to_sync, msg)
+            uriWhichIsSettingUp = null
+            return@LaunchedEffect
+        }
+        // Save config
+        // TODO
 
-        delay(2000)
+        nav?.let { NavActions(it).list() }
+        uriWhichIsSettingUp = null
+    }
 
-        isSettingUp =false
+    // Snackbar for download/unlock errors
+    LaunchedEffect(errorMessage) {
+        val msg = errorMessage ?: return@LaunchedEffect
+        val snackbar = scaffoldState?.snackbarHostState ?: return@LaunchedEffect
+        val result = snackbar.showSnackbar(msg, context.getString(R.string.retry))
+        errorMessage = null
+        if (result == SnackbarResult.ActionPerformed) submit()
     }
 
     Column(
         modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(8.dp),
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(8.dp),
     ) {
         // Database URL
         OutlinedTextField(
@@ -100,7 +135,7 @@ fun SetupScreen(
                 }
                 databaseUrl = it
             },
-            enabled = !isSettingUp,
+            enabled = uriWhichIsSettingUp == null,
             placeholder = { Text(stringResource(R.string.database_url)) },
             label = { Text(stringResource(R.string.database)) },
             isError = confirmClicked && selectedFileUri == null && !isOverHttp,
@@ -222,6 +257,7 @@ private fun PasswordTextField(
         onValueChange = onValueChange,
         isError = isError,
         label = { Text(stringResource(label)) },
+        singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         visualTransformation =
             if (showPassword) VisualTransformation.None

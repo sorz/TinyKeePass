@@ -65,4 +65,5 @@
     <string name="open_db_dialog_note">It may take several seconds</string>
     <string name="open_db_dialog_fail">Fail to open database</string>
     <string name="require_user_auth">Require user auth before unlock</string>
+    <string name="retry">Retry</string>
 </resources>

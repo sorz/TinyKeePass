@@ -2,6 +2,7 @@ package org.sorz.lab.tinykeepass.ui
 
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -9,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.android.material.composethemeadapter.MdcTheme
+import kotlinx.coroutines.Dispatchers
 import org.sorz.lab.tinykeepass.R
 import org.sorz.lab.tinykeepass.keepass.RealRepository
 import org.sorz.lab.tinykeepass.keepass.Repository
@@ -22,9 +24,12 @@ private object Routes {
 
 @Composable
 fun App() {
-    val repo = RealRepository()
+    val repo = RealRepository(
+        LocalContext.current,
+        Dispatchers.IO,
+    )
 
-    MdcTheme {
+    MdcTheme {3
         val navController = rememberNavController()
         val scaffoldState = rememberScaffoldState()
 
@@ -57,11 +62,11 @@ private fun NavGraph(
         }
         // List screen
         composable(Routes.LIST) {
-            TODO()
+            Text("TODO: List screen")
         }
         // Setup screen
         composable(Routes.Setup) {
-            SetupScreen(repo, navController)
+            SetupScreen(repo, navController, scaffoldState)
         }
     }
 }
