@@ -1,5 +1,8 @@
 package org.sorz.lab.tinykeepass.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,7 +17,6 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.*
@@ -40,11 +42,17 @@ fun SetupScreen(
     nav: NavController? = null,
 ) {
     var databaseUrl by rememberSaveable { mutableStateOf("") }
-    var httpAuthRequired by rememberSaveable { mutableStateOf(true) }
+    var httpAuthRequired by rememberSaveable { mutableStateOf(false) }
     var httpAuthUsername by rememberSaveable { mutableStateOf("") }
     var httpAuthPassword  by rememberSaveable { mutableStateOf("") }
     var masterPassword by rememberSaveable { mutableStateOf("") }
     var userAuthRequired by rememberSaveable { mutableStateOf(false) }
+    var selectedFileUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+
+    val openFileLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { selectedFileUri = it }
+    val isOverHttp = databaseUrl.startsWith("http", true)
 
     Column(
         modifier = Modifier
@@ -54,15 +62,24 @@ fun SetupScreen(
     ) {
         // Database URL
         OutlinedTextField(
-            value = databaseUrl,
-            onValueChange = { databaseUrl = it },
+            value = selectedFileUri?.toString() ?: databaseUrl,
+            onValueChange = {
+                if (selectedFileUri != null) {
+                    selectedFileUri = null
+                    if (!it.startsWith("http", true)) {
+                        databaseUrl = ""
+                        return@OutlinedTextField
+                    }
+                }
+                databaseUrl = it
+            },
             placeholder = { Text(stringResource(R.string.database_url)) },
             label = { Text(stringResource(R.string.database)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
-                IconButton(onClick = { /*TODO*/ }) {
+                IconButton(onClick = { openFileLauncher.launch(arrayOf("*/*")) }) {
                     Icon(Icons.Default.FolderOpen, stringResource(R.string.open_file))
                 }
             },
@@ -71,7 +88,8 @@ fun SetupScreen(
         // HTTP basic auth
         Spacer(modifier = Modifier.height(24.dp))
         CheckboxWithLabel(
-            checked = httpAuthRequired,
+            enabled = isOverHttp,
+            checked = isOverHttp && httpAuthRequired,
             onCheckedChange = { httpAuthRequired = it },
             label = R.string.require_http_auth,
         )
@@ -119,13 +137,16 @@ private fun CheckboxWithLabel(
     checked: Boolean,
     onCheckedChange: ((Boolean) -> Unit),
     @StringRes label: Int,
+    enabled: Boolean = true,
 ) {
-    Row(modifier = Modifier.clickable {
+    val modifier = Modifier.clickable {
         onCheckedChange(!checked)
-    }) {
+    }
+    Row(modifier = if (enabled) { modifier } else { Modifier }) {
         Checkbox(
             checked = checked,
             onCheckedChange = onCheckedChange,
+            enabled = enabled,
         )
         Text(
             text = stringResource(label),

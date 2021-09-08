@@ -45,6 +45,8 @@ android {
 }
 
 dependencies {
+    def activity_version = "1.4.0-alpha01"
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'commons-io:commons-io:2.8.0'
 
@@ -65,6 +67,10 @@ dependencies {
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
     implementation "androidx.navigation:navigation-compose:$nav_version"
+
+    // Jetpack Activity
+    implementation("androidx.activity:activity-ktx:$activity_version")
+    implementation("androidx.activity:activity-compose:$activity_version")
 
     // Compose UI
     implementation "androidx.compose.compiler:compiler:$compose_version"
