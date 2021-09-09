@@ -5,6 +5,9 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +24,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -32,6 +36,7 @@ import org.sorz.lab.tinykeepass.keepass.Repository
 import org.sorz.lab.tinykeepass.R
 import org.sorz.lab.tinykeepass.auth.SecureStorage
 import org.sorz.lab.tinykeepass.auth.SystemException
+import org.sorz.lab.tinykeepass.auth.UserAuthException
 import org.sorz.lab.tinykeepass.keepass.HttpAuth
 import org.sorz.lab.tinykeepass.keepass.RealRepository
 import org.sorz.lab.tinykeepass.keepass.RemoteKeePass
@@ -66,6 +71,10 @@ fun SetupScreen(
     var databaseInSettingUp by remember { mutableStateOf<RemoteKeePass?>(null) }  // Pwd incl.
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    val userAuthIsAvailable = remember {
+        BiometricManager.from(context)
+            .canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
+    }
     val isSettingUp = databaseInSettingUp != null
     val openFileLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -120,7 +129,7 @@ fun SetupScreen(
             current.toBuilder()
                 .setDatabaseUri(remoteDb.uri.toString())
                 .setHttpAuthUsername(remoteDb.httpAuth?.username ?: "")
-                .setUserAuthRequired(userAuthRequired)
+                .setUserAuthRequired(userAuthRequired && userAuthIsAvailable)
                 .build()
         }
         // Save encrypted config
@@ -132,6 +141,9 @@ fun SetupScreen(
         } catch (err: SystemException) {
             Log.e(TAG, "fail to get master key", err) // FIXME: proper error message
             return@LaunchedEffect onError(context.getString(R.string.error_get_master_key, err.toString()))
+        } catch (err: UserAuthException) {
+            Log.e(TAG, "user auth fail", err) // FIXME: proper error message
+            return@LaunchedEffect onError(err.message ?: err.toString())
         }
         Log.d(TAG, "Save encrypted config")
         remoteDb.writeToPrefs(prefs)
@@ -230,10 +242,10 @@ fun SetupScreen(
         // User auth option
         Spacer(modifier = Modifier.height(8.dp))
         CheckboxWithLabel(
-            checked = userAuthRequired,
+            checked = userAuthRequired && userAuthIsAvailable,
             onCheckedChange = { userAuthRequired = it },
             label = R.string.require_user_auth,
-            enabled = !isSettingUp,
+            enabled = !isSettingUp && userAuthIsAvailable,
         )
 
         // Confirm
@@ -270,7 +282,10 @@ private fun CheckboxWithLabel(
         )
         Text(
             text = stringResource(label),
-            modifier = Modifier.padding(start = 8.dp)
+            modifier = Modifier.padding(start = 4.dp),
+            color =
+                if (enabled) Color.Unspecified
+                else MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
         )
     }
 }
