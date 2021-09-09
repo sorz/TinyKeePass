@@ -14,35 +14,60 @@ import org.sorz.lab.tinykeepass.settingsDataStore
 import java.io.IOException
 import java.lang.IllegalArgumentException
 import java.security.GeneralSecurityException
+import java.security.KeyStore
 
 private const val TAG = "SecureStorage"
+private const val USER_AUTH_VALID_SECS = 10 // TODO: allow custom user auth valid duration
 
 class SecureStorage(
     private val context: Context,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val prefsFileName: String = "secret_shared_prefs",
+    private val keyAlias: String = "keepass-test-key"
 ) {
-    @Throws(MasterKeyGenerateException::class)
-    suspend fun getMasterKey(): MasterKey {
+    @Throws(KeyStoreException::class)
+    private suspend fun getKeyStore(): KeyStore = withContext(ioDispatcher) {
+        try {
+            KeyStore.getInstance("AndroidKeyStore").apply {
+                load(null)
+            }
+        } catch (err: Exception) {
+            throw KeyStoreException(err)
+        }
+    }
+
+    @Throws(MasterKeyException::class)
+    private suspend fun getOrGenerateMasterKey(): MasterKey {
         val userAuthRequired = context.settingsDataStore.data.first().userAuthRequired
         val strongBox = context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
         Log.d(TAG, "strong box: $strongBox")
-        val masterKey = try {
+        return try {
             withContext(ioDispatcher) {
-                MasterKey.Builder(context)
+                MasterKey.Builder(context, keyAlias)
                     .setRequestStrongBoxBacked(strongBox)
-                    .setUserAuthenticationRequired(userAuthRequired)
+                    .setUserAuthenticationRequired(userAuthRequired, USER_AUTH_VALID_SECS)
                     .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
                     .build()
             }
         } catch (err: GeneralSecurityException) {
-            throw MasterKeyGenerateException(err)
+            throw MasterKeyException(err)
         } catch (err: IllegalArgumentException) {
-            throw MasterKeyGenerateException(err)
+            throw MasterKeyException(err)
         } catch (err: IOException) {
-            throw MasterKeyGenerateException(err)
+            throw MasterKeyException(err)
         }
-        return masterKey
+    }
+
+    @Throws(KeyStoreException::class, MasterKeyException::class)
+    suspend fun generateMasterKey(): MasterKey {
+        getKeyStore().apply {
+            if (containsAlias(keyAlias))
+                deleteEntry(keyAlias)
+        }
+        withContext(ioDispatcher) {
+            context.deleteSharedPreferences(prefsFileName)
+        }
+        return getOrGenerateMasterKey()
     }
 
     suspend fun getEncryptedPreferences(masterKey: MasterKey): SharedPreferences =
@@ -55,4 +80,6 @@ class SecureStorage(
         }
 }
 
-class MasterKeyGenerateException(throwable: Throwable): Exception(throwable)
+open class SystemException(throwable: Throwable): Exception(throwable)
+class KeyStoreException(throwable: Throwable): SystemException(throwable)
+class MasterKeyException(throwable: Throwable): SystemException(throwable)

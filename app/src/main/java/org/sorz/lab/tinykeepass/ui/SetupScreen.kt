@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import org.sorz.lab.tinykeepass.keepass.Repository
 import org.sorz.lab.tinykeepass.R
-import org.sorz.lab.tinykeepass.auth.MasterKeyGenerateException
 import org.sorz.lab.tinykeepass.auth.SecureStorage
+import org.sorz.lab.tinykeepass.auth.SystemException
 import org.sorz.lab.tinykeepass.keepass.HttpAuth
 import org.sorz.lab.tinykeepass.keepass.RealRepository
 import org.sorz.lab.tinykeepass.keepass.RemoteKeePass
@@ -101,9 +101,6 @@ fun SetupScreen(
     // Download database & save config
     LaunchedEffect(databaseInSettingUp) {
         val remoteDb = databaseInSettingUp ?: return@LaunchedEffect
-        val httpAuth = HttpAuth(httpAuthUsername, httpAuthPassword).takeIf {
-            isOverHttp && httpAuthRequired
-        }
         val onError = { msg: String -> errorMessage = msg; databaseInSettingUp = null }
         // Try download & open the database
         try {
@@ -130,9 +127,9 @@ fun SetupScreen(
         val prefs = try {
             Log.d(TAG, "Get encrypted prefs")
             SecureStorage(context).run {
-                getEncryptedPreferences(getMasterKey())
+                getEncryptedPreferences(generateMasterKey())
             }
-        } catch (err: MasterKeyGenerateException) {
+        } catch (err: SystemException) {
             Log.e(TAG, "fail to get master key", err) // FIXME: proper error message
             return@LaunchedEffect onError(context.getString(R.string.error_get_master_key, err.toString()))
         }
