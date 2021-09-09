@@ -29,7 +29,7 @@ fun App() {
         Dispatchers.IO,
     )
 
-    MdcTheme {3
+    MdcTheme {
         val navController = rememberNavController()
         val scaffoldState = rememberScaffoldState()
 

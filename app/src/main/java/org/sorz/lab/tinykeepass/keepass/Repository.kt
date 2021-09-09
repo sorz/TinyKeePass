@@ -30,20 +30,11 @@ enum class DatabaseState {
     UNCONFIGURED, LOCKED, UNLOCKED,
 }
 
-data class HttpAuth(
-    val username: String,
-    val password: String,
-)
-
 interface Repository{
     val databaseState: StateFlow<DatabaseState>
 
     suspend fun unlockDatabase()
-    suspend fun syncDatabase(
-        uri: Uri,
-        masterPassword: String,
-        httpAuth: HttpAuth? = null
-    )
+    suspend fun syncDatabase(remote: RemoteKeePass)
     suspend fun cleanDatabase()
 }
 
@@ -65,32 +56,28 @@ class RealRepository(
     }
 
     @Throws(IOException::class)
-    override suspend fun syncDatabase(
-        uri: Uri,
-        masterPassword: String,
-        httpAuth: HttpAuth?,
-    ) {
+    override suspend fun syncDatabase(remote: RemoteKeePass) {
         val tempDbFile = File(cacheDir, databaseFilename)
         val persistentDbFile = File(filesDir, databaseFilename)
 
         // Copy file from uri to temp dir
-        if (uri.scheme?.startsWith("http", true) == true) {
+        if (remote.uri.scheme?.startsWith("http", true) == true) {
             val client = HttpClient(Android) {
-                httpAuth?.let { auth ->
+                remote.httpAuth?.let { auth ->
                     install(Auth) {
                         basic {
                             credentials {
                                 BasicAuthCredentials(auth.username, auth.password)
                             }
                             sendWithoutRequest { request ->
-                                request.url.host == uri.host
+                                request.url.host == remote.uri.host
                             }
                         }
                     }
                 }
             }
             val resp = try {
-                client.get<HttpResponse>(uri.toString())
+                client.get<HttpResponse>(remote.uri.toString())
             } catch (err: ResponseException) {
                 throw IOException("got response: ${err.response.status}")
             }
@@ -98,12 +85,12 @@ class RealRepository(
         } else {
             val resolver = context.contentResolver
             resolver
-                .runCatching { takePersistableUriPermission(uri, FLAG_GRANT_READ_URI_PERMISSION) }
+                .runCatching { takePersistableUriPermission(remote.uri, FLAG_GRANT_READ_URI_PERMISSION) }
                 .onFailure { Log.w(TAG, "cannot take persistable permission", it) }
                 // Ignore it, we can still read it once w/o syncing in future
             try {
                 withContext(ioDispatcher) {
-                    resolver.openInputStream(uri) ?:
+                    resolver.openInputStream(remote.uri) ?:
                     throw IOException("content provider crashed")
                 }
             } catch (err: SecurityException) {
@@ -119,7 +106,7 @@ class RealRepository(
 
         // Try to open db in temp dir
         try {
-            loadDatabase(tempDbFile, masterPassword)
+            loadDatabase(tempDbFile, remote.masterPassword)
         } catch (err: LoadDatabaseException) {
             throw IOException("fail to unlock database", err)
         }

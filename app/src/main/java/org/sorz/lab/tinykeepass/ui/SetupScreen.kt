@@ -30,8 +30,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import org.sorz.lab.tinykeepass.keepass.Repository
 import org.sorz.lab.tinykeepass.R
+import org.sorz.lab.tinykeepass.auth.MasterKeyGenerateException
+import org.sorz.lab.tinykeepass.auth.SecureStorage
 import org.sorz.lab.tinykeepass.keepass.HttpAuth
 import org.sorz.lab.tinykeepass.keepass.RealRepository
+import org.sorz.lab.tinykeepass.keepass.RemoteKeePass
 import org.sorz.lab.tinykeepass.settingsDataStore
 import java.io.IOException
 import java.util.*
@@ -55,20 +58,21 @@ fun SetupScreen(
     var databaseUrl by rememberSaveable { mutableStateOf("") }
     var httpAuthRequired by rememberSaveable { mutableStateOf(false) }
     var httpAuthUsername by rememberSaveable { mutableStateOf("") }
-    var httpAuthPassword  by rememberSaveable { mutableStateOf("") }
-    var masterPassword by rememberSaveable { mutableStateOf("") }
+    var httpAuthPassword  by remember { mutableStateOf("") }  // Do not save password
+    var masterPassword by remember { mutableStateOf("") }
     var userAuthRequired by rememberSaveable { mutableStateOf(false) }
     var selectedFileUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var confirmClicked by rememberSaveable { mutableStateOf(false) }
-    var uriWhichIsSettingUp by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var databaseInSettingUp by remember { mutableStateOf<RemoteKeePass?>(null) }  // Pwd incl.
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    val isSettingUp = uriWhichIsSettingUp != null
+    val isSettingUp = databaseInSettingUp != null
     val openFileLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { selectedFileUri = it }
     val typedDatabaseUri = Uri.parse(databaseUrl)
-    val isOverHttp = typedDatabaseUri.scheme?.lowercase()?.matches(Regex("https?")) == true
+    val isOverHttp = selectedFileUri == null
+            && typedDatabaseUri.scheme?.lowercase()?.matches(Regex("https?")) == true
 
     // Restore saved config
     savedSettings?.let { cfg ->
@@ -80,45 +84,56 @@ fun SetupScreen(
     fun submit() {
         confirmClicked = true
         val validatedUri = selectedFileUri ?: typedDatabaseUri?.takeIf { isOverHttp } ?: return
-        if (isOverHttp && httpAuthRequired)
-            if (httpAuthUsername.isEmpty() || httpAuthPassword.isEmpty()
-                    || !isValidHttpBasicAuthValue(httpAuthUsername)
-                    || !isValidHttpBasicAuthValue(httpAuthPassword)
-            ) return
         if (masterPassword.isEmpty()) return
-        uriWhichIsSettingUp = validatedUri
+        val httpAuth = if (isOverHttp && httpAuthRequired) {
+            if (httpAuthUsername.isEmpty() || httpAuthPassword.isEmpty()
+                || !isValidHttpBasicAuthValue(httpAuthUsername)
+                || !isValidHttpBasicAuthValue(httpAuthPassword)
+            ) return
+            HttpAuth(httpAuthUsername, httpAuthPassword)
+        } else null
+        databaseInSettingUp = RemoteKeePass(validatedUri, masterPassword, httpAuth)
     }
 
     // Download database & save config
-    LaunchedEffect(uriWhichIsSettingUp) {
-        val databaseUri = uriWhichIsSettingUp ?: return@LaunchedEffect
+    LaunchedEffect(databaseInSettingUp) {
+        val remoteDb = databaseInSettingUp ?: return@LaunchedEffect
         val httpAuth = HttpAuth(httpAuthUsername, httpAuthPassword).takeIf {
             isOverHttp && httpAuthRequired
         }
-        // Try downlaod & open the database
+        val onError = { msg: String -> errorMessage = msg; databaseInSettingUp = null }
+        // Try download & open the database
         try {
-            repo.syncDatabase(databaseUri, masterPassword, httpAuth)
+            repo.syncDatabase(remoteDb)
         } catch (err: IOException) {
             Log.w(TAG, "fail to setup database", err)
             val msg = err.cause?.localizedMessage // FIXME: proper error message
                 ?: err.cause?.toString()
                 ?: err.localizedMessage
                 ?: err.toString()
-            errorMessage = context.getString(R.string.fail_to_sync, msg)
-            uriWhichIsSettingUp = null
-            return@LaunchedEffect
+            return@LaunchedEffect onError(context.getString(R.string.fail_to_sync, msg))
         }
-        // Save config
+        // Save plaintext config
         context.settingsDataStore.updateData { current ->
             current.toBuilder()
-                .setDatabaseUri(databaseUri.toString())
-                .setHttpAuthUsername(httpAuth?.username ?: "")
+                .setDatabaseUri(remoteDb.uri.toString())
+                .setHttpAuthUsername(remoteDb.httpAuth?.username ?: "")
+                .setUserAuthRequired(userAuthRequired)
                 .build()
         }
-        // TODO
+        // Save encrypted config
+        val prefs = try {
+            SecureStorage(context).run {
+                getEncryptedPreferences(getMasterKey())
+            }
+        } catch (err: MasterKeyGenerateException) {
+            Log.e(TAG, "fail to get master key", err) // FIXME: proper error message
+            return@LaunchedEffect onError(context.getString(R.string.error_get_master_key, err.toString()))
+        }
+        remoteDb.writeToPrefs(prefs)
 
         nav?.let { NavActions(it).list() }
-        uriWhichIsSettingUp = null
+        databaseInSettingUp = null
     }
 
     // Snackbar for download/unlock errors
@@ -149,7 +164,7 @@ fun SetupScreen(
                 }
                 databaseUrl = it
             },
-            enabled = uriWhichIsSettingUp == null,
+            enabled = !isSettingUp,
             placeholder = { Text(stringResource(R.string.database_url)) },
             label = { Text(stringResource(R.string.database)) },
             isError = confirmClicked && selectedFileUri == null && !isOverHttp,

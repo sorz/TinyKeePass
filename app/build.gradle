@@ -10,7 +10,7 @@ android {
     buildToolsVersion '29.0.3'
     defaultConfig {
         applicationId "org.sorz.lab.tinykeepass"
-        minSdkVersion 24
+        minSdkVersion 28
         targetSdkVersion 31
         versionCode 14
         versionName "0.4.0"

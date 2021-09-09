@@ -6,4 +6,5 @@ option java_multiple_files = true;
 message Settings {
     string database_uri = 1;
     string http_auth_username = 2;
+    bool user_auth_required = 3;
 }
