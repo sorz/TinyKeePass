@@ -2,6 +2,9 @@ package org.sorz.lab.tinykeepass.keepass
 
 import android.content.SharedPreferences
 import android.net.Uri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 
 private const val KEY_URI = "remote-keepass-uri"
@@ -21,13 +24,16 @@ data class RemoteKeePass(
     val masterPassword: String,
     val httpAuth: HttpAuth?
 ) {
-    fun writeToPrefs(prefs: SharedPreferences) {
+    suspend fun writeToPrefs(
+        prefs: SharedPreferences,
+        ioDispatcher: CoroutineContext = Dispatchers.IO
+    ) = withContext(ioDispatcher) {
         prefs.edit()
             .putString(KEY_URI, uri.toString())
             .putString(KEY_MASTER_PASSWORD, masterPassword)
             .putString(KEY_HTTP_USERNAME, httpAuth?.username)
             .putString(KEY_HTTP_PASSWORD, httpAuth?.password)
-            .apply()
+            .commit()
     }
 
     override fun toString(): String =

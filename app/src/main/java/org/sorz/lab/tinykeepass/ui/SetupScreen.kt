@@ -76,7 +76,10 @@ fun SetupScreen(
 
     // Restore saved config
     savedSettings?.let { cfg ->
-        if (databaseUrl.isEmpty()) databaseUrl = cfg.databaseUri
+        if (databaseUrl.isEmpty() && selectedFileUri == null) {
+            if (isOverHttp) databaseUrl = cfg.databaseUri
+            else selectedFileUri = Uri.parse(cfg.databaseUri)
+        }
         if (httpAuthUsername.isEmpty()) httpAuthUsername = cfg.httpAuthUsername
     }
 
@@ -104,6 +107,7 @@ fun SetupScreen(
         val onError = { msg: String -> errorMessage = msg; databaseInSettingUp = null }
         // Try download & open the database
         try {
+            Log.d(TAG, "Syncing database")
             repo.syncDatabase(remoteDb)
         } catch (err: IOException) {
             Log.w(TAG, "fail to setup database", err)
@@ -114,6 +118,7 @@ fun SetupScreen(
             return@LaunchedEffect onError(context.getString(R.string.fail_to_sync, msg))
         }
         // Save plaintext config
+        Log.d(TAG, "Save plaintext config")
         context.settingsDataStore.updateData { current ->
             current.toBuilder()
                 .setDatabaseUri(remoteDb.uri.toString())
@@ -123,6 +128,7 @@ fun SetupScreen(
         }
         // Save encrypted config
         val prefs = try {
+            Log.d(TAG, "Get encrypted prefs")
             SecureStorage(context).run {
                 getEncryptedPreferences(getMasterKey())
             }
@@ -130,6 +136,7 @@ fun SetupScreen(
             Log.e(TAG, "fail to get master key", err) // FIXME: proper error message
             return@LaunchedEffect onError(context.getString(R.string.error_get_master_key, err.toString()))
         }
+        Log.d(TAG, "Save encrypted config")
         remoteDb.writeToPrefs(prefs)
 
         nav?.let { NavActions(it).list() }

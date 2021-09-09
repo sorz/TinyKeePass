@@ -45,12 +45,14 @@ class SecureStorage(
         return masterKey
     }
 
-    fun getEncryptedPreferences(masterKey: MasterKey): SharedPreferences =
-        EncryptedSharedPreferences.create(
-            context, prefsFileName, masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-        )
+    suspend fun getEncryptedPreferences(masterKey: MasterKey): SharedPreferences =
+        withContext(Dispatchers.IO) {
+            EncryptedSharedPreferences.create(
+                context, prefsFileName, masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+            )
+        }
 }
 
 class MasterKeyGenerateException(throwable: Throwable): Exception(throwable)
