@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 import org.sorz.lab.tinykeepass.R
 import org.sorz.lab.tinykeepass.auth.SecureStorage
 import org.sorz.lab.tinykeepass.auth.SystemException
@@ -56,6 +57,7 @@ fun SetupScreen(
     scaffoldState: ScaffoldState? = null,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val savedSettings by context.settingsDataStore.data.collectAsState(null)
     var databaseUrl by rememberSaveable { mutableStateOf("") }
     var httpAuthRequired by rememberSaveable { mutableStateOf(false) }
@@ -65,14 +67,12 @@ fun SetupScreen(
     var userAuthRequired by rememberSaveable { mutableStateOf(false) }
     var selectedFileUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var confirmClicked by rememberSaveable { mutableStateOf(false) }
-    var databaseInSettingUp by remember { mutableStateOf<RemoteKeePass?>(null) }  // Pwd incl.
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isSettingUp by remember { mutableStateOf(false) }
 
     val userAuthIsAvailable = remember {
         BiometricManager.from(context)
             .canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
     }
-    val isSettingUp = databaseInSettingUp != null
     val openFileLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { selectedFileUri = it }
@@ -89,25 +89,8 @@ fun SetupScreen(
         if (httpAuthUsername.isEmpty()) httpAuthUsername = cfg.httpAuthUsername
     }
 
-    // Validate input before trigger saving
-    fun submit() {
-        confirmClicked = true
-        val validatedUri = selectedFileUri ?: typedDatabaseUri?.takeIf { isOverHttp } ?: return
-        if (masterPassword.isEmpty()) return
-        val httpAuth = if (isOverHttp && httpAuthRequired) {
-            if (httpAuthUsername.isEmpty() || httpAuthPassword.isEmpty()
-                || !isValidHttpBasicAuthValue(httpAuthUsername)
-                || !isValidHttpBasicAuthValue(httpAuthPassword)
-            ) return
-            HttpAuth(httpAuthUsername, httpAuthPassword)
-        } else null
-        databaseInSettingUp = RemoteKeePass(validatedUri, masterPassword, httpAuth)
-    }
-
     // Download database & save config
-    LaunchedEffect(databaseInSettingUp) {
-        val remoteDb = databaseInSettingUp ?: return@LaunchedEffect
-        val onError = { msg: String -> errorMessage = msg; databaseInSettingUp = null }
+    suspend fun setup(remoteDb: RemoteKeePass, onError: (msg: String) -> Unit) {
         // Try download & open the database
         try {
             Log.d(TAG, "Syncing database")
@@ -118,7 +101,7 @@ fun SetupScreen(
                 ?: err.cause?.toString()
                 ?: err.localizedMessage
                 ?: err.toString()
-            return@LaunchedEffect onError(context.getString(R.string.fail_to_sync, msg))
+            return onError(context.getString(R.string.fail_to_sync, msg))
         }
         // Save plaintext config
         Log.d(TAG, "Save plaintext config")
@@ -137,26 +120,42 @@ fun SetupScreen(
             }
         } catch (err: SystemException) {
             Log.e(TAG, "fail to get master key", err) // FIXME: proper error message
-            return@LaunchedEffect onError(context.getString(R.string.error_get_master_key, err.toString()))
+            return onError(context.getString(R.string.error_get_master_key, err.toString()))
         } catch (err: UserAuthException) {
             Log.e(TAG, "user auth fail", err) // FIXME: proper error message
-            return@LaunchedEffect onError(err.message ?: err.toString())
+            return onError(err.message ?: err.toString())
         }
         Log.d(TAG, "Save encrypted config")
         remoteDb.writeToPrefs(prefs)
         LocalKeePass(remoteDb.masterPassword).writeToPrefs(prefs)
-
         nav?.let { NavActions(it).list() }
-        databaseInSettingUp = null
     }
 
-    // Snackbar for download/unlock errors
-    LaunchedEffect(errorMessage) {
-        val msg = errorMessage ?: return@LaunchedEffect
-        val snackbar = scaffoldState?.snackbarHostState ?: return@LaunchedEffect
-        val result = snackbar.showSnackbar(msg, context.getString(R.string.retry))
-        errorMessage = null
-        if (result == SnackbarResult.ActionPerformed) submit()
+    // Validate input before trigger saving
+    fun submit() {
+        confirmClicked = true
+        val validatedUri = selectedFileUri ?: typedDatabaseUri?.takeIf { isOverHttp } ?: return
+        if (masterPassword.isEmpty()) return
+        val httpAuth = if (isOverHttp && httpAuthRequired) {
+            if (httpAuthUsername.isEmpty() || httpAuthPassword.isEmpty()
+                || !isValidHttpBasicAuthValue(httpAuthUsername)
+                || !isValidHttpBasicAuthValue(httpAuthPassword)
+            ) return
+            HttpAuth(httpAuthUsername, httpAuthPassword)
+        } else null
+        isSettingUp = true
+        val remoteDb = RemoteKeePass(validatedUri, masterPassword, httpAuth)
+        scope.launch {
+            setup(remoteDb) { err ->
+                scope.launch {
+                    val result = scaffoldState?.snackbarHostState
+                        ?.showSnackbar(err, context.getString(R.string.retry))
+                    if (result == SnackbarResult.ActionPerformed) submit()
+                }
+            }
+        }.invokeOnCompletion {
+            isSettingUp = false
+        }
     }
 
     Column(

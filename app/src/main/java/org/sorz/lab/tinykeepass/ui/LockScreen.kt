@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,11 +37,10 @@ fun LockScreen(
     scaffoldState: ScaffoldState? = null,
     ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val dbState by repo.databaseState.collectAsState()
     var unlocking by remember { mutableStateOf(false) }
     var resetting by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
 
     val waiting = unlocking || resetting
 
@@ -56,10 +54,13 @@ fun LockScreen(
         }
     }
 
-    fun unlock() = scope.launch {
-        unlocking = true
-        val onError = { msg: String -> errorMessage = msg; unlocking = false }
+    fun showError(msg: String) {
+        scope.launch {
+            scaffoldState?.snackbarHostState?.showSnackbar(msg)
+        }
+    }
 
+    fun unlock() = scope.launch {
         val prefs = try {
             Log.d(TAG, "Get encrypted prefs")
             SecureStorage(context).run {
@@ -67,27 +68,24 @@ fun LockScreen(
             }
         } catch (err: SystemException) {
             Log.e(TAG, "fail to get master key", err) // FIXME: proper error message
-            return@launch onError(context.getString(R.string.error_get_master_key, err.toString()))
+            return@launch showError(context.getString(R.string.error_get_master_key, err.toString()))
         } catch (err: UserAuthException) {
             Log.e(TAG, "user auth fail", err) // FIXME: proper error message
-            return@launch onError(err.message ?: err.toString())
+            return@launch showError(err.message ?: err.toString())
         }
-        val local = LocalKeePass.loadFromPrefs(prefs) ?: return@launch onError(context.getString(R.string.no_master_key))
+        val local = LocalKeePass.loadFromPrefs(prefs) ?: return@launch showError(context.getString(R.string.no_master_key))
         repo.unlockDatabase(local)
         nav?.let { NavActions(it).list() }
         unlocking = false
+    }.invokeOnCompletion {
+        unlocking = true
     }
 
-    LaunchedEffect(resetting) {
-        if (!resetting) return@LaunchedEffect
+    fun reset() = scope.launch {
+        resetting = true
         repo.clearDatabase()
+    }.invokeOnCompletion {
         resetting = false
-    }
-
-    LaunchedEffect(errorMessage) {
-        val msg = errorMessage ?: return@LaunchedEffect
-        val snackbar = scaffoldState?.snackbarHostState ?: return@LaunchedEffect
-        snackbar.showSnackbar(msg)
     }
 
     Column(
@@ -119,7 +117,7 @@ fun LockScreen(
         }
         Spacer(Modifier.height(16.dp))
         OutlinedButton(
-            onClick = { resetting = true },
+            onClick = { reset() },
             enabled = configured && !waiting,
             modifier = buttonModifier,
         ) {
