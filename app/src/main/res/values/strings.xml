@@ -67,4 +67,5 @@
     <string name="require_user_auth">Require user auth before unlock</string>
     <string name="retry">Retry</string>
     <string name="error_get_master_key">Fail to get master key: %s</string>
+    <string name="no_master_key">Master key missing, try reconfigure database.</string>
 </resources>

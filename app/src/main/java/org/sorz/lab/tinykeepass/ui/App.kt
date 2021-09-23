@@ -58,11 +58,11 @@ private fun NavGraph(
     NavHost(navController, Routes.LOCKED) {
         // Locked screen
         composable(Routes.LOCKED) {
-            LockScreen(repo, navController)
+            LockScreen(repo, navController, scaffoldState)
         }
         // List screen
         composable(Routes.LIST) {
-            Text("TODO: List screen")
+            ListScreen(repo, navController)
         }
         // Setup screen
         composable(Routes.Setup) {
@@ -76,7 +76,10 @@ class NavActions(navController: NavController) {
         navController.navigate(Routes.LOCKED)
     }
     val list: () -> Unit = {
-        navController.navigate(Routes.LIST)
+        navController.navigate(Routes.LIST) {
+            launchSingleTop = true
+            popUpTo(Routes.LOCKED)
+        }
     }
     val setup: () -> Unit = {
         navController.navigate(Routes.Setup)

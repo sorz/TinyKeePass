@@ -32,14 +32,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import org.sorz.lab.tinykeepass.keepass.Repository
 import org.sorz.lab.tinykeepass.R
 import org.sorz.lab.tinykeepass.auth.SecureStorage
 import org.sorz.lab.tinykeepass.auth.SystemException
 import org.sorz.lab.tinykeepass.auth.UserAuthException
-import org.sorz.lab.tinykeepass.keepass.HttpAuth
-import org.sorz.lab.tinykeepass.keepass.RealRepository
-import org.sorz.lab.tinykeepass.keepass.RemoteKeePass
+import org.sorz.lab.tinykeepass.keepass.*
 import org.sorz.lab.tinykeepass.settingsDataStore
 import java.io.IOException
 import java.util.*
@@ -136,7 +133,7 @@ fun SetupScreen(
         val prefs = try {
             Log.d(TAG, "Get encrypted prefs")
             SecureStorage(context).run {
-                getEncryptedPreferences(generateMasterKey())
+                getEncryptedPreferences(generateNewMasterKey())
             }
         } catch (err: SystemException) {
             Log.e(TAG, "fail to get master key", err) // FIXME: proper error message
@@ -147,6 +144,7 @@ fun SetupScreen(
         }
         Log.d(TAG, "Save encrypted config")
         remoteDb.writeToPrefs(prefs)
+        LocalKeePass(remoteDb.masterPassword).writeToPrefs(prefs)
 
         nav?.let { NavActions(it).list() }
         databaseInSettingUp = null

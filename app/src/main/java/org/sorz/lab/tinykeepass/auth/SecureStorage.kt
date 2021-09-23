@@ -75,7 +75,7 @@ class SecureStorage(
     }
 
     @Throws(KeyStoreException::class, MasterKeyException::class)
-    suspend fun generateMasterKey(): MasterKey {
+    suspend fun generateNewMasterKey(): MasterKey {
         getKeyStore().apply {
             if (containsAlias(keyAlias))
                 deleteEntry(keyAlias)
@@ -83,6 +83,11 @@ class SecureStorage(
         withContext(ioDispatcher) {
             context.deleteSharedPreferences(prefsFileName)
         }
+        return getOrGenerateMasterKey()
+    }
+
+    @Throws(KeyStoreException::class, UserAuthException::class)
+    suspend fun getExistingMasterKey(): MasterKey {
         return getOrGenerateMasterKey()
     }
 
@@ -125,6 +130,20 @@ class SecureStorage(
             } else {
                 throw err
             }
+        }
+    }
+
+    suspend fun clear() {
+        withContext(ioDispatcher) {
+            context.deleteSharedPreferences(prefsFileName)
+        }
+        try {
+            getKeyStore().apply {
+                if (containsAlias(keyAlias))
+                    deleteEntry(keyAlias)
+            }
+        } catch (err: KeyStoreException) {
+            Log.w(TAG, "Fail to delete master key", err)
         }
     }
 }
