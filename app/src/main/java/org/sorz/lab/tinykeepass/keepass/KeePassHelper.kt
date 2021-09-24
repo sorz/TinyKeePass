@@ -1,6 +1,10 @@
 package org.sorz.lab.tinykeepass.keepass
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.content.Context.CLIPBOARD_SERVICE
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
@@ -12,6 +16,9 @@ import java.io.File
 
 import com.kunzisoft.keepass.database.element.Database
 import com.kunzisoft.keepass.database.element.Entry
+import org.jetbrains.anko.startService
+import org.sorz.lab.tinykeepass.PasswordCopingService
+import org.sorz.lab.tinykeepass.R
 import java.util.stream.Stream
 import kotlin.streams.asStream
 
@@ -48,3 +55,27 @@ private val Entry.cleanUrl get() = url.replace("^https?://(www\\.)?".toRegex(), 
 val Entry.urlHostname get() = cleanUrl.split("/".toRegex(), 2).first()
 val Entry.urlPath get() = cleanUrl.split("/".toRegex(), 2).getOrNull(1)
         ?.takeIf { it.isNotBlank() }?.let { "/$it" }
+
+fun Entry.copyUsername(context: Context) {
+    val clipboardManager = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+    val clipData = ClipData.newPlainText(context.getString(R.string.username), username)
+    clipboardManager.setPrimaryClip(clipData)
+}
+
+fun Entry.copyPassword(context: Context) {
+    Intent(context, PasswordCopingService::class.java).apply {
+        action = PasswordCopingService.ACTION_COPY_PASSWORD
+        putExtra(PasswordCopingService.EXTRA_PASSWORD, password)
+        context.startService(this)
+    }
+}
+
+fun Entry.copyPasswordPostponed(context: Context) {
+    Intent(context, PasswordCopingService::class.java).apply {
+        action = PasswordCopingService.ACTION_NEW_NOTIFICATION
+        putExtra(PasswordCopingService.EXTRA_PASSWORD, password)
+        putExtra(PasswordCopingService.EXTRA_USERNAME, username)
+        putExtra(PasswordCopingService.EXTRA_ENTRY_TITLE, title)
+        context.startService(this)
+    }
+}

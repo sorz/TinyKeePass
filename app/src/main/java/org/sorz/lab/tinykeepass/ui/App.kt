@@ -62,7 +62,7 @@ private fun NavGraph(
         }
         // List screen
         composable(Routes.LIST) {
-            ListScreen(repo, navController)
+            ListScreen(repo, navController, scaffoldState)
         }
         // Setup screen
         composable(Routes.Setup) {

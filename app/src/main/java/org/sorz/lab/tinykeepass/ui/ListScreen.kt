@@ -2,16 +2,11 @@ package org.sorz.lab.tinykeepass.ui
 
 import android.widget.ImageView
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.material.Button
-import androidx.compose.material.Icon
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,6 +23,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import com.kunzisoft.keepass.database.element.Entry
 import com.kunzisoft.keepass.icons.IconDrawableFactory
+import kotlinx.coroutines.launch
 import org.sorz.lab.tinykeepass.R
 import org.sorz.lab.tinykeepass.keepass.*
 
@@ -43,16 +39,40 @@ private fun ListScreenPreview() {
 fun ListScreen(
     repo: Repository,
     nav: NavController? = null,
-) {
+    scaffoldState: ScaffoldState? = null,
+    ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val dbState by repo.databaseState.collectAsState()
 
     if (dbState != DatabaseState.UNLOCKED && nav != null) {
         NavActions(nav).locked()
     }
 
+    fun copyEntry(entry: Entry) {
+        if (entry.username == "") {
+            // No username, copy password immediately
+            entry.copyPassword(context)
+        } else {
+            // Copy username and show the notification to copying password
+            entry.copyUsername(context)
+            entry.copyPasswordPostponed(context)
+            scope.launch {
+                val action = scaffoldState?.snackbarHostState?.showSnackbar(
+                    context.getString(R.string.username_copied, entry.username),
+                    context.getString(R.string.copy_password),
+                    SnackbarDuration.Long,
+                )
+                if (action == SnackbarResult.ActionPerformed) {
+                    entry.copyPassword(context)
+                }
+            }
+        }
+    }
+
     EntryList(
         repo = repo,
-        onClick = { },
+        onClick = { copyEntry(it) },
         onClickLabel = stringResource(R.string.click_label_copy_password),
     ) { entry ->
         Text(
@@ -175,3 +195,4 @@ private fun EntryListItem(iconFactory: IconDrawableFactory, entry: Entry) {
         }
     }
 }
+

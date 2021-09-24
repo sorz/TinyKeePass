@@ -102,10 +102,10 @@ public class PasswordCopingService extends Service {
                 .setVisibility(Notification.VISIBILITY_SECRET);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             builder.setChannelId(CHANNEL_ID_COPYING);
-        if (username!= null)
+        if (username!= null && !username.isEmpty())
             builder.setContentText(
                     String.format("Copy %s's password to clipboard.", username));
-        else if (title != null)
+        else if (title != null && !title.isEmpty())
             builder.setContentText("Copy password for " + title);
         else
             builder.setContentText("Copy password to clipboard.");
