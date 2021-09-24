@@ -7,6 +7,7 @@ import android.util.Log
 import com.kunzisoft.keepass.database.element.Database
 import com.kunzisoft.keepass.database.element.Entry
 import com.kunzisoft.keepass.database.exception.LoadDatabaseException
+import com.kunzisoft.keepass.icons.IconDrawableFactory
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
@@ -36,6 +37,7 @@ enum class DatabaseState {
 interface Repository{
     val databaseState: StateFlow<DatabaseState>
     val databaseEntries: StateFlow<List<Entry>>
+    val iconFactory: IconDrawableFactory
     suspend fun unlockDatabase(local: LocalKeePass)
     suspend fun syncDatabase(remote: RemoteKeePass)
     suspend fun lockDatabase()
@@ -56,6 +58,7 @@ class RealRepository(
 
     override val databaseState = state
     override val databaseEntries: StateFlow<List<Entry>> = entries
+    override val iconFactory: IconDrawableFactory get() = database.drawFactory
 
     @Throws(LoadDatabaseException::class)
     override suspend fun unlockDatabase(local: LocalKeePass) {
