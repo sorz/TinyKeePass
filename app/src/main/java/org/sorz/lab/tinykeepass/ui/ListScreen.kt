@@ -1,18 +1,22 @@
 package org.sorz.lab.tinykeepass.ui
 
 import android.widget.ImageView
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material.Button
 import androidx.compose.material.Icon
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
@@ -41,12 +45,41 @@ fun ListScreen(
     nav: NavController? = null,
 ) {
     val dbState by repo.databaseState.collectAsState()
-    val iconFactory = remember { repo.iconFactory }
-    val entries by repo.databaseEntries.collectAsState()
 
     if (dbState != DatabaseState.UNLOCKED && nav != null) {
         NavActions(nav).locked()
     }
+
+    EntryList(
+        repo = repo,
+        onClick = { },
+        onClickLabel = stringResource(R.string.click_label_copy_password),
+    ) { entry ->
+        Text(
+            text = entry.password,
+            textAlign = TextAlign.Center,
+            fontFamily = FontFamily(
+                Font(R.font.fira_mono_regular)
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp, 16.dp),
+            fontSize = 24.sp,
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun EntryList(
+    repo: Repository,
+    onClick: (entry: Entry) -> Unit,
+    onClickLabel: String? = null,
+    expanded: (@Composable ColumnScope.(Entry) -> Unit)? = null,
+) {
+    val entries by repo.databaseEntries.collectAsState()
+    var selectedEntry by remember { mutableStateOf<Entry?>(null) }
+    val iconFactory = remember { repo.iconFactory }
 
     LazyColumn(
         Modifier.fillMaxWidth()
@@ -55,71 +88,90 @@ fun ListScreen(
             items = entries,
             key = { it.nodeId }
         ) { entry ->
-            EntryDetail(iconFactory, entry, false)
-        }
-    }
-
-}
-
-
-@Composable
-private fun EntryDetail(iconFactory: IconDrawableFactory, entry: Entry, expanded: Boolean) {
-    val context = LocalContext.current
-    val iconDrawable = iconFactory.getIconSuperDrawable(context, entry.icon, 24).drawable
-    Column(Modifier.fillMaxWidth()) {
-        Row {
-            // Icon
-            AndroidView(factory = {
-                ImageView(context).apply {
-                    setImageDrawable(iconDrawable)
-                }
-            })
-            Spacer(Modifier.width(16.dp))
-            Column {
-                // Title
-                Text(
-                    text = entry.title,
-                    fontSize = 18.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Row {
-                    // Username
-                    if (entry.username != "") {
-                        Text(
-                            text = entry.username,
-                            maxLines = 1,
-                        )
-                    }
-                    // URL
-                    if (entry.url != "") {
-                        val color = colorResource(android.R.color.darker_gray)
-                        Text(
-                            text = entry.urlHostname,
-                            maxLines = 1,
-                            color = color,
-                        )
-                        entry.urlPath?.let { path ->
-                            Text(
-                                text = entry.urlHostname,
-                                color = color.copy(alpha = 0.6f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
+            Surface(
+                modifier = Modifier
+                    .combinedClickable(
+                        onClickLabel = onClickLabel,
+                        onLongClickLabel = stringResource(R.string.click_label_select_entry),
+                        onClick = {
+                            if (selectedEntry != null) {
+                                selectedEntry = null
+                            } else {
+                                onClick(entry)
+                            }
+                        },
+                        onLongClick = { selectedEntry = entry }.takeIf { expanded != null },
+                    )
+                    .padding(vertical = 8.dp)
+            ) {
+                Column {
+                    EntryListItem(iconFactory, entry)
+                    expanded?.takeIf { selectedEntry == entry }?.let { content ->
+                        content(entry)
                     }
                 }
             }
         }
-    
-        if (expanded) {
+    }
+}
+
+
+@Composable
+private fun EntryListItem(iconFactory: IconDrawableFactory, entry: Entry) {
+    val context = LocalContext.current
+    val iconDrawable = iconFactory.getIconSuperDrawable(context, entry.icon, 24).drawable
+
+    Row(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Icon
+        Spacer(Modifier.width(12.dp))
+        AndroidView(
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .size(16.dp),
+            factory = {
+                ImageView(context).apply {
+                    setImageDrawable(iconDrawable)
+                }
+            },
+        )
+        Spacer(Modifier.width(8.dp))
+        Column {
+            // Title
             Text(
-                text = entry.password,
-                textAlign = TextAlign.Center,
-                fontFamily = FontFamily(
-                    Font(R.font.fira_mono_regular)
-                ),
+                text = entry.title,
+                fontSize = 18.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
+            Row {
+                // Username
+                if (entry.username != "") {
+                    Text(
+                        text = entry.username,
+                        maxLines = 1,
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                // URL
+                if (entry.url != "") {
+                    val color = colorResource(android.R.color.darker_gray)
+                    Text(
+                        text = entry.urlHostname,
+                        maxLines = 1,
+                        color = color,
+                    )
+                    entry.urlPath?.let { path ->
+                        Text(
+                            text = path,
+                            color = color.copy(alpha = 0.6f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -68,4 +68,6 @@
     <string name="retry">Retry</string>
     <string name="error_get_master_key">Fail to get master key: %s</string>
     <string name="no_master_key">Master key missing, try reconfigure database.</string>
+    <string name="click_label_copy_password">Copy username and password</string>
+    <string name="click_label_select_entry">Show the password and options</string>
 </resources>
