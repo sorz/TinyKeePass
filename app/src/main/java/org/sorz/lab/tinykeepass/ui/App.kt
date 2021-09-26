@@ -2,6 +2,9 @@ package org.sorz.lab.tinykeepass.ui
 
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
@@ -32,9 +35,11 @@ fun App() {
     MdcTheme {
         val navController = rememberNavController()
         val scaffoldState = rememberScaffoldState()
+        val floatingActionButton = remember { mutableStateOf<@Composable () -> Unit>({}) }
 
         Scaffold(
             scaffoldState = scaffoldState,
+            floatingActionButton = floatingActionButton.value,
             topBar = {
                 TopAppBar(
                     title = {
@@ -43,7 +48,7 @@ fun App() {
                 )
              },
         ) {
-            NavGraph(navController, scaffoldState, repo)
+            NavGraph(navController, scaffoldState, repo, floatingActionButton)
         }
     }
 }
@@ -53,19 +58,22 @@ private fun NavGraph(
     navController: NavHostController,
     scaffoldState: ScaffoldState,
     repo: Repository,
+    floatingActionButton: MutableState<@Composable () -> Unit>,
 ) {
 
     NavHost(navController, Routes.LOCKED) {
         // Locked screen
         composable(Routes.LOCKED) {
+            floatingActionButton.value = { }
             LockScreen(repo, navController, scaffoldState)
         }
         // List screen
         composable(Routes.LIST) {
-            ListScreen(repo, navController, scaffoldState)
+            ListScreen(repo, navController, scaffoldState, floatingActionButton)
         }
         // Setup screen
         composable(Routes.Setup) {
+            floatingActionButton.value = { }
             SetupScreen(repo, navController, scaffoldState)
         }
     }

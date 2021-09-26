@@ -70,4 +70,6 @@
     <string name="no_master_key">Master key missing, try reconfigure database.</string>
     <string name="click_label_copy_password">Copy username and password</string>
     <string name="click_label_select_entry">Show the password and options</string>
+    <string name="action_sync">Sync database</string>
+    <string name="no_remote_db">No remote database found, try reconfigure database.</string>
 </resources>

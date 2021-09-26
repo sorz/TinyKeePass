@@ -61,6 +61,7 @@ fun LockScreen(
     }
 
     fun unlock() = scope.launch {
+        unlocking = true
         val prefs = try {
             Log.d(TAG, "Get encrypted prefs")
             SecureStorage(context).run {
@@ -76,9 +77,8 @@ fun LockScreen(
         val local = LocalKeePass.loadFromPrefs(prefs) ?: return@launch showError(context.getString(R.string.no_master_key))
         repo.unlockDatabase(local)
         nav?.let { NavActions(it).list() }
-        unlocking = false
     }.invokeOnCompletion {
-        unlocking = true
+        unlocking = false
     }
 
     fun reset() = scope.launch {
