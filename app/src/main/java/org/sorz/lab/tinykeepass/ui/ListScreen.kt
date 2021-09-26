@@ -108,28 +108,36 @@ fun EntryList(
             items = entries,
             key = { it.nodeId }
         ) { entry ->
-            Surface(
-                modifier = Modifier
-                    .combinedClickable(
-                        onClickLabel = onClickLabel,
-                        onLongClickLabel = stringResource(R.string.click_label_select_entry),
-                        onClick = {
-                            if (selectedEntry != null) {
-                                selectedEntry = null
-                            } else {
-                                onClick(entry)
-                            }
-                        },
-                        onLongClick = { selectedEntry = entry }.takeIf { expanded != null },
-                    )
-                    .padding(vertical = 8.dp)
-            ) {
-                Column {
-                    EntryListItem(iconFactory, entry)
-                    expanded?.takeIf { selectedEntry == entry }?.let { content ->
-                        content(entry)
+            Column(Modifier.fillMaxWidth()) {
+                // Item
+                Surface(
+                    modifier = Modifier
+                        .combinedClickable(
+                            onClickLabel = onClickLabel,
+                            onLongClickLabel = stringResource(R.string.click_label_select_entry),
+                            onClick = {
+                                if (selectedEntry != null) {
+                                    selectedEntry = null
+                                } else {
+                                    onClick(entry)
+                                }
+                            },
+                            onLongClick = { selectedEntry = entry }.takeIf { expanded != null },
+                        )
+                        .padding(vertical = 12.dp)
+                ) {
+                    Column {
+                        EntryListItem(iconFactory, entry)
+                        expanded?.takeIf { selectedEntry == entry }?.let { content ->
+                            content(entry)
+                        }
                     }
                 }
+                // Divider
+                if (entry != entries.last()) {
+                    Divider(Modifier.padding(start=36.dp))
+                }
+
             }
         }
     }
@@ -161,10 +169,11 @@ private fun EntryListItem(iconFactory: IconDrawableFactory, entry: Entry) {
             // Title
             Text(
                 text = entry.title,
-                fontSize = 18.sp,
+                fontSize = 20.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            // Second line
             Row {
                 // Username
                 if (entry.username != "") {
