@@ -1,6 +1,5 @@
 package org.sorz.lab.tinykeepass.ui
 
-import android.util.Log
 import android.widget.ImageView
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -8,8 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,11 +25,7 @@ import com.kunzisoft.keepass.database.element.Entry
 import com.kunzisoft.keepass.icons.IconDrawableFactory
 import kotlinx.coroutines.launch
 import org.sorz.lab.tinykeepass.R
-import org.sorz.lab.tinykeepass.auth.SecureStorage
-import org.sorz.lab.tinykeepass.auth.SystemException
-import org.sorz.lab.tinykeepass.auth.UserAuthException
 import org.sorz.lab.tinykeepass.keepass.*
-import java.io.IOException
 
 private const val TAG = "ListScreen"
 
@@ -46,9 +39,8 @@ private fun ListScreenPreview() {
 fun ListScreen(
     repo: Repository,
     nav: NavController? = null,
-    scaffoldState: ScaffoldState? = null,
-    floatingActionButton: MutableState<@Composable () -> Unit>? = null,
-    ) {
+    snackbarHostState: SnackbarHostState? = null,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val dbState by repo.databaseState.collectAsState()
@@ -66,7 +58,7 @@ fun ListScreen(
             entry.copyUsername(context)
             entry.copyPasswordPostponed(context)
             scope.launch {
-                val action = scaffoldState?.snackbarHostState?.showSnackbar(
+                val action = snackbarHostState?.showSnackbar(
                     context.getString(R.string.username_copied, entry.username),
                     context.getString(R.string.copy_password),
                     SnackbarDuration.Long,
@@ -82,8 +74,6 @@ fun ListScreen(
         repo = repo,
         onClick = { copyEntry(it) },
         onClickLabel = stringResource(R.string.click_label_copy_password),
-        scaffoldState = scaffoldState,
-        floatingActionButton = floatingActionButton,
     ) { entry ->
         Text(
             text = entry.password,
@@ -105,16 +95,11 @@ fun EntryList(
     repo: Repository,
     onClick: (entry: Entry) -> Unit,
     onClickLabel: String? = null,
-    scaffoldState: ScaffoldState? = null,
-    floatingActionButton: MutableState<@Composable () -> Unit>? = null,
     expanded: (@Composable ColumnScope.(Entry) -> Unit)? = null,
 ) {
     val entries by repo.databaseEntries.collectAsState()
     var selectedEntry by remember { mutableStateOf<Entry?>(null) }
     val iconFactory = remember { repo.iconFactory }
-
-    if (scaffoldState != null && floatingActionButton != null)
-        SyncDatabaseFloatingActionButton(repo, scaffoldState, floatingActionButton)
 
     LazyColumn(
         Modifier.fillMaxWidth()
@@ -218,56 +203,4 @@ private fun EntryListItem(iconFactory: IconDrawableFactory, entry: Entry) {
             }
         }
     }
-}
-
-@Composable
-private fun SyncDatabaseFloatingActionButton(
-    repo: Repository,
-    scaffoldState: ScaffoldState,
-    floatingActionButton: MutableState<@Composable () -> Unit>,
-) {
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    var isSyncing by remember { mutableStateOf(false) }
-
-    suspend fun syncDatabase() {
-        suspend fun onError(err: String) {
-            val result = scaffoldState.snackbarHostState
-                .showSnackbar(err, context.getString(R.string.retry))
-            if (result == SnackbarResult.ActionPerformed) syncDatabase()
-        }
-        try {
-            val pref = SecureStorage(context).run {
-                getEncryptedPreferences(getExistingMasterKey())
-            }
-            val remoteDb = RemoteKeePass.loadFromPrefs(pref)
-                ?: return onError(context.getString(R.string.no_remote_db))
-            repo.syncDatabase(remoteDb)
-        } catch (err: SystemException) {
-            Log.e(TAG, "fail to get master key", err) // FIXME: proper error message
-            return onError(context.getString(R.string.error_get_master_key, err.toString()))
-        } catch (err: UserAuthException) {
-            Log.e(TAG, "user auth fail", err) // FIXME: proper error message
-            return onError(err.message ?: err.toString())
-        } catch (err: IOException) {
-            Log.e(TAG, "io error", err) // FIXME: proper error message
-            return onError(err.message ?: err.toString())
-        }
-        scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.sync_done))
-    }
-
-    floatingActionButton.value = {
-        if (!isSyncing)
-            FloatingActionButton(
-                onClick = {
-                    isSyncing = true
-                    scope.launch { syncDatabase() }.invokeOnCompletion {
-                        isSyncing = false
-                    }
-                }
-            ) {
-                Icon(Icons.Filled.CloudDownload, stringResource(R.string.action_sync))
-            }
-    }
-
 }

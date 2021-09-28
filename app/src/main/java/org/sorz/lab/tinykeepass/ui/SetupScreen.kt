@@ -54,7 +54,7 @@ private fun SetupScreenPreview() {
 fun SetupScreen(
     repo: Repository,
     nav: NavController? = null,
-    scaffoldState: ScaffoldState? = null,
+    snackbarHostState: SnackbarHostState? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -148,8 +148,7 @@ fun SetupScreen(
         scope.launch {
             setup(remoteDb) { err ->
                 scope.launch {
-                    val result = scaffoldState?.snackbarHostState
-                        ?.showSnackbar(err, context.getString(R.string.retry))
+                    val result = snackbarHostState?.showSnackbar(err, context.getString(R.string.retry))
                     if (result == SnackbarResult.ActionPerformed) submit()
                 }
             }

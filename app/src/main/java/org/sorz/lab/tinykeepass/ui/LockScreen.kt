@@ -34,7 +34,7 @@ private fun LockScreenPreview() {
 fun LockScreen(
     repo: Repository,
     nav: NavController? = null,
-    scaffoldState: ScaffoldState? = null,
+    snackbarHostState: SnackbarHostState? = null,
     ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -56,7 +56,7 @@ fun LockScreen(
 
     fun showError(msg: String) {
         scope.launch {
-            scaffoldState?.snackbarHostState?.showSnackbar(msg)
+            snackbarHostState?.showSnackbar(msg)
         }
     }
 

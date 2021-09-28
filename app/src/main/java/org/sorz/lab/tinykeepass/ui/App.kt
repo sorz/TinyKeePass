@@ -1,10 +1,7 @@
 package org.sorz.lab.tinykeepass.ui
 
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
@@ -35,11 +32,13 @@ fun App() {
     MdcTheme {
         val navController = rememberNavController()
         val scaffoldState = rememberScaffoldState()
-        val floatingActionButton = remember { mutableStateOf<@Composable () -> Unit>({}) }
 
         Scaffold(
             scaffoldState = scaffoldState,
-            floatingActionButton = floatingActionButton.value,
+            floatingActionButton = { SyncDatabaseFloatingActionButton(
+                repo = repo,
+                snackbarHostState = scaffoldState.snackbarHostState
+            ) },
             topBar = {
                 TopAppBar(
                     title = {
@@ -48,7 +47,7 @@ fun App() {
                 )
              },
         ) {
-            NavGraph(navController, scaffoldState, repo, floatingActionButton)
+            NavGraph(navController, scaffoldState, repo)
         }
     }
 }
@@ -58,23 +57,19 @@ private fun NavGraph(
     navController: NavHostController,
     scaffoldState: ScaffoldState,
     repo: Repository,
-    floatingActionButton: MutableState<@Composable () -> Unit>,
 ) {
-
     NavHost(navController, Routes.LOCKED) {
         // Locked screen
         composable(Routes.LOCKED) {
-            floatingActionButton.value = { }
-            LockScreen(repo, navController, scaffoldState)
+            LockScreen(repo, navController, scaffoldState.snackbarHostState)
         }
         // List screen
         composable(Routes.LIST) {
-            ListScreen(repo, navController, scaffoldState, floatingActionButton)
+            ListScreen(repo, navController, scaffoldState.snackbarHostState)
         }
         // Setup screen
         composable(Routes.Setup) {
-            floatingActionButton.value = { }
-            SetupScreen(repo, navController, scaffoldState)
+            SetupScreen(repo, navController, scaffoldState.snackbarHostState)
         }
     }
 }
