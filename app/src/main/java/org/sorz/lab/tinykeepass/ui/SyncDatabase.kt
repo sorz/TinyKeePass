@@ -1,10 +1,7 @@
 package org.sorz.lab.tinykeepass.ui
 
 import android.util.Log
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Icon
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.SnackbarResult
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.runtime.*
@@ -31,11 +28,14 @@ fun SyncDatabaseFloatingActionButton(
     val context = LocalContext.current
     val dbState by repo.databaseState.collectAsState()
     var isSyncing by remember { mutableStateOf(false) }
+    var isShowingSnackbar by remember { mutableStateOf(false) }
 
     suspend fun syncDatabase() {
         suspend fun onError(err: String) {
+            isShowingSnackbar = true
             val result = snackbarHostState.showSnackbar(err, context.getString(R.string.retry))
             if (result == SnackbarResult.ActionPerformed) syncDatabase()
+            isShowingSnackbar = false
         }
         try {
             val pref = SecureStorage(context).run {
@@ -54,19 +54,26 @@ fun SyncDatabaseFloatingActionButton(
             Log.e(TAG, "io error", err) // FIXME: proper error message
             return onError(err.message ?: err.toString())
         }
+        isShowingSnackbar = true
         snackbarHostState.showSnackbar(context.getString(R.string.sync_done))
+        isShowingSnackbar = false
     }
 
-    if (dbState == DatabaseState.UNLOCKED && !isSyncing)
+    if ((isSyncing || dbState == DatabaseState.UNLOCKED) && !isShowingSnackbar)
         FloatingActionButton(
             onClick = {
-                isSyncing = true
-                scope.launch { syncDatabase() }.invokeOnCompletion {
-                    isSyncing = false
+                if (!isSyncing) {
+                    isSyncing = true
+                    scope.launch { syncDatabase() }.invokeOnCompletion {
+                        isSyncing = false
+                    }
                 }
             }
         ) {
-            Icon(Icons.Filled.CloudDownload, stringResource(R.string.action_sync))
+            if (isSyncing)
+                CircularProgressIndicator()
+            else
+                Icon(Icons.Filled.CloudDownload, stringResource(R.string.action_sync))
         }
 
 }
