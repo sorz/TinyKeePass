@@ -45,7 +45,7 @@ android {
 }
 
 dependencies {
-    def activity_version = "1.4.0-alpha01"
+    def activity_version = "1.4.0-alpha02"
     def ktor_version = "1.6.3"
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')

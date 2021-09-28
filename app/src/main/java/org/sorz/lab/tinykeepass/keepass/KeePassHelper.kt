@@ -56,6 +56,12 @@ val Entry.urlHostname get() = cleanUrl.split("/".toRegex(), 2).first()
 val Entry.urlPath get() = cleanUrl.split("/".toRegex(), 2).getOrNull(1)
         ?.takeIf { it.isNotBlank() }?.let { "/$it" }
 
+fun Entry.copyUrl(context: Context) {
+    val clipboardManager = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+    val clipData = ClipData.newPlainText("URL", url)
+    clipboardManager.setPrimaryClip(clipData)
+}
+
 fun Entry.copyUsername(context: Context) {
     val clipboardManager = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
     val clipData = ClipData.newPlainText(context.getString(R.string.username), username)

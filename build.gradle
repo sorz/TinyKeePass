@@ -2,7 +2,7 @@
 
 buildscript {
     ext.kotlin_version = '1.5.30'
-    ext.nav_version = '2.4.0-alpha08'
+    ext.nav_version = '2.4.0-alpha09'
     ext.compose_version = "1.1.0-alpha04"
 
     repositories {

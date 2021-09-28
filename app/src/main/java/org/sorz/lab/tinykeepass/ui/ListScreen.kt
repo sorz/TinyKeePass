@@ -1,5 +1,7 @@
 package org.sorz.lab.tinykeepass.ui
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.ImageView
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -7,6 +9,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -74,19 +81,7 @@ fun ListScreen(
         repo = repo,
         onClick = { copyEntry(it) },
         onClickLabel = stringResource(R.string.click_label_copy_password),
-    ) { entry ->
-        Text(
-            text = entry.password,
-            textAlign = TextAlign.Center,
-            fontFamily = FontFamily(
-                Font(R.font.fira_mono_regular)
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp, 16.dp),
-            fontSize = 24.sp,
-        )
-    }
+    ) { entry -> EntryListItemExpandedArea(entry, snackbarHostState) }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -203,4 +198,66 @@ private fun EntryListItem(iconFactory: IconDrawableFactory, entry: Entry) {
             }
         }
     }
+}
+
+@Composable
+fun EntryListItemExpandedArea(entry: Entry, snackbarHostState: SnackbarHostState? = null) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    fun showSnackbar(msg: String) {
+        scope.launch {
+            snackbarHostState?.showSnackbar(msg, duration=SnackbarDuration.Short)
+        }
+    }
+
+    // Password
+    Text(
+        text = entry.password,
+        textAlign = TextAlign.Center,
+        fontFamily = FontFamily(
+            Font(R.font.fira_mono_regular)
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp, 16.dp),
+        fontSize = 24.sp,
+    )
+
+    // Actions
+    Row(
+        horizontalArrangement = Arrangement.End,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        if (entry.username != "")
+            IconButton(onClick = {
+                entry.copyUsername(context)
+                showSnackbar(context.getString(R.string.username_copied, entry.username))
+            }) {
+                Icon(Icons.Default.Person, stringResource(R.string.action_copy_username))
+            }
+        if (entry.password != "")
+            IconButton(onClick = {
+                entry.copyPassword(context)
+                showSnackbar(context.getString(R.string.password_copied))
+            }) {
+                Icon(Icons.Default.Password, stringResource(R.string.action_copy_password))
+            }
+        if (entry.url != "") {
+            IconButton(onClick = {
+                entry.copyUrl(context)
+                showSnackbar(context.getString(R.string.url_copied))
+            }) {
+                Icon(Icons.Default.Link, stringResource(R.string.action_copy_url))
+            }
+            IconButton(onClick = {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(entry.url)))
+                if (entry.username != "") entry.copyUsername(context)
+                if (entry.password != "") entry.copyPasswordPostponed(context)
+            }) {
+                Icon(Icons.Default.OpenInBrowser, stringResource(R.string.action_open_in_browser))
+            }
+        }
+    }
+
 }
