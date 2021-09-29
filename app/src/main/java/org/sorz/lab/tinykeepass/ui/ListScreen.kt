@@ -10,11 +10,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.OpenInBrowser
-import androidx.compose.material.icons.filled.Password
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -202,8 +200,9 @@ private fun EntryListItem(iconFactory: IconDrawableFactory, entry: Entry) {
 
 @Composable
 fun EntryListItemExpandedArea(entry: Entry, snackbarHostState: SnackbarHostState? = null) {
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var showPassword by remember { mutableStateOf(false) }
 
     fun showSnackbar(msg: String) {
         scope.launch {
@@ -212,17 +211,32 @@ fun EntryListItemExpandedArea(entry: Entry, snackbarHostState: SnackbarHostState
     }
 
     // Password
-    Text(
-        text = entry.password,
-        textAlign = TextAlign.Center,
-        fontFamily = FontFamily(
-            Font(R.font.fira_mono_regular)
-        ),
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(32.dp, 16.dp),
-        fontSize = 24.sp,
-    )
+            .padding(vertical = 16.dp),
+    ) {
+        Spacer(Modifier.width(32.dp))
+        Text(
+            text = if (showPassword) entry.password else "******",
+            textAlign = TextAlign.Center,
+            fontFamily = FontFamily(
+                Font(R.font.fira_mono_regular)
+            ),
+            fontSize = 24.sp,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+        IconButton(
+            onClick = { showPassword = !showPassword },
+        ) {
+            if (showPassword)
+                Icon(Icons.Default.Visibility, stringResource(R.string.hide_password_title))
+            else
+                Icon(Icons.Default.VisibilityOff, stringResource(R.string.title_show_password))
+        }
+    }
 
     // Actions
     Row(
