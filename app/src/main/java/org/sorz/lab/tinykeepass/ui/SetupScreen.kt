@@ -81,12 +81,14 @@ fun SetupScreen(
             && typedDatabaseUri.scheme?.lowercase()?.matches(Regex("https?")) == true
 
     // Restore saved config
-    savedSettings?.let { cfg ->
-        if (databaseUrl.isEmpty() && selectedFileUri == null) {
-            if (isOverHttp) databaseUrl = cfg.databaseUri
-            else selectedFileUri = Uri.parse(cfg.databaseUri)
+    LaunchedEffect(savedSettings) {
+        savedSettings?.let { cfg ->
+            if (databaseUrl.isEmpty() && selectedFileUri == null) {
+                if (isOverHttp) databaseUrl = cfg.databaseUri
+                else selectedFileUri = Uri.parse(cfg.databaseUri)
+            }
+            if (httpAuthUsername.isEmpty()) httpAuthUsername = cfg.httpAuthUsername
         }
-        if (httpAuthUsername.isEmpty()) httpAuthUsername = cfg.httpAuthUsername
     }
 
     // Download database & save config
