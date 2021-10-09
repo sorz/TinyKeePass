@@ -8,12 +8,17 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -47,13 +52,15 @@ fun ListScreen(
 ) {
     val scaffoldState = rememberScaffoldState()
     val name by repo.databaseName.collectAsState()
+    var keyword by rememberSaveable { mutableStateOf("") }
+
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            TopAppBar(
-                title = { Text(
-                    name.takeIf { it != "" } ?: stringResource(R.string.app_name)
-                ) },
+            SearchableTopAppBar(
+                title = name.takeIf { it != "" } ?: stringResource(R.string.app_name),
+                keyword = keyword,
+                onChange = { keyword = it },
             )
         },
         floatingActionButton = {
@@ -301,4 +308,59 @@ fun EntryListItemExpandedArea(entry: Entry, snackbarHostState: SnackbarHostState
         }
     }
 
+}
+
+
+@Composable
+fun SearchableTopAppBar(
+    title: String,
+    keyword: String,
+    onChange: (keyword: String) -> Unit,
+) {
+    val focusRequester = remember { FocusRequester() }
+    var showInput by rememberSaveable { mutableStateOf(false) }
+    if (keyword != "" && !showInput) showInput = true
+
+    LaunchedEffect(showInput) {
+        if (showInput) focusRequester.requestFocus()
+    }
+
+    if (!showInput) {
+        TopAppBar(
+            title = { Text(title) },
+            actions = {
+                IconButton(onClick = { showInput = true }) {
+                    Icon(Icons.Default.Search, stringResource(R.string.action_search))
+                }
+            }
+        )
+    } else {
+        TopAppBar(
+            navigationIcon = {
+                IconButton(onClick = {
+                    onChange("")
+                    showInput = false
+                }) {
+                    Icon(Icons.Default.ArrowBack, stringResource(R.string.cancel_search))
+                }
+            },
+            title = {
+                TextField(
+                    value = keyword,
+                    onValueChange = onChange,
+                    singleLine = true,
+                    maxLines = 1,
+                    trailingIcon = {
+                        if (keyword != "") {
+                            IconButton(onClick = { onChange("") }) {
+                                Icon(Icons.Default.Backspace, stringResource(R.string.clear_input))
+                            }
+                        }
+                    },
+                    modifier = Modifier.focusRequester(focusRequester),
+                )
+            },
+        )
+
+    }
 }

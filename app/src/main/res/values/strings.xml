@@ -73,4 +73,6 @@
     <string name="action_sync">Sync database</string>
     <string name="no_remote_db">No remote database found, try reconfigure database.</string>
     <string name="screen_title_setup">Setup Database</string>
+    <string name="cancel_search">Cancel search</string>
+    <string name="clear_input">Clear input</string>
 </resources>
