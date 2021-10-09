@@ -49,10 +49,10 @@ private fun ListScreenPreview() {
 fun ListScreen(
     repo: Repository,
     nav: NavController? = null,
+    keyword: String? = null,
 ) {
     val scaffoldState = rememberScaffoldState()
     val name by repo.databaseName.collectAsState()
-    var keyword by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -60,7 +60,14 @@ fun ListScreen(
             SearchableTopAppBar(
                 title = name.takeIf { it != "" } ?: stringResource(R.string.app_name),
                 keyword = keyword,
-                onChange = { keyword = it },
+                onChange = { keyword ->
+                    nav?.let {
+                        if (keyword != null)
+                            NavActions(it).search(keyword)
+                        else
+                            NavActions(it).list()
+                    }
+                },
             )
         },
         floatingActionButton = {
@@ -314,12 +321,11 @@ fun EntryListItemExpandedArea(entry: Entry, snackbarHostState: SnackbarHostState
 @Composable
 fun SearchableTopAppBar(
     title: String,
-    keyword: String,
-    onChange: (keyword: String) -> Unit,
+    keyword: String?,
+    onChange: (keyword: String?) -> Unit,
 ) {
     val focusRequester = remember { FocusRequester() }
-    var showInput by rememberSaveable { mutableStateOf(false) }
-    if (keyword != "" && !showInput) showInput = true
+    val showInput  = keyword != null
 
     LaunchedEffect(showInput) {
         if (showInput) focusRequester.requestFocus()
@@ -329,7 +335,7 @@ fun SearchableTopAppBar(
         TopAppBar(
             title = { Text(title) },
             actions = {
-                IconButton(onClick = { showInput = true }) {
+                IconButton(onClick = { onChange("") }) {
                     Icon(Icons.Default.Search, stringResource(R.string.action_search))
                 }
             }
@@ -337,16 +343,13 @@ fun SearchableTopAppBar(
     } else {
         TopAppBar(
             navigationIcon = {
-                IconButton(onClick = {
-                    onChange("")
-                    showInput = false
-                }) {
+                IconButton(onClick = { onChange(null) }) {
                     Icon(Icons.Default.ArrowBack, stringResource(R.string.cancel_search))
                 }
             },
             title = {
                 TextField(
-                    value = keyword,
+                    value = keyword ?: "",
                     onValueChange = onChange,
                     singleLine = true,
                     maxLines = 1,
@@ -361,6 +364,5 @@ fun SearchableTopAppBar(
                 )
             },
         )
-
     }
 }

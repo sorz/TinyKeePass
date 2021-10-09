@@ -1,17 +1,15 @@
 package org.sorz.lab.tinykeepass.ui
 
-import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.google.android.material.composethemeadapter.MdcTheme
 import kotlinx.coroutines.Dispatchers
-import org.sorz.lab.tinykeepass.R
 import org.sorz.lab.tinykeepass.keepass.RealRepository
 import org.sorz.lab.tinykeepass.keepass.Repository
 
@@ -19,7 +17,12 @@ import org.sorz.lab.tinykeepass.keepass.Repository
 private object Routes {
     const val LOCKED = "locked"
     const val LIST = "list"
-    const val Setup = "setup"
+    const val SEARCH = "search?${Params.KEYWORD}={${Params.KEYWORD}}"
+    const val SETUP = "setup"
+}
+
+private object Params {
+    const val KEYWORD = "keyword"
 }
 
 @Composable
@@ -49,8 +52,16 @@ private fun NavGraph(
         composable(Routes.LIST) {
             ListScreen(repo, navController)
         }
+        // Search screen
+        composable(
+            Routes.SEARCH,
+            arguments = listOf(navArgument(Params.KEYWORD) { defaultValue = "" })
+        ) { backStackEntry ->
+            val keyword = backStackEntry.arguments?.getString(Params.KEYWORD) ?: ""
+            ListScreen(repo, navController, keyword)
+        }
         // Setup screen
-        composable(Routes.Setup) {
+        composable(Routes.SETUP) {
             SetupScreen(repo, navController)
         }
     }
@@ -66,7 +77,13 @@ class NavActions(navController: NavController) {
             popUpTo(Routes.LOCKED)
         }
     }
+    val search: (keyword: String) -> Unit = { keyword ->
+        navController.navigate("search?${Params.KEYWORD}=$keyword") {
+            launchSingleTop = true
+            popUpTo(Routes.LIST)
+        }
+    }
     val setup: () -> Unit = {
-        navController.navigate(Routes.Setup)
+        navController.navigate(Routes.SETUP)
     }
 }
