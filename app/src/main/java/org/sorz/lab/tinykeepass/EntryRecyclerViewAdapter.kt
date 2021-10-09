@@ -122,13 +122,11 @@ class EntryRecyclerViewAdapter (
 
 class EntryViewHolder(val binding: FragmentEntryBinding) : RecyclerView.ViewHolder(binding.root)
 
-@BindingAdapter("app:nullableText")
 fun setNullableText(view: TextView, text: String?) {
     view.text = text ?: ""
     view.visibility = if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
 }
 
-@BindingAdapter("app:coloredPassword")
 fun setColoredPassword(view: TextView, password: String?) {
     view.visibility = if (password.isNullOrEmpty()) View.GONE else View.VISIBLE
     view.text = ""

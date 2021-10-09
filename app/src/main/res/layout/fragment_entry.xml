@@ -36,7 +36,6 @@
             app:layout_constraintBottom_toBottomOf="@+id/textUrlHostname"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/textUrlHostname"
-            app:nullableText="@{Helper.getUrlPath(entry)}"
             tools:text="/path/very/long/long/long/end" />
 
         <ImageView
@@ -63,7 +62,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/imageIcon"
             app:layout_constraintTop_toTopOf="parent"
-            app:nullableText="@{entry.title}"
             tools:text="Entry title Entry title (very long long long end)" />
 
         <TextView
@@ -75,7 +73,6 @@
             android:singleLine="true"
             app:layout_constraintStart_toStartOf="@+id/textTitle"
             app:layout_constraintTop_toBottomOf="@+id/textTitle"
-            app:nullableText="@{entry.username}"
             tools:text="username" />
 
         <TextView
@@ -88,7 +85,6 @@
             android:textColor="@android:color/darker_gray"
             app:layout_constraintStart_toEndOf="@+id/textUsername"
             app:layout_constraintTop_toBottomOf="@+id/textTitle"
-            app:nullableText="@{Helper.getUrlHostname(entry)}"
             tools:text="domain.name" />
 
         <TextView
@@ -102,7 +98,6 @@
             android:textAlignment="center"
             android:textAppearance="@android:style/TextAppearance.Material.Large"
             android:textColor="@color/colorPrimary"
-            app:coloredPassword="@{password}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textUsername"
