@@ -67,3 +67,5 @@ class NavActions(navController: NavController) {
         navController.navigate(Routes.Setup)
     }
 }
+
+

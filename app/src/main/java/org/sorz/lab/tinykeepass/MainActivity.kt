@@ -1,5 +1,7 @@
 package org.sorz.lab.tinykeepass
 
+import android.content.Context
+import android.content.ContextWrapper
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +21,12 @@ class MainActivity : AppCompatActivity() {
     fun doSyncDatabase() { TODO("remove me") }
     fun doCleanDatabase() { TODO("remove me") }
     fun doConfigureDatabase() { TODO("remove me") }
+}
+
+fun Context.getActivity(): AppCompatActivity? = when (this) {
+    is AppCompatActivity -> this
+    is ContextWrapper -> baseContext.getActivity()
+    else -> null
 }
 
 /*

@@ -3,6 +3,7 @@ package org.sorz.lab.tinykeepass.ui
 import android.content.Intent
 import android.net.Uri
 import android.widget.ImageView
+import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -35,6 +36,7 @@ import com.kunzisoft.keepass.database.element.Entry
 import com.kunzisoft.keepass.icons.IconDrawableFactory
 import kotlinx.coroutines.launch
 import org.sorz.lab.tinykeepass.R
+import org.sorz.lab.tinykeepass.getActivity
 import org.sorz.lab.tinykeepass.keepass.*
 
 private const val TAG = "ListScreen"
@@ -61,6 +63,7 @@ fun ListScreen(
                 title = name.takeIf { it != "" } ?: stringResource(R.string.app_name),
                 keyword = keyword,
                 onChange = { keyword = it },
+                nav = nav,
             )
         },
         floatingActionButton = {
@@ -316,13 +319,32 @@ fun SearchableTopAppBar(
     title: String,
     keyword: String,
     onChange: (keyword: String) -> Unit,
+    nav: NavController?,
 ) {
+    val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }
     var showInput by rememberSaveable { mutableStateOf(false) }
     if (keyword != "" && !showInput) showInput = true
 
     LaunchedEffect(showInput) {
         if (showInput) focusRequester.requestFocus()
+    }
+
+    DisposableEffect(showInput) {
+        val dispatcher = context.takeIf { showInput }?.getActivity()?.onBackPressedDispatcher
+            ?: return@DisposableEffect onDispose { }
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                onChange("")
+                showInput = false
+            }
+        }
+        nav?.enableOnBackPressed(false)
+        dispatcher.addCallback(callback)
+        onDispose {
+            callback.remove()
+            nav?.enableOnBackPressed(true)
+        }
     }
 
     if (!showInput) {
