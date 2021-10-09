@@ -38,6 +38,8 @@ import kotlinx.coroutines.launch
 import org.sorz.lab.tinykeepass.R
 import org.sorz.lab.tinykeepass.getActivity
 import org.sorz.lab.tinykeepass.keepass.*
+import org.sorz.lab.tinykeepass.search.EntryQueryRelevance
+import kotlin.streams.toList
 
 private const val TAG = "ListScreen"
 
@@ -73,7 +75,7 @@ fun ListScreen(
             )
         }
     ) {
-        Content(repo, nav, scaffoldState.snackbarHostState)
+        Content(repo, nav, scaffoldState.snackbarHostState, keyword)
     }
 }
 
@@ -82,6 +84,7 @@ private fun Content(
     repo: Repository,
     nav: NavController? = null,
     snackbarHostState: SnackbarHostState? = null,
+    keyword: String,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -116,6 +119,7 @@ private fun Content(
         repo = repo,
         onClick = { copyEntry(it) },
         onClickLabel = stringResource(R.string.click_label_copy_password),
+        keyword = keyword,
     ) { entry -> EntryListItemExpandedArea(entry, snackbarHostState) }
 }
 
@@ -125,17 +129,30 @@ fun EntryList(
     repo: Repository,
     onClick: (entry: Entry) -> Unit,
     onClickLabel: String? = null,
+    keyword: String = "",
     expanded: (@Composable ColumnScope.(Entry) -> Unit)? = null,
 ) {
     val entries by repo.databaseEntries.collectAsState()
     var selectedEntry by remember { mutableStateOf<Entry?>(null) }
     val iconFactory = remember { repo.iconFactory }
 
+    val displayEntries = if (keyword == "") {
+        entries
+    } else {
+        val kws = keyword.lowercase().trim().split(' ')
+        entries.parallelStream()
+            .map { e -> EntryQueryRelevance(e, kws) }
+            .filter { it.isRelated }
+            .sorted()
+            .map { it.entry }
+            .toList()
+    }
+
     LazyColumn(
         Modifier.fillMaxWidth()
     ) {
         items(
-            items = entries,
+            items = displayEntries,
             key = { it.nodeId }
         ) { entry ->
             Column(Modifier.fillMaxWidth()) {
