@@ -330,20 +330,10 @@ fun SearchableTopAppBar(
         if (showInput) focusRequester.requestFocus()
     }
 
-    DisposableEffect(showInput) {
-        val dispatcher = context.takeIf { showInput }?.getActivity()?.onBackPressedDispatcher
-            ?: return@DisposableEffect onDispose { }
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                onChange("")
-                showInput = false
-            }
-        }
-        nav?.enableOnBackPressed(false)
-        dispatcher.addCallback(callback)
-        onDispose {
-            callback.remove()
-            nav?.enableOnBackPressed(true)
+    if (showInput && nav != null) {
+        rememberBackPressedCallback(nav) {
+            onChange("")
+            showInput = false
         }
     }
 
