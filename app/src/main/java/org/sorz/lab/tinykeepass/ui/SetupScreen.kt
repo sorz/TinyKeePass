@@ -54,6 +54,26 @@ private fun SetupScreenPreview() {
 fun SetupScreen(
     repo: Repository,
     nav: NavController? = null,
+) {
+    val scaffoldState = rememberScaffoldState()
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(stringResource(R.string.screen_title_setup))
+                },
+            )
+        },
+    ) {
+        Content(repo, nav, scaffoldState.snackbarHostState)
+    }
+}
+
+@Composable
+private fun Content(
+    repo: Repository,
+    nav: NavController? = null,
     snackbarHostState: SnackbarHostState? = null,
 ) {
     val context = LocalContext.current

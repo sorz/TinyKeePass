@@ -31,45 +31,27 @@ fun App() {
 
     MdcTheme {
         val navController = rememberNavController()
-        val scaffoldState = rememberScaffoldState()
-
-        Scaffold(
-            scaffoldState = scaffoldState,
-            floatingActionButton = { SyncDatabaseFloatingActionButton(
-                repo = repo,
-                snackbarHostState = scaffoldState.snackbarHostState
-            ) },
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(stringResource(R.string.app_name))
-                    },
-                )
-             },
-        ) {
-            NavGraph(navController, scaffoldState, repo)
-        }
+        NavGraph(navController, repo)
     }
 }
 
 @Composable
 private fun NavGraph(
     navController: NavHostController,
-    scaffoldState: ScaffoldState,
     repo: Repository,
 ) {
     NavHost(navController, Routes.LOCKED) {
         // Locked screen
         composable(Routes.LOCKED) {
-            LockScreen(repo, navController, scaffoldState.snackbarHostState)
+            LockScreen(repo, navController)
         }
         // List screen
         composable(Routes.LIST) {
-            ListScreen(repo, navController, scaffoldState.snackbarHostState)
+            ListScreen(repo, navController)
         }
         // Setup screen
         composable(Routes.Setup) {
-            SetupScreen(repo, navController, scaffoldState.snackbarHostState)
+            SetupScreen(repo, navController)
         }
     }
 }

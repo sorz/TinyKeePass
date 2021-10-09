@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import com.kunzisoft.keepass.database.element.Database
 import com.kunzisoft.keepass.database.element.Entry
 import com.kunzisoft.keepass.database.exception.LoadDatabaseException
@@ -37,6 +38,7 @@ enum class DatabaseState {
 interface Repository{
     val databaseState: StateFlow<DatabaseState>
     val databaseEntries: StateFlow<List<Entry>>
+    val databaseName: StateFlow<String>
     val iconFactory: IconDrawableFactory
     suspend fun unlockDatabase(local: LocalKeePass)
     suspend fun syncDatabase(remote: RemoteKeePass)
@@ -55,9 +57,11 @@ class RealRepository(
     private val persistentDbFile = File(filesDir, databaseFilename)
     private val state = MutableStateFlow(if (persistentDbFile.isFile) DatabaseState.LOCKED else DatabaseState.UNCONFIGURED)
     private val entries = MutableStateFlow<List<Entry>>(listOf())
+    private val name = MutableStateFlow("")
 
     override val databaseState = state
     override val databaseEntries: StateFlow<List<Entry>> = entries
+    override val databaseName: StateFlow<String> = name
     override val iconFactory: IconDrawableFactory get() = database.drawFactory
 
     @Throws(LoadDatabaseException::class)
@@ -138,6 +142,7 @@ class RealRepository(
         Log.d(TAG, "Locking database")
         database.closeAndClear()
         entries.value = listOf()
+        name.value = ""
         state.value = DatabaseState.LOCKED
     }
 
@@ -145,6 +150,7 @@ class RealRepository(
         Log.d(TAG, "Clearing database")
         database.closeAndClear()
         entries.value = listOf()
+        name.value = ""
         state.value = DatabaseState.UNCONFIGURED
         // Remove configures
         SecureStorage(context, ioDispatcher).clear()
@@ -170,6 +176,7 @@ class RealRepository(
                     fixDuplicateUUID = true,
                     progressTaskUpdater = null,
                 )
+                name.value = database.name
                 entries.value = database.allEntriesNotInRecycleBin
                     .sortedBy { it.creationTime.date }
                     .sortedBy { it.url }

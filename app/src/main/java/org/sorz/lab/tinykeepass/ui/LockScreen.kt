@@ -34,8 +34,28 @@ private fun LockScreenPreview() {
 fun LockScreen(
     repo: Repository,
     nav: NavController? = null,
-    snackbarHostState: SnackbarHostState? = null,
+) {
+    val scaffoldState = rememberScaffoldState()
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(stringResource(R.string.app_name))
+                },
+            )
+        },
     ) {
+        Content(repo, nav, scaffoldState.snackbarHostState)
+    }
+}
+
+@Composable
+private fun Content(
+    repo: Repository,
+    nav: NavController? = null,
+    snackbarHostState: SnackbarHostState? = null,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val dbState by repo.databaseState.collectAsState()

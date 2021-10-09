@@ -72,4 +72,5 @@
     <string name="click_label_select_entry">Show the password and options</string>
     <string name="action_sync">Sync database</string>
     <string name="no_remote_db">No remote database found, try reconfigure database.</string>
+    <string name="screen_title_setup">Setup Database</string>
 </resources>

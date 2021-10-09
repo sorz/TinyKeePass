@@ -44,6 +44,33 @@ private fun ListScreenPreview() {
 fun ListScreen(
     repo: Repository,
     nav: NavController? = null,
+) {
+    val scaffoldState = rememberScaffoldState()
+    val name by repo.databaseName.collectAsState()
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            TopAppBar(
+                title = { Text(
+                    name.takeIf { it != "" } ?: stringResource(R.string.app_name)
+                ) },
+            )
+        },
+        floatingActionButton = {
+            SyncDatabaseFloatingActionButton(
+                repo = repo,
+                snackbarHostState = scaffoldState.snackbarHostState
+            )
+        }
+    ) {
+        Content(repo, nav, scaffoldState.snackbarHostState)
+    }
+}
+
+@Composable
+private fun Content(
+    repo: Repository,
+    nav: NavController? = null,
     snackbarHostState: SnackbarHostState? = null,
 ) {
     val context = LocalContext.current
