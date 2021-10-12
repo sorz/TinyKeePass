@@ -1,68 +1,136 @@
-package org.sorz.lab.tinykeepass.autofill;
+package org.sorz.lab.tinykeepass.autofill
 
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentSender;
-import android.os.Build;
-import android.service.autofill.Dataset;
-import android.service.autofill.FillResponse;
-import androidx.annotation.RequiresApi;
+import org.sorz.lab.tinykeepass.autofill.AutofillUtils.buildDataset
+import org.sorz.lab.tinykeepass.autofill.AutofillUtils.getRemoteViews
+import org.sorz.lab.tinykeepass.search.SearchIndex
+import android.service.autofill.FillResponse
+import android.service.autofill.Dataset
+import org.sorz.lab.tinykeepass.R
+import android.view.autofill.AutofillId
+import android.content.IntentSender
+import android.content.Intent
+import android.app.PendingIntent
+import android.app.assist.AssistStructure
+import android.content.Context
+import android.os.Bundle
+import android.util.Log
+import android.view.autofill.AutofillManager
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.kunzisoft.keepass.database.element.Entry
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
+import org.sorz.lab.tinykeepass.auth.SecureStorage
+import org.sorz.lab.tinykeepass.auth.SystemException
+import org.sorz.lab.tinykeepass.auth.UserAuthException
+import org.sorz.lab.tinykeepass.keepass.*
+import java.lang.IllegalArgumentException
+import java.lang.StringBuilder
+import java.util.*
+import java.util.function.Consumer
+import java.util.stream.Stream
+import javax.inject.Inject
 
-import android.widget.RemoteViews;
 
-import org.sorz.lab.tinykeepass.R;
-import org.sorz.lab.tinykeepass.search.SearchIndex;
-import org.sorz.lab.tinykeepass.keepass.KeePassStorage;
+private const val TAG = "AuthActivity"
 
-import java.util.Objects;
-import java.util.stream.Stream;
+@AndroidEntryPoint
+class AuthActivity : AppCompatActivity() {
+    @Inject lateinit var repo: Repository
 
-import com.kunzisoft.keepass.database.element.Database;
-import com.kunzisoft.keepass.database.element.Entry;
-import com.kunzisoft.keepass.database.element.node.NodeIdUUID;
-import com.kunzisoft.keepass.icons.IconDrawableFactory;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
+        lifecycleScope.launchWhenStarted {
+            repo.databaseState.collect { state ->
+                Log.d(TAG, "repo state: $state")
+                when (state) {
+                    DatabaseState.UNCONFIGURED ->
+                        finishWithError(getString(R.string.error_database_not_configured))
+                    DatabaseState.LOCKED -> unlockDatabase()
+                    DatabaseState.UNLOCKED -> finishWithEntries()
+                }
+            }
+        }
 
-@RequiresApi(api = Build.VERSION_CODES.O)
-public class AuthActivity extends BaseActivity {
-    private final static int MAX_NUM_CANDIDATE_ENTRIES = 5;
-
-    @Override
-    protected void onDatabaseOpened() {
-        StructureParser.Result result = parseStructure();
-        Database keePass = KeePassStorage.get(this);
-        IconDrawableFactory iconFactory = keePass.getDrawFactory();
-        SearchIndex index = new SearchIndex(keePass);
-        StringBuilder queryBuilder = new StringBuilder();
-        result.title.forEach(title -> queryBuilder.append(title).append(' '));
-        Stream<Entry> entryStream = index.search(queryBuilder.toString())
-                .map(entry -> keePass.getEntryById(new NodeIdUUID(entry)));
-
-        FillResponse.Builder responseBuilder = new FillResponse.Builder();
-        // add matched entities
-        entryStream
-                .map(entry -> AutofillUtils.INSTANCE.buildDataset(this, entry, iconFactory, result))
-                .filter(Objects::nonNull)
-                .limit(MAX_NUM_CANDIDATE_ENTRIES)
-                .forEach(responseBuilder::addDataset);
-        // add "show all" item
-        RemoteViews presentation = AutofillUtils.INSTANCE.getRemoteViews(this,
-                getString(R.string.autofill_item_show_all),
-                R.drawable.ic_more_horiz_gray_24dp);
-        presentation.setTextColor(R.id.textView, getColor(R.color.hint));
-        Dataset.Builder datasetBuilder = new Dataset.Builder(presentation)
-                .setAuthentication(EntrySelectActivity.getAuthIntentSenderForResponse(this));
-        result.allAutofillIds().forEach(id -> datasetBuilder.setValue(id, null));
-        responseBuilder.addDataset(datasetBuilder.build());
-
-        setFillResponse(responseBuilder.build());
-        finish();
     }
 
-    static IntentSender getAuthIntentSenderForResponse(Context context) {
-        Intent intent = new Intent(context, AuthActivity.class);
-        return PendingIntent.getActivity(context, 0, intent,
-                PendingIntent.FLAG_CANCEL_CURRENT).getIntentSender();
+    private suspend fun unlockDatabase() {
+        Log.d(TAG, "Locked, try to unlock")
+
+        val prefs = try {
+            SecureStorage(this).run {
+                getEncryptedPreferences(getExistingMasterKey())
+            }
+        } catch (err: SystemException) {
+            Log.e(TAG, "fail to get master key", err) // FIXME: proper error message
+            return finishWithError(getString(R.string.error_get_master_key, err.toString()))
+        } catch (err: UserAuthException) {
+            Log.e(TAG, "user auth fail", err) // FIXME: proper error message
+            return finishWithError(err.message ?: err.toString())
+        }
+        val local = LocalKeePass.loadFromPrefs(prefs)
+            ?: return finishWithError(getString(R.string.no_master_key))
+        repo.unlockDatabase(local)
+    }
+
+    private fun finishWithEntries() {
+        Log.d(TAG, "Unlocked, enumerate entries")
+        val structure = intent.getParcelableExtra<AssistStructure>(AutofillManager.EXTRA_ASSIST_STRUCTURE)
+            ?: throw IllegalArgumentException("Missing intent extra EXTRA_ASSIST_STRUCTURE")
+        val result = StructureParser(structure).parse()
+
+        val index = SearchIndex(repo.databaseEntries.value)
+        val queryBuilder = StringBuilder()
+        result.title.forEach(Consumer { title: CharSequence? ->
+            queryBuilder.append(title).append(' ')
+        })
+        val entryStream: Stream<Entry> = index.search(queryBuilder.toString())
+            .map { uuid -> repo.findEntryByUUID(uuid) }
+        val responseBuilder = FillResponse.Builder()
+        // add matched entities
+        entryStream
+            .map { entry: Entry? -> buildDataset(this, entry!!, repo.iconFactory, result) }
+            .filter { obj: Dataset? -> Objects.nonNull(obj) }
+            .limit(MAX_NUM_CANDIDATE_ENTRIES.toLong())
+            .forEach { dataset: Dataset? -> responseBuilder.addDataset(dataset) }
+        // add "show all" item
+        val presentation = getRemoteViews(
+            this,
+            getString(R.string.autofill_item_show_all),
+            R.drawable.ic_more_horiz_gray_24dp
+        )
+        presentation.setTextColor(R.id.textView, getColor(R.color.hint))
+        val datasetBuilder = Dataset.Builder(presentation)
+            .setAuthentication(EntrySelectActivity.getAuthIntentSenderForResponse(this))
+        result.allAutofillIds().forEach { id: AutofillId? ->
+            datasetBuilder.setValue(
+                id!!, null
+            )
+        }
+        responseBuilder.addDataset(datasetBuilder.build())
+        setResult(RESULT_OK, Intent().apply {
+            putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, responseBuilder.build());
+        })
+        finish()
+    }
+
+
+    private fun finishWithError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        setResult(RESULT_CANCELED)
+        finish()
+    }
+
+    companion object {
+        private const val MAX_NUM_CANDIDATE_ENTRIES = 5
+        fun getAuthIntentSenderForResponse(context: Context?): IntentSender {
+            val intent = Intent(context, AuthActivity::class.java)
+            return PendingIntent.getActivity(
+                context, 0, intent,
+                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            ).intentSender
+        }
     }
 }

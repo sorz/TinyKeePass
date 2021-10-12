@@ -27,6 +27,8 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.lang.Exception
+import java.util.*
+import kotlin.collections.HashMap
 import kotlin.coroutines.CoroutineContext
 
 private const val TAG = "Repository"
@@ -44,6 +46,7 @@ interface Repository {
     suspend fun syncDatabase(remote: RemoteKeePass)
     suspend fun lockDatabase()
     suspend fun clearDatabase()
+    fun findEntryByUUID(uuid: UUID): Entry?
 }
 
 class RealRepository(
@@ -55,6 +58,7 @@ class RealRepository(
     private val database: Database = Database.getInstance(),
 ) : Repository {
     private val persistentDbFile = File(filesDir, databaseFilename)
+    private var uuidEntries = mapOf<UUID, Entry>()
     private val state = MutableStateFlow(if (persistentDbFile.isFile) DatabaseState.LOCKED else DatabaseState.UNCONFIGURED)
     private val entries = MutableStateFlow<List<Entry>>(listOf())
     private val name = MutableStateFlow("")
@@ -141,6 +145,7 @@ class RealRepository(
     override suspend fun lockDatabase() {
         Log.d(TAG, "Locking database")
         database.closeAndClear()
+        uuidEntries = mapOf()
         entries.value = listOf()
         name.value = ""
         state.value = DatabaseState.LOCKED
@@ -149,6 +154,7 @@ class RealRepository(
     override suspend fun clearDatabase() {
         Log.d(TAG, "Clearing database")
         database.closeAndClear()
+        uuidEntries = mapOf()
         entries.value = listOf()
         name.value = ""
         state.value = DatabaseState.UNCONFIGURED
@@ -177,12 +183,14 @@ class RealRepository(
                     progressTaskUpdater = null,
                 )
                 name.value = database.name
-                entries.value = database.allEntriesNotInRecycleBin
+                uuidEntries = database.allEntriesNotInRecycleBin.map { it.nodeId.id to it }.toMap()
+                entries.value = uuidEntries.values.asSequence()
                     .sortedBy { it.creationTime.date }
                     .sortedBy { it.url }
                     .sortedBy { it.username }
                     .sortedBy { it.title }
                     .toList()
+                database.closeAndClear()
             }
             state.value = DatabaseState.UNLOCKED
         } catch (err: Exception) {
@@ -190,6 +198,8 @@ class RealRepository(
             throw err
         }
     }
+
+    override fun findEntryByUUID(uuid: UUID): Entry? = uuidEntries[uuid]
 }
 
 private suspend fun copyStream(

@@ -26,14 +26,13 @@ public class SearchIndex {
     private long totalToken;
 
     /**
-     * Build a index that contains all entries (expect recycle bin) of
-     * KeePass file.
-     * @param keePass to be included in the index.
+     * Build a index that contains all entries.
+     * @param entries to be included in the index.
      */
-    public SearchIndex(Database keePass) {
+    public SearchIndex(List<Entry> entries) {
         tokenIndex = new HashMap<>();
         totalEntry = new AtomicInteger();
-        KeePassHelperKt.getAllEntriesNotInRecycleBinStream(keePass)
+        entries.stream()
                 .parallel()
                 .forEach(this::addEntry);
     }

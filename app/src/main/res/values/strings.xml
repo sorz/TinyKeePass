@@ -75,4 +75,5 @@
     <string name="screen_title_setup">Setup Database</string>
     <string name="cancel_search">Cancel search</string>
     <string name="clear_input">Clear input</string>
+    <string name="error_database_not_configured">KeePass database is not configured</string>
 </resources>
