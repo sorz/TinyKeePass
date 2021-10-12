@@ -66,14 +66,6 @@ private fun Content(
 
     Log.d(TAG, "dbState $dbState unlocking $unlocking")
 
-    LaunchedEffect(dbState, unlocking) {
-        Log.d(TAG, "!!!!checking $dbState ${!unlocking}")
-        if (dbState == DatabaseState.UNLOCKED && !unlocking && nav != null) {
-            Log.d(TAG, "!!!Lock database")
-            //repo.lockDatabase()
-        }
-    }
-
     fun showError(msg: String) {
         scope.launch {
             snackbarHostState?.showSnackbar(msg)
@@ -106,6 +98,11 @@ private fun Content(
         repo.clearDatabase()
     }.invokeOnCompletion {
         resetting = false
+    }
+
+    // Auto unlock when launch
+    LaunchedEffect(true) {
+        if (dbState == DatabaseState.LOCKED) unlock()
     }
 
     Column(
