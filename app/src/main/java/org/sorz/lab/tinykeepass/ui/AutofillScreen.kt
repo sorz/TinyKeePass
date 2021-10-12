@@ -74,7 +74,14 @@ fun AutofillScreen(
             DatabaseState.UNLOCKED -> {
                 if (forceShowALlEntries || action == AutofillAction.SHOW_ALL_ENTRIES) {
                     FullEntriesList(repo) { entry ->
-                        TODO()
+                        val dataset = AutofillUtils.buildDataset(
+                            context,
+                            entry,
+                            repo.iconFactory,
+                            structure
+                        ) ?: return@FullEntriesList finishWithResult(RESULT_CANCELED, null)
+                        val intent = generateResponse(context, structure, listOf(dataset))
+                        finishWithResult(RESULT_OK, intent)
                     }
                 } else {
                     LaunchedEffect(state) {
