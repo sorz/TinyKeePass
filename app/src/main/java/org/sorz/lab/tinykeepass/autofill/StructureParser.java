@@ -18,7 +18,7 @@ import java.util.stream.Stream;
  * Parse AssistStructure and guess username and password fields.
  */
 @RequiresApi(api = Build.VERSION_CODES.O)
-class StructureParser {
+public class StructureParser {
     static private final String TAG = StructureParser.class.getName();
 
     final private AssistStructure structure;
@@ -70,12 +70,12 @@ class StructureParser {
             parseViewNode(node.getChildAt(i));
     }
 
-    static class Result {
-        final List<CharSequence> title;
-        final List<String> webDomain;
-        final List<AutofillId> username;
-        final List<AutofillId> email;
-        final List<AutofillId> password;
+    public static class Result {
+        public final List<CharSequence> title;
+        public final List<String> webDomain;
+        public final List<AutofillId> username;
+        public final List<AutofillId> email;
+        public final List<AutofillId> password;
 
         private Result() {
             title = new ArrayList<>();
@@ -85,7 +85,7 @@ class StructureParser {
             password = new ArrayList<>();
         }
 
-        Stream<AutofillId> allAutofillIds() {
+        public Stream<AutofillId> allAutofillIds() {
             return Stream.concat(Stream.concat(
                         username.stream(), email.stream()), password.stream());
         }

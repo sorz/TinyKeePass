@@ -253,7 +253,7 @@ private fun EntryListItem(iconFactory: IconDrawableFactory, entry: Entry) {
 }
 
 @Composable
-fun EntryListItemExpandedArea(entry: Entry, snackbarHostState: SnackbarHostState? = null) {
+private fun EntryListItemExpandedArea(entry: Entry, snackbarHostState: SnackbarHostState? = null) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showPassword by remember { mutableStateOf(false) }
@@ -336,7 +336,7 @@ fun SearchableTopAppBar(
     title: String,
     keyword: String,
     onChange: (keyword: String) -> Unit,
-    nav: NavController?,
+    nav: NavController? = null,
 ) {
     val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }

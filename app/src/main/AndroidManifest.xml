@@ -72,7 +72,7 @@
         </service>
 
         <activity
-            android:name=".autofill.AuthActivity"
+            android:name=".autofill.AutofillActivity"
             android:theme="@style/AppTheme.Transparent" />
         <activity
             android:name=".autofill.EntrySelectActivity"

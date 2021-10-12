@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import org.sorz.lab.tinykeepass.R
 import org.sorz.lab.tinykeepass.keepass.hasDatabaseConfigured
+import org.sorz.lab.tinykeepass.ui.AutofillAction
 import kotlin.streams.toList
 
 
@@ -40,9 +41,9 @@ class TinyAutofillService : AutofillService() {
         val presentation = AutofillUtils.getRemoteViews(this,
                 getString(R.string.autofill_unlock_db),
                 android.R.drawable.ic_lock_lock)
-        val sender = AuthActivity.getAuthIntentSenderForResponse(this)
+        val intentSender = getAutofillIntentSender(AutofillAction.AUTH_USER)
         val autofillIds = parseResult.allAutofillIds().toList().toTypedArray()
-        responseBuilder.setAuthentication(autofillIds, sender, presentation)
+        responseBuilder.setAuthentication(autofillIds, intentSender, presentation)
 
         callback.onSuccess(responseBuilder.build())
     }
