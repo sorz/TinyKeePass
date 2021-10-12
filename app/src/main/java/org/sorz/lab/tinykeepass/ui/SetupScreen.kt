@@ -54,6 +54,7 @@ private fun SetupScreenPreview() {
 fun SetupScreen(
     repo: Repository,
     nav: NavController? = null,
+    uri: Uri? = null,
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
@@ -66,7 +67,7 @@ fun SetupScreen(
             )
         },
     ) {
-        Content(repo, nav, scaffoldState.snackbarHostState)
+        Content(repo, nav, scaffoldState.snackbarHostState, uri)
     }
 }
 
@@ -75,6 +76,7 @@ private fun Content(
     repo: Repository,
     nav: NavController? = null,
     snackbarHostState: SnackbarHostState? = null,
+    uri: Uri? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -156,7 +158,7 @@ private fun Content(
     // Validate input before trigger saving
     fun submit() {
         confirmClicked = true
-        val validatedUri = selectedFileUri ?: typedDatabaseUri?.takeIf { isOverHttp } ?: return
+        val validatedUri = uri ?: selectedFileUri ?: typedDatabaseUri?.takeIf { isOverHttp } ?: return
         if (masterPassword.isEmpty()) return
         val httpAuth = if (isOverHttp && httpAuthRequired) {
             if (httpAuthUsername.isEmpty() || httpAuthPassword.isEmpty()
@@ -187,7 +189,7 @@ private fun Content(
     ) {
         // Database URL
         OutlinedTextField(
-            value = selectedFileUri?.toString() ?: databaseUrl,
+            value = uri?.toString() ?: selectedFileUri?.toString() ?: databaseUrl,
             onValueChange = {
                 if (selectedFileUri != null) {
                     selectedFileUri = null
@@ -198,7 +200,7 @@ private fun Content(
                 }
                 databaseUrl = it
             },
-            enabled = !isSettingUp,
+            enabled = !isSettingUp && uri != null,
             placeholder = { Text(stringResource(R.string.database_url)) },
             label = { Text(stringResource(R.string.database)) },
             isError = confirmClicked && selectedFileUri == null && !isOverHttp,

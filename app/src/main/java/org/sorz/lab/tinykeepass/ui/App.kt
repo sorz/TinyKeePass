@@ -1,7 +1,9 @@
 package org.sorz.lab.tinykeepass.ui
 
+import android.net.Uri
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavAction
 import androidx.navigation.NavController
@@ -23,10 +25,10 @@ private object Routes {
 }
 
 @Composable
-fun App(repo: Repository) {
+fun App(repo: Repository, openDatabaseUri: Uri? = null) {
     MdcTheme {
         val navController = rememberNavController()
-        NavGraph(navController, repo)
+        NavGraph(navController, repo, openDatabaseUri)
     }
 }
 
@@ -34,19 +36,25 @@ fun App(repo: Repository) {
 private fun NavGraph(
     navController: NavHostController,
     repo: Repository,
+    openDatabaseUri: Uri? = null
 ) {
-    NavHost(navController, Routes.LOCKED) {
+    val start = if (openDatabaseUri != null) Routes.Setup else Routes.LOCKED
+    var ignoreOpenDatabaseUri by rememberSaveable { mutableStateOf(false) }
+
+    NavHost(navController, start) {
         // Locked screen
         composable(Routes.LOCKED) {
             LockScreen(repo, navController)
+            ignoreOpenDatabaseUri = false
         }
         // List screen
         composable(Routes.LIST) {
             ListScreen(repo, navController)
+            ignoreOpenDatabaseUri = false
         }
         // Setup screen
         composable(Routes.Setup) {
-            SetupScreen(repo, navController)
+            SetupScreen(repo, navController, openDatabaseUri.takeUnless { ignoreOpenDatabaseUri })
         }
     }
 }
