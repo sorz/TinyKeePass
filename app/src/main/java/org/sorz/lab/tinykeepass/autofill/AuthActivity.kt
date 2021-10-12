@@ -16,6 +16,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.autofill.AutofillManager
 import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.kunzisoft.keepass.database.element.Entry
@@ -25,6 +26,7 @@ import org.sorz.lab.tinykeepass.auth.SecureStorage
 import org.sorz.lab.tinykeepass.auth.SystemException
 import org.sorz.lab.tinykeepass.auth.UserAuthException
 import org.sorz.lab.tinykeepass.keepass.*
+import org.sorz.lab.tinykeepass.ui.AutofillAuthScreen
 import java.lang.IllegalArgumentException
 import java.lang.StringBuilder
 import java.util.*
@@ -53,7 +55,10 @@ class AuthActivity : AppCompatActivity() {
                 }
             }
         }
-
+        
+        setContent { 
+            AutofillAuthScreen(repo)
+        }
     }
 
     private suspend fun unlockDatabase() {
