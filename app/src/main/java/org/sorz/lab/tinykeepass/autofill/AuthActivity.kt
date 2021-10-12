@@ -56,7 +56,7 @@ class AuthActivity : AppCompatActivity() {
             }
         }
         
-        setContent { 
+        setContent {
             AutofillAuthScreen(repo)
         }
     }
@@ -134,7 +134,7 @@ class AuthActivity : AppCompatActivity() {
             val intent = Intent(context, AuthActivity::class.java)
             return PendingIntent.getActivity(
                 context, 0, intent,
-                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_MUTABLE
             ).intentSender
         }
     }
