@@ -35,7 +35,7 @@ enum class DatabaseState {
     UNCONFIGURED, LOCKED, UNLOCKED,
 }
 
-interface Repository{
+interface Repository {
     val databaseState: StateFlow<DatabaseState>
     val databaseEntries: StateFlow<List<Entry>>
     val databaseName: StateFlow<String>

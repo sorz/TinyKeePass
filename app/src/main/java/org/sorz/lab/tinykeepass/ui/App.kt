@@ -23,12 +23,7 @@ private object Routes {
 }
 
 @Composable
-fun App() {
-    val repo = RealRepository(
-        LocalContext.current,
-        Dispatchers.IO,
-    )
-
+fun App(repo: Repository) {
     MdcTheme {
         val navController = rememberNavController()
         NavGraph(navController, repo)
