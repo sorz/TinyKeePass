@@ -2,16 +2,14 @@ package org.sorz.lab.tinykeepass.ui
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.widget.ImageView
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -41,6 +39,7 @@ import org.sorz.lab.tinykeepass.keepass.*
 import org.sorz.lab.tinykeepass.search.EntryQueryRelevance
 import kotlin.streams.toList
 
+private const val TAG = "ListScreen"
 
 @Preview(showSystemUi = true)
 @Composable
@@ -56,6 +55,14 @@ fun ListScreen(
     val scaffoldState = rememberScaffoldState()
     val name by repo.databaseName.collectAsState()
     var keyword by rememberSaveable { mutableStateOf("") }
+    val dbState by repo.databaseState.collectAsState()
+
+    LaunchedEffect(dbState) {
+        if (dbState != DatabaseState.UNLOCKED && nav != null) {
+            Log.d(TAG, "Database $dbState != UNLOCKED, pop back")
+            NavActions(nav).popBack()
+        }
+    }
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -74,24 +81,19 @@ fun ListScreen(
             )
         }
     ) {
-        Content(repo, nav, scaffoldState.snackbarHostState, keyword)
+        if (dbState == DatabaseState.UNLOCKED)
+            Content(repo, scaffoldState.snackbarHostState, keyword)
     }
 }
 
 @Composable
 private fun Content(
     repo: Repository,
-    nav: NavController? = null,
     snackbarHostState: SnackbarHostState? = null,
     keyword: String,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val dbState by repo.databaseState.collectAsState()
-
-    if (dbState != DatabaseState.UNLOCKED && nav != null) {
-        NavActions(nav).locked()
-    }
 
     fun copyEntry(entry: Entry) {
         if (entry.username == "") {
@@ -184,7 +186,7 @@ fun EntryList(
                     }
                 }
                 // Divider
-                if (entry != entries.last()) {
+                if (entry != entries.lastOrNull()) {
                     Divider(Modifier.padding(start=36.dp))
                 }
 
