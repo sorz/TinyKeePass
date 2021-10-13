@@ -48,10 +48,6 @@
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".DatabaseSyncingService"
-            android:enabled="true"
-            android:exported="false" />
-        <service
                 android:name=".autofill.TinyAutofillService"
                 android:permission="android.permission.BIND_AUTOFILL_SERVICE"
                 android:exported="true">
@@ -66,9 +62,6 @@
         <activity
             android:name=".autofill.AutofillActivity"
             android:theme="@style/AppTheme.Transparent" />
-        <activity
-            android:name=".autofill.EntrySelectActivity"
-            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>

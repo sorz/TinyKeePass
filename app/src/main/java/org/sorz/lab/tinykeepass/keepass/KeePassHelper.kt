@@ -5,18 +5,9 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Context.CLIPBOARD_SERVICE
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-
-
-import org.sorz.lab.tinykeepass.FetchDatabaseTask
-
-import java.io.File
 
 import com.kunzisoft.keepass.database.element.Database
 import com.kunzisoft.keepass.database.element.Entry
-import org.jetbrains.anko.startService
 import org.sorz.lab.tinykeepass.PasswordCopingService
 import org.sorz.lab.tinykeepass.R
 import java.util.stream.Stream
@@ -38,17 +29,6 @@ val Database.allEntriesNotInRecycleBin: Sequence<Entry>
             yieldAll(group.getChildEntries())
         }
     }
-
-val Database.allEntriesNotInRecycleBinStream: Stream<Entry>
-    get() =
-    allEntriesNotInRecycleBin.asStream()
-
-
-val Context.databaseFile: File get() =
-    File(noBackupFilesDir, FetchDatabaseTask.DB_FILENAME)
-
-val Context.hasDatabaseConfigured: Boolean get() =
-    KeePassStorage.get(this) != null || databaseFile.canRead()
 
 private val Entry.cleanUrl get() = url.replace("^https?://(www\\.)?".toRegex(), "")
 

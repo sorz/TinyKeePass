@@ -5,16 +5,13 @@ import androidx.activity.OnBackPressedCallback
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavAction
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.android.material.composethemeadapter.MdcTheme
-import kotlinx.coroutines.Dispatchers
 import org.sorz.lab.tinykeepass.getActivity
-import org.sorz.lab.tinykeepass.keepass.RealRepository
 import org.sorz.lab.tinykeepass.keepass.Repository
 
 

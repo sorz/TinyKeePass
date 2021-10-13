@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.MutableState
 import com.kunzisoft.keepass.database.element.Database
 import com.kunzisoft.keepass.database.element.Entry
 import com.kunzisoft.keepass.database.exception.LoadDatabaseException
@@ -16,7 +15,6 @@ import io.ktor.client.features.auth.*
 import io.ktor.client.features.auth.providers.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import io.ktor.http.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +26,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.lang.Exception
 import java.util.*
-import kotlin.collections.HashMap
 import kotlin.coroutines.CoroutineContext
 
 private const val TAG = "Repository"

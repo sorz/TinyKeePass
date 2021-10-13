@@ -36,12 +36,10 @@ import com.kunzisoft.keepass.database.element.Entry
 import com.kunzisoft.keepass.icons.IconDrawableFactory
 import kotlinx.coroutines.launch
 import org.sorz.lab.tinykeepass.R
-import org.sorz.lab.tinykeepass.getActivity
 import org.sorz.lab.tinykeepass.keepass.*
 import org.sorz.lab.tinykeepass.search.EntryQueryRelevance
 import kotlin.streams.toList
 
-private const val TAG = "ListScreen"
 
 @Preview(showSystemUi = true)
 @Composable

@@ -1,5 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/drawable/ic_cloud_done_white_24dp.xml" value="0.31574074074074077" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/drawable/ic_cloud_white_black_24dp.xml" value="0.32314814814814813" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/drawable/ic_link_white_24dp.xml" value="0.3138888888888889" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/drawable/ic_report_problem_white_24dp.xml" value="0.3138888888888889" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/drawable/selectable_background.xml" value="0.3138888888888889" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/layout/activity_database_setup.xml" value="0.4" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/layout/activity_main.xml" value="0.4" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/layout/autofill_service_list_item.xml" value="0.34594594594594597" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/layout/content_main.xml" value="0.34594594594594597" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/layout/fragment_database_locked.xml" value="0.4" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/layout/fragment_entry.xml" value="0.29745042492917845" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/layout/fragment_entry_list.xml" value="0.34594594594594597" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/layout/fragment_open_database_dialog.xml" value="0.4" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/menu/entry_context.xml" value="0.34594594594594597" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/menu/menu_main.xml" value="0.34594594594594597" />
+        <entry key="..\:/Users/xierch/Desktop/TinyKeePass/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.3138888888888889" />
+      </map>
+    </option>
+  </component>
   <component name="NullableNotNullManager">
     <option name="myDefaultNullable" value="android.support.annotation.Nullable" />
     <option name="myDefaultNotNull" value="android.support.annotation.NonNull" />
@@ -46,7 +68,7 @@
       </value>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="JDK" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">

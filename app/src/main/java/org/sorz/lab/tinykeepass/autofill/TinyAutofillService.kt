@@ -10,21 +10,26 @@ import android.service.autofill.SaveCallback
 import android.service.autofill.SaveRequest
 import android.util.Log
 import androidx.annotation.RequiresApi
+import dagger.hilt.android.AndroidEntryPoint
 import org.sorz.lab.tinykeepass.R
-import org.sorz.lab.tinykeepass.keepass.hasDatabaseConfigured
+import org.sorz.lab.tinykeepass.keepass.DatabaseState
+import org.sorz.lab.tinykeepass.keepass.Repository
 import org.sorz.lab.tinykeepass.ui.AutofillAction
+import javax.inject.Inject
 import kotlin.streams.toList
 
 
 private const val TAG = "TinyAutofillService"
 
 @RequiresApi(api = Build.VERSION_CODES.O)
+@AndroidEntryPoint
 class TinyAutofillService : AutofillService() {
+    @Inject lateinit var repo: Repository
     override fun onFillRequest(request: FillRequest,
                                cancellationSignal: CancellationSignal,
                                callback: FillCallback) {
         cancellationSignal.setOnCancelListener { Log.d(TAG ,"autofill canceled.") }
-        if (!hasDatabaseConfigured) {
+        if (repo.databaseState.value == DatabaseState.UNCONFIGURED) {
             callback.onSuccess(null)
             return
         }

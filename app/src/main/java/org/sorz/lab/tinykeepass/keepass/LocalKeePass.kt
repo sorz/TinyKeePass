@@ -1,7 +1,6 @@
 package org.sorz.lab.tinykeepass.keepass
 
 import android.content.SharedPreferences
-import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
