@@ -70,19 +70,3 @@ class NavActions(navController: NavController) {
         navController.navigate(Routes.Setup)
     }
 }
-
-@Composable
-fun rememberBackPressedCallback(navController: NavController, onBackPressed: () -> Unit) {
-    val activity = LocalContext.current.getActivity() ?: return
-    DisposableEffect(Unit) {
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() { onBackPressed() }
-        }
-        navController.enableOnBackPressed(false)
-        activity.onBackPressedDispatcher.addCallback(callback)
-        onDispose {
-            callback.remove()
-            navController.enableOnBackPressed(true)
-        }
-    }
-}

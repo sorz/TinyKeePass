@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.ImageView
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -144,6 +145,10 @@ fun EntryList(
             .sorted()
             .map { it.entry }
             .toList()
+    }
+
+    BackHandler(selectedEntry != null) {
+        selectedEntry = null
     }
 
     LazyColumn(
@@ -336,7 +341,6 @@ fun SearchableTopAppBar(
     onChange: (keyword: String) -> Unit,
     nav: NavController? = null,
 ) {
-    val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }
     var showInput by rememberSaveable { mutableStateOf(false) }
     if (keyword != "" && !showInput) showInput = true
@@ -345,11 +349,9 @@ fun SearchableTopAppBar(
         if (showInput) focusRequester.requestFocus()
     }
 
-    if (showInput && nav != null) {
-        rememberBackPressedCallback(nav) {
-            onChange("")
-            showInput = false
-        }
+    BackHandler(showInput && nav != null) {
+        onChange("")
+        showInput = false
     }
 
     if (!showInput) {
