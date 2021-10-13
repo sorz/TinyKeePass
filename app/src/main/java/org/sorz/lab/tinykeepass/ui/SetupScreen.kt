@@ -200,7 +200,7 @@ private fun Content(
                 }
                 databaseUrl = it
             },
-            enabled = !isSettingUp && uri != null,
+            enabled = !isSettingUp && uri == null,
             placeholder = { Text(stringResource(R.string.database_url)) },
             label = { Text(stringResource(R.string.database)) },
             isError = confirmClicked && selectedFileUri == null && !isOverHttp,
