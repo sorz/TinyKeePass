@@ -8,6 +8,9 @@ buildscript {
 
     repositories {
         maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        maven {
             url 'https://maven.google.com'
         }
         google()
@@ -19,6 +22,7 @@ buildscript {
         classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$nav_version"
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.17'
         classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
+        classpath 'org.mozilla.rust-android-gradle:plugin:0.9.0'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
