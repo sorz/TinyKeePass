@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.android.material.composethemeadapter.MdcTheme
+import org.sorz.lab.tinykeepass.keepass.KdbxNative
 import org.sorz.lab.tinykeepass.keepass.Repository
 
 
@@ -23,6 +24,11 @@ fun App(repo: Repository, openDatabaseUri: Uri? = null) {
     MdcTheme {
         val navController = rememberNavController()
         NavGraph(navController, repo, openDatabaseUri)
+    }
+
+    LaunchedEffect(Unit) {
+        val bytes = KdbxNative.loadDatabase("/test/database.kdbx", "password")
+        println("KdbxNative return ${String(bytes)}")
     }
 }
 
