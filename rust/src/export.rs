@@ -1,7 +1,7 @@
 use jni::{
-    JNIEnv,
-    objects::{JClass, JObject, JValue, JString},
+    objects::{JClass, JObject, JString, JValue},
     sys::{jbyteArray, jint, jlong, jstring},
+    JNIEnv,
 };
 
 #[no_mangle]
@@ -12,9 +12,9 @@ pub extern "system" fn Java_org_sorz_lab_tinykeepass_keepass_KdbxNative_loadData
     path: JString,
     password: JString,
 ) -> jbyteArray {
-    let path = env.get_string(path)
-        .expect("fail to get String of path");
-    let password = env.get_string(password)
+    let path = env.get_string(path).expect("fail to get String of path");
+    let password = env
+        .get_string(password)
         .expect("fail to get String of password");
 
     println!("Open database {}", path.to_string_lossy());
