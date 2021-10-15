@@ -1,4 +1,4 @@
-mod cipher;
+mod crypto;
 mod dict;
 mod error;
 mod header;

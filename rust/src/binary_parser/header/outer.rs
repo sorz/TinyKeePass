@@ -5,7 +5,10 @@ use std::{
 };
 
 use crate::binary_parser::{
-    cipher::MasterSeed, dict::VariantDictionary, error::BinaryParseError, parse_header_field,
+    crypto::{MasterSeed, Sha256ReadStream, SHA256_LENGTH},
+    dict::VariantDictionary,
+    error::BinaryParseError,
+    parse_header_field,
 };
 
 const FILE_MAGIC: u32 = 0x9AA2D903;
@@ -25,7 +28,7 @@ const FIELD_MASTER_SEED: u8 = 0x04;
 const FIELD_ENCRYPTION_IV: u8 = 0x07;
 const FIELD_KDF_PARAMETERS: u8 = 0x0b;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum OuterCipher {
     AES128,
     AES256,
@@ -33,7 +36,7 @@ enum OuterCipher {
     ChaCha20,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompressionMethod {
     None,
     Gzip,
@@ -78,7 +81,9 @@ pub(crate) struct OuterHeader {
 }
 
 impl OuterHeader {
-    pub(crate) fn parse<R: Read>(mut reader: &mut R) -> Result<Self, BinaryParseError> {
+    pub(crate) fn parse<R: Read>(reader: R) -> Result<(R, Self), BinaryParseError> {
+        let mut reader = Sha256ReadStream::new(reader);
+
         // Parsing file magic & datbase version
         let magic = reader.read_u32::<LE>()?;
         if magic != FILE_MAGIC {
@@ -120,12 +125,22 @@ impl OuterHeader {
                 _ => (),
             }
         }
-        Ok(Self {
+        let header = Self {
             cipher: cipher.ok_or(BinaryParseError::FieldNotFound("Cipher"))?,
             compression: compression.ok_or(BinaryParseError::FieldNotFound("CompressionMethod"))?,
             master_seed: master_seed.ok_or(BinaryParseError::FieldNotFound("MasterSeed"))?,
             kdf_paramters: kdf_paramters.ok_or(BinaryParseError::FieldNotFound("KdfParamters"))?,
-        })
+        };
+
+        // Check header hash
+        let (mut reader, hash_actual) = reader.finalize();
+        let mut hash = [0u8; SHA256_LENGTH];
+        reader.read_exact(&mut hash)?;
+        if hash != hash_actual {
+            return Err(BinaryParseError::ValidationError);
+        }
+
+        Ok((reader, header))
     }
 }
 
@@ -133,8 +148,8 @@ impl OuterHeader {
 fn test_parse_outer_header() {
     use std::fs::File;
 
-    let mut f = File::open("test_data/kdbx4_chacha20_argon2.kdbx").unwrap();
-    let header = OuterHeader::parse(&mut f).unwrap();
-    println!("{:?}", header);
-    unimplemented!()
+    let f = File::open("test_data/kdbx4_chacha20_argon2.kdbx").unwrap();
+    let (_f, header) = OuterHeader::parse(f).unwrap();
+    assert_eq!(OuterCipher::ChaCha20, header.cipher);
+    assert_eq!(CompressionMethod::Gzip, header.compression);
 }

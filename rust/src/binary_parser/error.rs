@@ -20,6 +20,9 @@ pub enum BinaryParseError {
     #[error("missing required field `{0}`")]
     FieldNotFound(&'static str),
 
+    #[error("header corruppted")]
+    ValidationError,
+
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 
