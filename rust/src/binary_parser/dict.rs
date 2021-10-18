@@ -1,7 +1,7 @@
 use byteorder::{ReadBytesExt, LE};
 use std::{collections::HashMap, convert::TryInto, io::Read};
 
-use crate::binary_parser::error::BinaryParseError;
+use crate::error::BinaryParseError;
 
 #[derive(Debug, Clone)]
 pub(crate) enum Value {
@@ -90,5 +90,28 @@ impl VariantDictionary {
         }
 
         Ok(Self { entries })
+    }
+
+    pub(crate) fn get_u32(&self, key: &str) -> Option<u32> {
+        match self.entries.get(key) {
+            Some(Value::UInt32(v)) => Some(*v),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn get_u64(&self, key: &str) -> Option<u64> {
+        match self.entries.get(key) {
+            Some(Value::UInt32(v)) => Some((*v).into()),
+            Some(Value::UInt64(v)) => Some(*v),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn get_bytes<'a>(&'a self, key: &str) -> Option<&'a [u8]> {
+        match self.entries.get(key) {
+            Some(Value::Bytes(v)) => Some(v),
+            Some(Value::String(v)) => Some(v.as_bytes()),
+            _ => None,
+        }
     }
 }

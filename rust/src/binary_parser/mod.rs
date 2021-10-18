@@ -1,7 +1,5 @@
-mod crypto;
-mod dict;
-mod error;
 mod header;
+mod dict;
 
 use byteorder::{ReadBytesExt, LE};
 use std::{

@@ -11,7 +11,7 @@ pub enum BinaryParseError {
     #[error("unsupported VariantDictionary version ({0:#x})")]
     UnsupportedVariantDictionaryVersion(u16),
 
-    #[error("data store disconnected")]
+    #[error("field value invalid ({field}: {value})")]
     UnknownFieldValue { field: &'static str, value: String },
 
     #[error("field too large ({0} bytes)")]
@@ -22,6 +22,12 @@ pub enum BinaryParseError {
 
     #[error("header corruppted")]
     ValidationError,
+
+    #[error("wrong password")]
+    AuthenticationError,
+
+    #[error(transparent)]
+    CryptoError(#[from] crate::crypto::error::CryptoError),
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
